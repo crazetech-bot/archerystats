@@ -99,16 +99,9 @@
                 </div>
 
                 <div>
-                    <label for="phone" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone</label>
+                    <label for="phone" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Contact Number</label>
                     <input type="tel" id="phone" name="phone" value="{{ old('phone', $archer?->phone) }}"
                            placeholder="e.g. 012-3456789"
-                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
-                </div>
-
-                <div>
-                    <label for="team" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Team</label>
-                    <input type="text" id="team" name="team" value="{{ old('team', $archer?->team) }}"
                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
                 </div>
@@ -136,6 +129,26 @@
                     </button>
                 </div>
 
+                <div>
+                    <label for="team" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State / National Team</label>
+                    <input type="text" id="team" name="team" value="{{ old('team', $archer?->team) }}"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                </div>
+
+                <div>
+                    <label for="hand" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">RH / LH</label>
+                    <select id="hand" name="hand"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition
+                                   @error('hand') border-red-400 @enderror">
+                        <option value="">— Select —</option>
+                        <option value="right" @selected(old('hand', $archer?->hand) === 'right')>Right Handed</option>
+                        <option value="left"  @selected(old('hand', $archer?->hand) === 'left')>Left Handed</option>
+                    </select>
+                    @error('hand')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
             </div>
         </div>
 
@@ -155,28 +168,6 @@
             </div>
             <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
 
-                <div>
-                    <label for="country" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Country <span class="text-red-500 normal-case font-normal">*</span>
-                    </label>
-                    <input type="text" id="country" name="country"
-                           value="{{ old('country', $archer?->country ?? 'Malaysia') }}"
-                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
-                </div>
-
-                <div>
-                    <label for="state" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
-                    <select id="state" name="state"
-                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
-                        <option value="">— Select State —</option>
-                        @foreach($states as $s)
-                            <option value="{{ $s }}" @selected(old('state', $archer?->state) === $s)>{{ $s }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
                 <div class="sm:col-span-2">
                     <label for="address_line" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Address</label>
                     <textarea id="address_line" name="address_line" rows="2"
@@ -193,15 +184,25 @@
                 </div>
 
                 <div>
-                    <label for="address_state" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Address State</label>
-                    <select id="address_state" name="address_state"
+                    <label for="state" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
+                    <select id="state" name="state"
                             class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
                                    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
                         <option value="">— Select State —</option>
                         @foreach($states as $s)
-                            <option value="{{ $s }}" @selected(old('address_state', $archer?->address_state) === $s)>{{ $s }}</option>
+                            <option value="{{ $s }}" @selected(old('state', $archer?->state) === $s)>{{ $s }}</option>
                         @endforeach
                     </select>
+                </div>
+
+                <div>
+                    <label for="country" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Country <span class="text-red-500 normal-case font-normal">*</span>
+                    </label>
+                    <input type="text" id="country" name="country"
+                           value="{{ old('country', $archer?->country ?? 'Malaysia') }}"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
                 </div>
 
             </div>

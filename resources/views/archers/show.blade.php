@@ -99,14 +99,16 @@
                     Personal Information
                 </h3>
                 <dl class="grid grid-cols-2 gap-4">
-                    @php $items = [
-                        'Date of Birth' => $archer->date_of_birth?->format('d-m-Y') ?? '—',
-                        'Age'           => $archer->age ? $archer->age . ' years old' : '—',
-                        'Gender'        => $archer->gender ? ucfirst($archer->gender) : '—',
-                        'Phone'         => $archer->phone ?? '—',
-                        'Team'          => $archer->team ?? '—',
-                        'Club'          => $archer->club?->name ?? '—',
-                    ]; @endphp
+                    @php
+                        $items = [
+                            'Date of Birth'    => $archer->date_of_birth?->format('d-m-Y') ?? '—',
+                            'Age'              => $archer->age ? $archer->age . ' years old' : '—',
+                            'Gender'           => $archer->gender ? ucfirst($archer->gender) : '—',
+                            'Contact Number'   => $archer->phone ?? '—',
+                            'Club'             => $archer->club?->name ?? '—',
+                            'State / National' => $archer->team ?? '—',
+                        ];
+                    @endphp
                     @foreach($items as $label => $value)
                         <div class="bg-gray-50 rounded-xl px-4 py-3">
                             <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ $label }}</dt>
@@ -127,6 +129,14 @@
                     Location
                 </h3>
                 <dl class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded-xl px-4 py-3 col-span-2">
+                        <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Address</dt>
+                        <dd class="text-sm font-semibold text-gray-800 mt-1">{{ $archer->address_line ?? '—' }}</dd>
+                    </div>
+                    <div class="bg-gray-50 rounded-xl px-4 py-3">
+                        <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Postcode</dt>
+                        <dd class="text-sm font-semibold text-gray-800 mt-1">{{ $archer->postcode ?? '—' }}</dd>
+                    </div>
                     <div class="bg-gray-50 rounded-xl px-4 py-3">
                         <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider">State</dt>
                         <dd class="text-sm font-semibold text-gray-800 mt-1">{{ $archer->state ?? '—' }}</dd>
@@ -134,17 +144,6 @@
                     <div class="bg-gray-50 rounded-xl px-4 py-3">
                         <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Country</dt>
                         <dd class="text-sm font-semibold text-gray-800 mt-1">{{ $archer->country ?? '—' }}</dd>
-                    </div>
-                    <div class="bg-gray-50 rounded-xl px-4 py-3 col-span-2">
-                        <dt class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Address</dt>
-                        <dd class="text-sm font-semibold text-gray-800 mt-1">
-                            @if($archer->address_line || $archer->postcode || $archer->address_state)
-                                {{ $archer->address_line }}<br>
-                                {{ implode(', ', array_filter([$archer->postcode, $archer->address_state])) }}
-                            @else
-                                —
-                            @endif
-                        </dd>
                     </div>
                 </dl>
             </div>

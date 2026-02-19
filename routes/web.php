@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\ArcherController;
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
@@ -29,9 +30,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/archers/{archer}', [ArcherController::class, 'show'])->name('archers.show');
     });
 
-    // Super admin only: delete
+    // Super admin only
     Route::middleware(['role:super_admin'])->group(function () {
         Route::delete('/archers/{archer}', [ArcherController::class, 'destroy'])->name('archers.destroy');
+
+        Route::get('/admin/settings', [SettingController::class, 'index'])->name('admin.settings');
+        Route::post('/admin/settings', [SettingController::class, 'update'])->name('admin.settings.update');
+        Route::delete('/admin/settings/logo', [SettingController::class, 'removeLogo'])->name('admin.settings.logo.remove');
     });
 
 });

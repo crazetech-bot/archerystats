@@ -22,7 +22,7 @@ class Archer extends Model
         'user_id', 'club_id',
         'ref_no',
         'date_of_birth', 'gender', 'phone',
-        'team', 'state', 'country',
+        'team', 'hand', 'state', 'country',
         'address_line', 'postcode', 'address_state',
         'bow_style', 'divisions',
         'classification', 'photo', 'active', 'notes',
