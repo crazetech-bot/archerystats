@@ -57,13 +57,11 @@
                         <p class="mt-2 text-xs text-gray-400">PNG, JPG, WEBP or SVG &mdash; max 2MB. Recommended: transparent background.</p>
 
                         @if(!empty($settings['logo']))
-                            <form method="POST" action="{{ route('admin.settings.logo.remove') }}" class="mt-3"
-                                  x-data @submit.prevent="if(confirm('Remove logo?')) $el.submit()">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="text-xs font-medium text-red-500 hover:text-red-700 hover:underline">
-                                    &times; Remove current logo
-                                </button>
-                            </form>
+                            <button type="button" form="remove-logo-form"
+                                    class="mt-3 text-xs font-medium text-red-500 hover:text-red-700 hover:underline"
+                                    onclick="if(confirm('Remove logo?')) document.getElementById('remove-logo-form').submit()">
+                                &times; Remove current logo
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -139,6 +137,96 @@
             </div>
         </div>
 
+        {{-- Login Page Typography --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+                 style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe);">
+                <span class="h-8 w-8 rounded-xl bg-sky-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="h-4 w-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/>
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">Login Page Typography</h2>
+                    <p class="text-xs text-gray-500">Fonts shown on the sign-in screen (independent of main app fonts)</p>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-3"
+                 x-data="{
+                     loginBodyFont: '{{ $settings['login_body_font'] ?? ($settings['body_font'] ?? 'Inter') }}',
+                     loginHeadingFont: '{{ $settings['login_heading_font'] ?? ($settings['heading_font'] ?? 'Inter') }}',
+                     loginHeadingSize: '{{ $settings['login_heading_size'] ?? ($settings['heading_size'] ?? '28') }}'
+                 }">
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Login Body Font</label>
+                    <select name="login_body_font" x-model="loginBodyFont"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                        @foreach($googleFonts as $font)
+                            <option value="{{ $font }}" @selected(($settings['login_body_font'] ?? ($settings['body_font'] ?? 'Inter')) === $font)>{{ $font }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-2 text-xs text-gray-400" :style="`font-family: '${loginBodyFont}', sans-serif`">
+                        The quick brown fox jumps over the lazy dog.
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Login Heading Font</label>
+                    <select name="login_heading_font" x-model="loginHeadingFont"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                        @foreach($googleFonts as $font)
+                            <option value="{{ $font }}" @selected(($settings['login_heading_font'] ?? ($settings['heading_font'] ?? 'Inter')) === $font)>{{ $font }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-2 text-xs font-bold text-gray-500" :style="`font-family: '${loginHeadingFont}', sans-serif`">
+                        Welcome back
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Login Heading Size</label>
+                    <select name="login_heading_size" x-model="loginHeadingSize"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                        @foreach($headingSizes as $px => $label)
+                            <option value="{{ $px }}" @selected(($settings['login_heading_size'] ?? ($settings['heading_size'] ?? '28')) === (string)$px)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-2 font-bold text-gray-500" :style="`font-size: ${loginHeadingSize}px; font-family: '${loginHeadingFont}', sans-serif`">
+                        Welcome
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+                 style="background: linear-gradient(135deg, #faf5ff, #f3e8ff);">
+                <span class="h-8 w-8 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/>
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">Footer</h2>
+                    <p class="text-xs text-gray-500">Copyright text shown on the login page and main layout</p>
+                </div>
+            </div>
+            <div class="p-6">
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Footer Text</label>
+                <input type="text" name="footer_text"
+                       value="{{ $settings['footer_text'] ?? '' }}"
+                       placeholder="© {{ date('Y') }} Archery Stats Management System"
+                       class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                              focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                <p class="mt-2 text-xs text-gray-400">Leave blank to use the default copyright text.</p>
+            </div>
+        </div>
+
         {{-- Save --}}
         <div class="flex justify-end pb-2">
             <button type="submit"
@@ -148,6 +236,14 @@
             </button>
         </div>
     </form>
+
+    {{-- Standalone remove-logo form (outside main form to avoid nesting) --}}
+    @if(!empty($settings['logo']))
+        <form id="remove-logo-form" method="POST" action="{{ route('admin.settings.logo.remove') }}" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endif
 
     {{-- New Archers --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

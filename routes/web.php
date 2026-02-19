@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\ArcherController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
 // Auth routes
@@ -29,6 +30,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/archers', [ArcherController::class, 'index'])->name('archers.index');
         Route::get('/archers/{archer}', [ArcherController::class, 'show'])->name('archers.show');
     });
+
+    // Sessions & Scorecards (all authenticated roles)
+    Route::get('/archers/{archer}/sessions',        [SessionController::class, 'index'])->name('sessions.index');
+    Route::get('/archers/{archer}/sessions/create', [SessionController::class, 'create'])->name('sessions.create');
+    Route::post('/archers/{archer}/sessions',       [SessionController::class, 'store'])->name('sessions.store');
+    Route::get('/sessions/{session}/scorecard',     [SessionController::class, 'scorecard'])->name('sessions.scorecard');
+    Route::put('/sessions/{session}/scores',        [SessionController::class, 'saveScores'])->name('sessions.saveScores');
+    Route::get('/sessions/{session}',               [SessionController::class, 'show'])->name('sessions.show');
+    Route::delete('/sessions/{session}',            [SessionController::class, 'destroy'])->name('sessions.destroy');
 
     // Super admin only
     Route::middleware(['role:super_admin'])->group(function () {

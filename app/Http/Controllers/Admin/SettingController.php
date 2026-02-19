@@ -49,10 +49,14 @@ class SettingController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'logo'         => ['nullable', 'file', 'image', 'mimes:png,jpg,jpeg,webp,svg', 'max:2048'],
-            'body_font'    => ['nullable', 'string', 'max:100'],
-            'heading_font' => ['nullable', 'string', 'max:100'],
-            'heading_size' => ['nullable', 'string', 'max:10'],
+            'logo'               => ['nullable', 'file', 'image', 'mimes:png,jpg,jpeg,webp,svg', 'max:2048'],
+            'body_font'          => ['nullable', 'string', 'max:100'],
+            'heading_font'       => ['nullable', 'string', 'max:100'],
+            'heading_size'       => ['nullable', 'string', 'max:10'],
+            'login_body_font'    => ['nullable', 'string', 'max:100'],
+            'login_heading_font' => ['nullable', 'string', 'max:100'],
+            'login_heading_size' => ['nullable', 'string', 'max:10'],
+            'footer_text'        => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($request->hasFile('logo')) {
@@ -62,7 +66,9 @@ class SettingController extends Controller
             Setting::set('logo', $path);
         }
 
-        foreach (['body_font', 'heading_font', 'heading_size'] as $key) {
+        foreach (['body_font', 'heading_font', 'heading_size',
+                  'login_body_font', 'login_heading_font', 'login_heading_size',
+                  'footer_text'] as $key) {
             Setting::set($key, $request->input($key));
         }
 

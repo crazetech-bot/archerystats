@@ -26,12 +26,22 @@ class Archer extends Model
         'address_line', 'postcode', 'address_state',
         'bow_style', 'divisions',
         'classification', 'photo', 'active', 'notes',
+        'arrow_type', 'arrow_size', 'arrow_length',
+        'limb_type', 'limb_length', 'limb_poundage', 'actual_poundage',
+        'pb_unofficial_36_score', 'pb_unofficial_36_date',
+        'pb_unofficial_72_score', 'pb_unofficial_72_date',
+        'pb_official_36_score',   'pb_official_36_date',   'pb_official_36_tournament',
+        'pb_official_72_score',   'pb_official_72_date',   'pb_official_72_tournament',
     ];
 
     protected $casts = [
-        'date_of_birth' => 'date',
-        'active'        => 'boolean',
-        'divisions'     => 'array',
+        'date_of_birth'           => 'date',
+        'active'                  => 'boolean',
+        'divisions'               => 'array',
+        'pb_unofficial_36_date'   => 'date',
+        'pb_unofficial_72_date'   => 'date',
+        'pb_official_36_date'     => 'date',
+        'pb_official_72_date'     => 'date',
     ];
 
     protected static function boot(): void

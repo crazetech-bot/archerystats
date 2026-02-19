@@ -153,7 +153,7 @@
         </main>
 
         <footer class="px-6 py-3 border-t border-gray-100">
-            <p class="text-xs text-gray-400">&copy; {{ date('Y') }} Archery Stats Management System</p>
+            <p class="text-xs text-gray-400">{{ $siteSettings['footer_text'] ?? ('© ' . date('Y') . ' Archery Stats Management System') }}</p>
         </footer>
     </div>
 </div>
