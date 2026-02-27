@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Club extends Model
 {
     protected $fillable = [
-        'name', 'location', 'contact_email', 'contact_phone', 'logo', 'active',
+        'name', 'description', 'location', 'contact_email', 'contact_phone',
+        'website', 'address', 'state', 'founded_year', 'registration_number',
+        'logo', 'active',
     ];
 
     protected $casts = [
-        'active' => 'boolean',
+        'active'       => 'boolean',
+        'founded_year' => 'integer',
     ];
 
     public function users(): HasMany
@@ -23,5 +26,20 @@ class Club extends Model
     public function archers(): HasMany
     {
         return $this->hasMany(Archer::class);
+    }
+
+    public function coaches(): HasMany
+    {
+        return $this->hasMany(Coach::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(ClubInvitation::class);
+    }
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->logo ? asset('storage/' . $this->logo) : null;
     }
 }

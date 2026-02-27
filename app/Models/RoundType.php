@@ -8,12 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class RoundType extends Model
 {
     protected $fillable = [
-        'name', 'category', 'distance_meters', 'num_ends',
-        'arrows_per_end', 'max_score_per_arrow', 'description', 'active',
+        'name', 'category', 'discipline', 'distance_meters', 'target_face_cm',
+        'distance_segments', 'scoring_system', 'num_ends', 'arrows_per_end',
+        'max_score_per_arrow', 'description', 'active',
     ];
 
     protected $casts = [
-        'active' => 'boolean',
+        'active'             => 'boolean',
+        'distance_segments'  => 'array',
     ];
 
     public function sessions(): HasMany

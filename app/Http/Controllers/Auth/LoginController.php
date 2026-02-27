@@ -24,6 +24,26 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            if ($user->isSuspended()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'email' => 'Your account has been suspended. Please contact the administrator.',
+                ])->onlyInput('email');
+            }
+
+            if ($user->role === 'archer' && $user->archer) {
+                return redirect()->route('archers.show', $user->archer);
+            }
+
+            if ($user->role === 'coach' && $user->coach) {
+                return redirect()->route('coaches.show', $user->coach);
+            }
+
             return redirect()->intended(route('archers.index'));
         }
 

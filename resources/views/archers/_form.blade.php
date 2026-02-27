@@ -2,6 +2,7 @@
       x-data="{
           photoPreview: '{{ $archer?->photo ? asset('storage/' . $archer->photo) : '' }}',
           showPreview: {{ $archer?->photo ? 'true' : 'false' }},
+          status: '{{ old('status', $archer?->status ?? 'active') }}',
           handlePhoto(e) {
               const file = e.target.files[0];
               if (file) {
@@ -15,7 +16,9 @@
 
     <div class="max-w-4xl mx-auto space-y-6">
 
-        {{-- Personal Details --}}
+        {{-- ============================================================ --}}
+        {{-- SECTION: Personal Information                                  --}}
+        {{-- ============================================================ --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
                  style="background: linear-gradient(135deg, #f8faff, #f0f4ff);">
@@ -25,20 +28,22 @@
                     </svg>
                 </span>
                 <div>
-                    <h2 class="text-sm font-bold text-gray-900">Personal Details</h2>
-                    <p class="text-xs text-gray-500">Basic identity information</p>
+                    <h2 class="text-sm font-bold text-gray-900">Personal Information</h2>
+                    <p class="text-xs text-gray-500">Registration identifiers and archery category</p>
                 </div>
             </div>
             <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
 
+                {{-- Ref No (read-only if exists) --}}
                 @if($archer?->ref_no)
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ref No</label>
-                        <input type="text" value="{{ $archer->ref_no }}" readonly
-                               class="block w-full rounded-xl border border-gray-200 bg-gray-50 text-sm font-mono text-gray-500 py-2.5 px-4 cursor-not-allowed">
-                    </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ref No</label>
+                    <input type="text" value="{{ $archer->ref_no }}" readonly
+                           class="block w-full rounded-xl border border-gray-200 bg-gray-50 text-sm font-mono text-gray-500 py-2.5 px-4 cursor-not-allowed">
+                </div>
                 @endif
 
+                {{-- Full Name --}}
                 <div class="{{ $archer?->ref_no ? '' : 'sm:col-span-2' }}">
                     <label for="name" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Full Name <span class="text-red-500 normal-case font-normal">*</span>
@@ -50,6 +55,7 @@
                     @error('name')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- Email --}}
                 <div>
                     <label for="email" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Email Address <span class="text-red-500 normal-case font-normal">*</span>
@@ -61,57 +67,123 @@
                     @error('email')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- MAREOS ID --}}
                 <div>
-                    <label for="date_of_birth" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Date of Birth <span class="text-red-500 normal-case font-normal">*</span>
-                    </label>
-                    <input type="date" id="date_of_birth" name="date_of_birth"
-                           value="{{ old('date_of_birth', $archer?->date_of_birth?->format('Y-m-d')) }}"
-                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition
-                                  @error('date_of_birth') border-red-400 bg-red-50 @enderror">
-                    @error('date_of_birth')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                    <label for="mareos_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">MAREOS ID</label>
+                    <input type="text" id="mareos_id" name="mareos_id"
+                           value="{{ old('mareos_id', $archer?->mareos_id) }}"
+                           placeholder="e.g. MAR-00001"
+                           class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4 outline-none transition
+                                  focus:ring-2 focus:bg-white
+                                  @error('mareos_id') border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500/20
+                                  @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
+                    @error('mareos_id')
+                        <p class="mt-1.5 text-xs font-semibold text-red-600 flex items-center gap-1">
+                            <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
                 </div>
 
-                @if($archer?->age !== null)
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Age</label>
-                        <div class="flex items-center rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-4">
-                            <span class="text-sm font-bold text-indigo-600">{{ $archer->age }}</span>
-                            <span class="text-sm text-gray-500 ml-1">years old</span>
-                        </div>
-                    </div>
-                @endif
-
+                {{-- WAREOS ID --}}
                 <div>
-                    <label for="gender" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                        Gender <span class="text-red-500 normal-case font-normal">*</span>
-                    </label>
-                    <select id="gender" name="gender"
-                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition
-                                   @error('gender') border-red-400 @enderror">
-                        <option value="">Select gender</option>
-                        <option value="male"   @selected(old('gender', $archer?->gender) === 'male')>Male</option>
-                        <option value="female" @selected(old('gender', $archer?->gender) === 'female')>Female</option>
+                    <label for="wareos_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">WAREOS ID</label>
+                    <input type="text" id="wareos_id" name="wareos_id"
+                           value="{{ old('wareos_id', $archer?->wareos_id) }}"
+                           placeholder="e.g. WAR-00001"
+                           class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4 outline-none transition
+                                  focus:ring-2 focus:bg-white
+                                  @error('wareos_id') border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500/20
+                                  @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
+                    @error('wareos_id')
+                        <p class="mt-1.5 text-xs font-semibold text-red-600 flex items-center gap-1">
+                            <svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                            </svg>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+
+                {{-- Division (single select) --}}
+                <div>
+                    <label for="division" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Division <span class="text-red-500 normal-case font-normal">*</span></label>
+                    <select id="division" name="division"
+                            class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                   focus:ring-2 focus:bg-white outline-none transition
+                                   @error('division') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                   @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
+                        <option value="">— Select Division —</option>
+                        @foreach(\App\Models\Archer::DIVISIONS as $div)
+                            <option value="{{ $div }}" @selected(old('division', $archer?->division) === $div)>{{ $div }}</option>
+                        @endforeach
                     </select>
-                    @error('gender')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                    @error('division')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- Classification (radio cards) --}}
+                <div class="sm:col-span-2">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Classification <span class="text-red-500 normal-case font-normal">*</span> <span class="text-gray-400 font-normal normal-case">(choose one)</span></p>
+                    @php
+                        $currentClass = old('classification', $archer?->classification);
+                        $clsOptions = [
+                            'U12'  => ['label' => 'Under 12',   'border' => '#38bdf8', 'bg' => '#f0f9ff', 'color' => '#0369a1'],
+                            'U15'  => ['label' => 'Under 15',   'border' => '#a78bfa', 'bg' => '#f5f3ff', 'color' => '#6d28d9'],
+                            'U18'  => ['label' => 'Under 18',   'border' => '#fb7185', 'bg' => '#fff1f2', 'color' => '#be123c'],
+                            'Open' => ['label' => 'Open',       'border' => '#34d399', 'bg' => '#ecfdf5', 'color' => '#065f46'],
+                        ];
+                    @endphp
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3"
+                         x-data="{ selected: '{{ $currentClass ?? '' }}' }">
+                        @foreach($clsOptions as $cls => $opt)
+                            <label
+                                :style="selected === '{{ $cls }}'
+                                    ? 'border-color: {{ $opt['border'] }}; background-color: {{ $opt['bg'] }};'
+                                    : 'border-color: #e5e7eb; background-color: #f9fafb;'"
+                                class="flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 cursor-pointer transition-all">
+                                <input type="radio" name="classification" value="{{ $cls }}"
+                                       x-model="selected"
+                                       class="sr-only">
+                                <span class="text-lg font-black transition-colors"
+                                      :style="selected === '{{ $cls }}' ? 'color: {{ $opt['color'] }}' : 'color: #9ca3af'">{{ $cls }}</span>
+                                <span class="text-xs transition-colors"
+                                      :style="selected === '{{ $cls }}' ? 'color: {{ $opt['color'] }}' : 'color: #9ca3af'">{{ $opt['label'] }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('classification')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Para-Archery --}}
                 <div>
-                    <label for="phone" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Contact Number</label>
-                    <input type="tel" id="phone" name="phone" value="{{ old('phone', $archer?->phone) }}"
-                           placeholder="e.g. 012-3456789"
-                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                    <p class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Para-Archery <span class="text-red-500 normal-case font-normal">*</span></p>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="para_archery" value="0"
+                                   @checked(!old('para_archery', $archer?->para_archery))
+                                   class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="text-sm font-semibold text-gray-700">No</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="para_archery" value="1"
+                                   @checked(old('para_archery', $archer?->para_archery))
+                                   class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
+                            <span class="text-sm font-semibold text-gray-700">Yes</span>
+                        </label>
+                    </div>
                 </div>
 
+                {{-- Club --}}
                 <div x-data="{ addNew: {{ old('new_club_name') ? 'true' : 'false' }} }">
                     <label for="club_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Club</label>
                     <select id="club_id" name="club_id" x-show="!addNew"
-                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
-                        <option value="">— No Club —</option>
+                            class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                   focus:ring-2 focus:bg-white outline-none transition
+                                   @error('club_id') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                   @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
+                        <option value="">— Select Club —</option>
                         @foreach($clubs as $club)
                             <option value="{{ $club->id }}" @selected(old('club_id', $archer?->club_id) == $club->id)>
                                 {{ $club->name }}
@@ -127,21 +199,43 @@
                         <span x-show="!addNew">+ Add new club</span>
                         <span x-show="addNew" x-cloak>← Select existing club</span>
                     </button>
+                    @error('club_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- State Team --}}
                 <div>
-                    <label for="team" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State / National Team</label>
-                    <input type="text" id="team" name="team" value="{{ old('team', $archer?->team) }}"
-                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
-                </div>
-
-                <div>
-                    <label for="hand" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">RH / LH</label>
-                    <select id="hand" name="hand"
+                    <label for="state_team_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State Team</label>
+                    <select id="state_team_id" name="state_team_id"
                             class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition
-                                   @error('hand') border-red-400 @enderror">
+                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                        <option value="">— None —</option>
+                        @foreach($stateTeams ?? [] as $st)
+                            <option value="{{ $st->id }}" @selected(old('state_team_id', $archer?->state_team_id) == $st->id)>{{ $st->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('state_team_id')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- National Team --}}
+                <div>
+                    <label for="national_team" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">National Team</label>
+                    <select id="national_team" name="national_team"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                        @foreach(\App\Models\Archer::NATIONAL_TEAM_OPTIONS as $opt)
+                            <option value="{{ $opt }}" @selected(old('national_team', $archer?->national_team ?? 'No') === $opt)>{{ $opt }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- RH / LH --}}
+                <div>
+                    <label for="hand" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">RH / LH <span class="text-red-500 normal-case font-normal">*</span></label>
+                    <select id="hand" name="hand"
+                            class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                   focus:ring-2 focus:bg-white outline-none transition
+                                   @error('hand') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                   @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
                         <option value="">— Select —</option>
                         <option value="right" @selected(old('hand', $archer?->hand) === 'right')>Right Handed</option>
                         <option value="left"  @selected(old('hand', $archer?->hand) === 'left')>Left Handed</option>
@@ -149,52 +243,209 @@
                     @error('hand')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- Status --}}
+                <div>
+                    <label for="status" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Status <span class="text-red-500 normal-case font-normal">*</span></label>
+                    <select id="status" name="status" x-model="status"
+                            class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                   focus:ring-2 focus:bg-white outline-none transition
+                                   @error('status') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                   @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
+                        @foreach(\App\Models\Archer::STATUS_OPTIONS as $val => $label)
+                            <option value="{{ $val }}" @selected(old('status', $archer?->status ?? 'active') === $val)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    @error('status')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Injury Details (shown only when status = injury) --}}
+                <div class="col-span-full" x-show="status === 'injury'" x-cloak>
+                    <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+                        <p class="text-xs font-bold text-red-700 uppercase tracking-widest mb-3">Injury Details</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label for="injury_date" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Date of Injury</label>
+                                <input type="date" id="injury_date" name="injury_date"
+                                       value="{{ old('injury_date', $archer?->injury_date?->format('Y-m-d')) }}"
+                                       class="block w-full rounded-xl border border-gray-300 bg-white text-sm py-2.5 px-4
+                                              focus:border-red-400 focus:ring-2 focus:ring-red-400/20 outline-none transition">
+                                @error('injury_date')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                            </div>
+                            <div>
+                                <label for="injury_type" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Type of Injury</label>
+                                <input type="text" id="injury_type" name="injury_type"
+                                       value="{{ old('injury_type', $archer?->injury_type) }}"
+                                       placeholder="e.g. Shoulder strain"
+                                       class="block w-full rounded-xl border border-gray-300 bg-white text-sm py-2.5 px-4
+                                              focus:border-red-400 focus:ring-2 focus:ring-red-400/20 outline-none transition">
+                            </div>
+                            <div>
+                                <label for="injury_return_date" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Expected Return Date</label>
+                                <input type="date" id="injury_return_date" name="injury_return_date"
+                                       value="{{ old('injury_return_date', $archer?->injury_return_date?->format('Y-m-d')) }}"
+                                       class="block w-full rounded-xl border border-gray-300 bg-white text-sm py-2.5 px-4
+                                              focus:border-red-400 focus:ring-2 focus:ring-red-400/20 outline-none transition">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        {{-- Location --}}
+        {{-- ============================================================ --}}
+        {{-- SECTION 1.1: Athlete Profile                                  --}}
+        {{-- ============================================================ --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
                  style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
                 <span class="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                     <svg class="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
                     </svg>
                 </span>
                 <div>
-                    <h2 class="text-sm font-bold text-gray-900">Location</h2>
-                    <p class="text-xs text-gray-500">Address and region details</p>
+                    <h2 class="text-sm font-bold text-gray-900">1.1 &nbsp; Athlete Profile</h2>
+                    <p class="text-xs text-gray-500">Identity, date of birth and contact details</p>
                 </div>
             </div>
             <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
 
-                <div class="sm:col-span-2">
-                    <label for="address_line" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Address</label>
-                    <textarea id="address_line" name="address_line" rows="2"
-                              class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                     focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition resize-none">{{ old('address_line', $archer?->address_line) }}</textarea>
+                {{-- Date of Birth --}}
+                <div>
+                    <label for="date_of_birth" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Date of Birth <span class="text-red-500 normal-case font-normal">*</span>
+                    </label>
+                    <input type="date" id="date_of_birth" name="date_of_birth"
+                           value="{{ old('date_of_birth', $archer?->date_of_birth?->format('Y-m-d')) }}"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition
+                                  @error('date_of_birth') border-red-400 bg-red-50 @enderror">
+                    @error('date_of_birth')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- Age (read-only) --}}
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Age</label>
+                    <div class="flex items-center rounded-xl border border-gray-200 bg-gray-50 py-2.5 px-4">
+                        @if($archer?->age !== null)
+                            <span class="text-sm font-bold text-emerald-600">{{ $archer->age }}</span>
+                            <span class="text-sm text-gray-500 ml-1">years old</span>
+                        @else
+                            <span class="text-sm text-gray-400">— calculated from DOB</span>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- NRIC --}}
+                <div>
+                    <label for="nric" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">NRIC Number <span class="text-red-500 normal-case font-normal">*</span></label>
+                    <input type="text" id="nric" name="nric" maxlength="12" inputmode="numeric" pattern="[0-9]{12}"
+                           value="{{ old('nric', $archer?->nric) }}"
+                           placeholder="123456789102"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition
+                                  @error('nric') border-red-400 @enderror">
+                    @error('nric')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Place of Birth --}}
+                <div>
+                    <label for="place_of_birth" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Place of Birth <span class="text-red-500 normal-case font-normal">*</span></label>
+                    <input type="text" id="place_of_birth" name="place_of_birth"
+                           value="{{ old('place_of_birth', $archer?->place_of_birth) }}"
+                           placeholder="e.g. Kuala Lumpur"
+                           class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                  focus:ring-2 focus:bg-white outline-none transition
+                                  @error('place_of_birth') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                  @else border-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 @enderror">
+                    @error('place_of_birth')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Gender --}}
+                <div>
+                    <label for="gender" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                        Gender <span class="text-red-500 normal-case font-normal">*</span>
+                    </label>
+                    <select id="gender" name="gender"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition
+                                   @error('gender') border-red-400 @enderror">
+                        <option value="">Select gender</option>
+                        <option value="male"   @selected(old('gender', $archer?->gender) === 'male')>Male</option>
+                        <option value="female" @selected(old('gender', $archer?->gender) === 'female')>Female</option>
+                    </select>
+                    @error('gender')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Contact Number --}}
+                <div>
+                    <label for="phone" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Contact Number <span class="text-red-500 normal-case font-normal">*</span></label>
+                    <input type="tel" id="phone" name="phone" value="{{ old('phone', $archer?->phone) }}"
+                           placeholder="e.g. 012-3456789"
+                           class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                  focus:ring-2 focus:bg-white outline-none transition
+                                  @error('phone') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                  @else border-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 @enderror">
+                    @error('phone')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Passport Number --}}
+                <div>
+                    <label for="passport_number" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Passport Number</label>
+                    <input type="text" id="passport_number" name="passport_number" maxlength="20"
+                           value="{{ old('passport_number', $archer?->passport_number) }}"
+                           placeholder="e.g. A12345678"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition">
+                </div>
+
+                {{-- Passport Expiry Date --}}
+                <div>
+                    <label for="passport_expiry_date" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Passport Expiry Date</label>
+                    <input type="date" id="passport_expiry_date" name="passport_expiry_date"
+                           value="{{ old('passport_expiry_date', $archer?->passport_expiry_date?->format('Y-m-d')) }}"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition">
+                </div>
+
+                {{-- Address of Residence --}}
+                <div class="sm:col-span-2">
+                    <label for="address_line" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Address of Residence <span class="text-red-500 normal-case font-normal">*</span></label>
+                    <textarea id="address_line" name="address_line" rows="2"
+                              class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                     focus:ring-2 focus:bg-white outline-none transition resize-none
+                                     @error('address_line') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                     @else border-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 @enderror">{{ old('address_line', $archer?->address_line) }}</textarea>
+                    @error('address_line')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                {{-- Postcode --}}
                 <div>
                     <label for="postcode" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Postcode</label>
                     <input type="text" id="postcode" name="postcode" maxlength="10"
                            value="{{ old('postcode', $archer?->postcode) }}"
                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition">
                 </div>
 
+                {{-- State of Residence --}}
                 <div>
-                    <label for="state" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
+                    <label for="state" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State of Residence <span class="text-red-500 normal-case font-normal">*</span></label>
                     <select id="state" name="state"
-                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                            class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                   focus:ring-2 focus:bg-white outline-none transition
+                                   @error('state') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                   @else border-gray-300 focus:border-emerald-500 focus:ring-emerald-500/20 @enderror">
                         <option value="">— Select State —</option>
                         @foreach($states as $s)
                             <option value="{{ $s }}" @selected(old('state', $archer?->state) === $s)>{{ $s }}</option>
                         @endforeach
                     </select>
+                    @error('state')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
+                {{-- Country --}}
                 <div>
                     <label for="country" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                         Country <span class="text-red-500 normal-case font-normal">*</span>
@@ -202,23 +453,140 @@
                     <input type="text" id="country" name="country"
                            value="{{ old('country', $archer?->country ?? 'Malaysia') }}"
                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition">
                 </div>
 
             </div>
         </div>
 
-        {{-- Equipment --}}
+        {{-- ============================================================ --}}
+        {{-- SECTION 1.2: Next of Kin                                      --}}
+        {{-- ============================================================ --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
                  style="background: linear-gradient(135deg, #fff7ed, #ffedd5);">
                 <span class="h-8 w-8 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0">
                     <svg class="h-4 w-4 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">1.2 &nbsp; Next of Kin</h2>
+                    <p class="text-xs text-gray-500">Emergency contact information</p>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                <div>
+                    <label for="next_of_kin_name" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                    <input type="text" id="next_of_kin_name" name="next_of_kin_name"
+                           value="{{ old('next_of_kin_name', $archer?->next_of_kin_name) }}"
+                           placeholder="e.g. Ahmad bin Ali"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:bg-white outline-none transition">
+                </div>
+
+                <div>
+                    <label for="next_of_kin_relationship" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Relationship</label>
+                    <input type="text" id="next_of_kin_relationship" name="next_of_kin_relationship"
+                           value="{{ old('next_of_kin_relationship', $archer?->next_of_kin_relationship) }}"
+                           placeholder="e.g. Father, Mother, Spouse"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:bg-white outline-none transition">
+                </div>
+
+                <div>
+                    <label for="next_of_kin_email" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email Address</label>
+                    <input type="email" id="next_of_kin_email" name="next_of_kin_email"
+                           value="{{ old('next_of_kin_email', $archer?->next_of_kin_email) }}"
+                           placeholder="e.g. parent@email.com"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:bg-white outline-none transition">
+                    @error('next_of_kin_email')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="next_of_kin_phone" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Contact Number</label>
+                    <input type="tel" id="next_of_kin_phone" name="next_of_kin_phone"
+                           value="{{ old('next_of_kin_phone', $archer?->next_of_kin_phone) }}"
+                           placeholder="e.g. 012-3456789"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:bg-white outline-none transition">
+                </div>
+
+            </div>
+        </div>
+
+        {{-- ============================================================ --}}
+        {{-- SECTION 1.3: Education Background                             --}}
+        {{-- ============================================================ --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+                 style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe);">
+                <span class="h-8 w-8 rounded-xl bg-sky-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="h-4 w-4 text-sky-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/>
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">1.3 &nbsp; Education Background</h2>
+                    <p class="text-xs text-gray-500">School and educational institution</p>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                <div class="sm:col-span-2">
+                    <label for="school" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">School / Institution</label>
+                    <input type="text" id="school" name="school"
+                           value="{{ old('school', $archer?->school) }}"
+                           placeholder="e.g. SMK Damansara Utama"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:bg-white outline-none transition">
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="school_address" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">School Address</label>
+                    <textarea id="school_address" name="school_address" rows="2"
+                              class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                     focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:bg-white outline-none transition resize-none">{{ old('school_address', $archer?->school_address) }}</textarea>
+                </div>
+
+                <div>
+                    <label for="school_postcode" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Postcode</label>
+                    <input type="text" id="school_postcode" name="school_postcode" maxlength="10"
+                           value="{{ old('school_postcode', $archer?->school_postcode) }}"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:bg-white outline-none transition">
+                </div>
+
+                <div>
+                    <label for="school_state" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
+                    <select id="school_state" name="school_state"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 focus:bg-white outline-none transition">
+                        <option value="">— Select State —</option>
+                        @foreach($states as $s)
+                            <option value="{{ $s }}" @selected(old('school_state', $archer?->school_state) === $s)>{{ $s }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- ============================================================ --}}
+        {{-- 1.4 Equipment                                                  --}}
+        {{-- ============================================================ --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+                 style="background: linear-gradient(135deg, #fdf4ff, #fae8ff);">
+                <span class="h-8 w-8 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l5.654-4.654m5.896-2.572c.083-.283.27-.576.604-.818L21 8.25l-4.5-4.5-2.053 2.053c-.242.334-.535.52-.818.604m-5.585 5.585L3 21"/>
                     </svg>
                 </span>
                 <div>
-                    <h2 class="text-sm font-bold text-gray-900">Equipment</h2>
+                    <h2 class="text-sm font-bold text-gray-900">1.4 Equipment</h2>
                     <p class="text-xs text-gray-500">Arrow and limb setup</p>
                 </div>
             </div>
@@ -294,82 +662,6 @@
             </div>
         </div>
 
-        {{-- Archery Details: Division + Classification --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
-                 style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
-                <span class="h-8 w-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                    <svg class="h-4 w-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 6a4 4 0 100 8 4 4 0 000-8zm0 2a2 2 0 110 4 2 2 0 010-4z"/>
-                    </svg>
-                </span>
-                <div>
-                    <h2 class="text-sm font-bold text-gray-900">Archery Details</h2>
-                    <p class="text-xs text-gray-500">Division, classification and category</p>
-                </div>
-            </div>
-            <div class="p-6 space-y-6">
-
-                {{-- Division --}}
-                <div>
-                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Division <span class="text-gray-400 font-normal normal-case">(select all that apply)</span></p>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        @foreach($divisions as $div)
-                            @php $checked = in_array($div, old('divisions', $archer?->divisions ?? [])); @endphp
-                            <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all
-                                          {{ $checked ? 'border-amber-400 bg-amber-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300' }}"
-                                   x-data="{ checked: {{ $checked ? 'true' : 'false' }} }"
-                                   :class="checked ? 'border-amber-400 bg-amber-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300'">
-                                <input type="checkbox" name="divisions[]" value="{{ $div }}"
-                                       @checked($checked)
-                                       x-model="checked"
-                                       class="h-4 w-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400">
-                                <span class="text-sm font-semibold" :class="checked ? 'text-amber-700' : 'text-gray-600'">{{ $div }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                    @error('divisions')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
-
-                {{-- Divider --}}
-                <div class="border-t border-gray-100"></div>
-
-                {{-- Classification --}}
-                <div>
-                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Classification <span class="text-gray-400 font-normal normal-case">(choose one)</span></p>
-                    @php
-                        $currentClass = old('classification', $archer?->classification);
-                        $clsOptions = [
-                            'U12'  => ['label' => 'Under 12',   'border' => '#38bdf8', 'bg' => '#f0f9ff', 'color' => '#0369a1'],
-                            'U15'  => ['label' => 'Under 15',   'border' => '#a78bfa', 'bg' => '#f5f3ff', 'color' => '#6d28d9'],
-                            'U18'  => ['label' => 'Under 18',   'border' => '#fb7185', 'bg' => '#fff1f2', 'color' => '#be123c'],
-                            'Open' => ['label' => 'Open Class', 'border' => '#34d399', 'bg' => '#ecfdf5', 'color' => '#065f46'],
-                        ];
-                    @endphp
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3"
-                         x-data="{ selected: '{{ $currentClass ?? '' }}' }">
-                        @foreach($clsOptions as $cls => $opt)
-                            <label
-                                :style="selected === '{{ $cls }}'
-                                    ? 'border-color: {{ $opt['border'] }}; background-color: {{ $opt['bg'] }};'
-                                    : 'border-color: #e5e7eb; background-color: #f9fafb;'"
-                                class="flex flex-col items-center gap-1.5 p-4 rounded-xl border-2 cursor-pointer transition-all">
-                                <input type="radio" name="classification" value="{{ $cls }}"
-                                       x-model="selected"
-                                       class="sr-only">
-                                <span class="text-lg font-black transition-colors"
-                                      :style="selected === '{{ $cls }}' ? 'color: {{ $opt['color'] }}' : 'color: #9ca3af'">{{ $cls }}</span>
-                                <span class="text-xs transition-colors"
-                                      :style="selected === '{{ $cls }}' ? 'color: {{ $opt['color'] }}' : 'color: #9ca3af'">{{ $opt['label'] }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                    @error('classification')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
-                </div>
-
-            </div>
-        </div>
-
         {{-- Personal Best (Unofficial — Training) --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
@@ -387,7 +679,6 @@
             <div class="p-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-                    {{-- 36 Arrows --}}
                     <div class="rounded-2xl border border-sky-100 bg-sky-50/40 p-5 space-y-4">
                         <p class="text-xs font-bold text-sky-700 uppercase tracking-wider flex items-center gap-1.5">
                             <span class="inline-flex h-5 w-5 rounded-full bg-sky-200 text-sky-800 text-xs font-black items-center justify-center">36</span>
@@ -410,7 +701,6 @@
                         </div>
                     </div>
 
-                    {{-- 72 Arrows --}}
                     <div class="rounded-2xl border border-sky-100 bg-sky-50/40 p-5 space-y-4">
                         <p class="text-xs font-bold text-sky-700 uppercase tracking-wider flex items-center gap-1.5">
                             <span class="inline-flex h-5 w-5 rounded-full bg-sky-200 text-sky-800 text-xs font-black items-center justify-center">72</span>
@@ -454,7 +744,6 @@
             <div class="p-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-                    {{-- Official 36 Arrows --}}
                     <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 space-y-4">
                         <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
                             <span class="inline-flex h-5 w-5 rounded-full bg-emerald-200 text-emerald-800 text-xs font-black items-center justify-center">36</span>
@@ -485,7 +774,6 @@
                         </div>
                     </div>
 
-                    {{-- Official 72 Arrows --}}
                     <div class="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 space-y-4">
                         <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
                             <span class="inline-flex h-5 w-5 rounded-full bg-emerald-200 text-emerald-800 text-xs font-black items-center justify-center">72</span>
@@ -576,6 +864,52 @@
                              focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition resize-none">{{ old('notes', $archer?->notes) }}</textarea>
         </div>
 
+        {{-- Login Credentials --}}
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0;">
+            <div class="px-6 py-4 flex items-center gap-3" style="background:#0f172a; border-bottom:3px solid #f59e0b;">
+                <svg class="h-5 w-5 flex-shrink-0" style="color:#f59e0b;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                </svg>
+                <div>
+                    <h2 class="text-sm font-black text-white uppercase tracking-widest" style="font-family:'Barlow',sans-serif;">Login Credentials</h2>
+                    <p class="text-xs font-medium" style="color:#94a3b8;">
+                        @if(isset($archer) && $archer->exists)
+                            Leave blank to keep the current password
+                        @else
+                            Set the archer's login password
+                        @endif
+                    </p>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                    <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                        Password
+                        @if(!isset($archer) || !$archer->exists)
+                            <span class="text-red-500 normal-case font-normal">*</span>
+                        @else
+                            <span class="text-slate-400 normal-case font-normal text-xs">(optional)</span>
+                        @endif
+                    </label>
+                    <input type="password" id="password" name="password"
+                           placeholder="{{ (isset($archer) && $archer->exists) ? 'Leave blank to keep current' : 'Min. 8 characters' }}"
+                           class="block w-full rounded-xl border border-slate-300 bg-slate-50 text-sm py-2.5 px-4
+                                  focus:border-amber-500 focus:ring-2 focus:bg-white outline-none transition
+                                  @error('password') border-red-400 bg-red-50 @enderror">
+                    @error('password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="password_confirmation" class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                        Confirm Password
+                    </label>
+                    <input type="password" id="password_confirmation" name="password_confirmation"
+                           placeholder="Repeat password"
+                           class="block w-full rounded-xl border border-slate-300 bg-slate-50 text-sm py-2.5 px-4
+                                  focus:border-amber-500 focus:ring-2 focus:bg-white outline-none transition">
+                </div>
+            </div>
+        </div>
+
         {{-- Submit --}}
         <div class="flex items-center justify-end gap-3 pb-4">
             <a href="{{ route('archers.index') }}"
@@ -584,9 +918,9 @@
                 Cancel
             </a>
             <button type="submit"
-                    class="px-8 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95"
-                    style="background: linear-gradient(135deg, #4338ca, #6366f1);">
-                {{ isset($archer) && $archer->exists ? 'Update Archer' : 'Create Archer' }}
+                    class="px-8 py-2.5 rounded-xl text-sm font-black shadow-lg transition-all active:scale-95"
+                    style="background:#f59e0b; color:#0f172a; font-family:'Barlow',sans-serif; letter-spacing:0.04em;">
+                {{ isset($archer) && $archer->exists ? 'UPDATE ARCHER' : 'CREATE ARCHER' }}
             </button>
         </div>
 

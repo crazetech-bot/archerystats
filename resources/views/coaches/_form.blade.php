@@ -122,10 +122,16 @@
                 </div>
 
                 <div>
-                    <label for="team" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State / National Team</label>
-                    <input type="text" id="team" name="team" value="{{ old('team', $coach?->team) }}"
-                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                  focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition">
+                    <label for="state_team_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State / National Team</label>
+                    <select id="state_team_id" name="state_team_id"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition">
+                        <option value="">— None —</option>
+                        @foreach($stateTeams ?? [] as $st)
+                            <option value="{{ $st->id }}" @selected(old('state_team_id', $coach?->state_team_id) == $st->id)>{{ $st->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('state_team_id')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
@@ -141,6 +147,21 @@
                         @endforeach
                     </select>
                     @error('coaching_level')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="sports_science_course" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Sports Science Course</label>
+                    <select id="sports_science_course" name="sports_science_course"
+                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                   focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition">
+                        <option value="">— Select Course —</option>
+                        @foreach(\App\Models\Coach::SPORTS_SCIENCE_COURSES as $course)
+                            <option value="{{ $course }}" @selected(old('sports_science_course', $coach?->sports_science_course) === $course)>
+                                {{ $course }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('sports_science_course')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
             </div>
@@ -256,17 +277,63 @@
                              focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition resize-none">{{ old('notes', $coach?->notes) }}</textarea>
         </div>
 
+        {{-- Login Credentials --}}
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0;">
+            <div class="px-6 py-4 flex items-center gap-3" style="background:#0f172a; border-bottom:3px solid #f59e0b;">
+                <svg class="h-5 w-5 flex-shrink-0" style="color:#f59e0b;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+                </svg>
+                <div>
+                    <h2 class="text-sm font-black text-white uppercase tracking-widest" style="font-family:'Barlow',sans-serif;">Login Credentials</h2>
+                    <p class="text-xs font-medium" style="color:#94a3b8;">
+                        @if(isset($coach) && $coach->exists)
+                            Leave blank to keep the current password
+                        @else
+                            Set the coach's login password
+                        @endif
+                    </p>
+                </div>
+            </div>
+            <div class="p-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                <div>
+                    <label for="password" class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                        Password
+                        @if(!isset($coach) || !$coach->exists)
+                            <span class="text-red-500 normal-case font-normal">*</span>
+                        @else
+                            <span class="text-slate-400 normal-case font-normal text-xs">(optional)</span>
+                        @endif
+                    </label>
+                    <input type="password" id="password" name="password"
+                           placeholder="{{ (isset($coach) && $coach->exists) ? 'Leave blank to keep current' : 'Min. 8 characters' }}"
+                           class="block w-full rounded-xl border border-slate-300 bg-slate-50 text-sm py-2.5 px-4
+                                  focus:border-amber-500 focus:ring-2 focus:bg-white outline-none transition
+                                  @error('password') border-red-400 bg-red-50 @enderror">
+                    @error('password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="password_confirmation" class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5">
+                        Confirm Password
+                    </label>
+                    <input type="password" id="password_confirmation" name="password_confirmation"
+                           placeholder="Repeat password"
+                           class="block w-full rounded-xl border border-slate-300 bg-slate-50 text-sm py-2.5 px-4
+                                  focus:border-amber-500 focus:ring-2 focus:bg-white outline-none transition">
+                </div>
+            </div>
+        </div>
+
         {{-- Submit --}}
         <div class="flex items-center justify-end gap-3 pb-4">
             <a href="{{ route('coaches.index') }}"
-               class="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-sm font-semibold text-gray-700
-                      hover:bg-gray-50 transition-colors shadow-sm">
+               class="px-5 py-2.5 rounded-xl border text-sm font-semibold transition-colors shadow-sm"
+               style="border-color:#e2e8f0; color:#64748b; background:#fff;">
                 Cancel
             </a>
             <button type="submit"
-                    class="px-8 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95"
-                    style="background: linear-gradient(135deg, #0d9488, #14b8a6);">
-                {{ isset($coach) && $coach->exists ? 'Update Coach' : 'Create Coach' }}
+                    class="px-8 py-2.5 rounded-xl text-sm font-black shadow-lg transition-all active:scale-95"
+                    style="background:#f59e0b; color:#0f172a; font-family:'Barlow',sans-serif; letter-spacing:0.04em;">
+                {{ isset($coach) && $coach->exists ? 'UPDATE COACH' : 'CREATE COACH' }}
             </button>
         </div>
 

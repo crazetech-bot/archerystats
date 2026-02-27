@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'role', 'club_id',
+        'name', 'email', 'password', 'role', 'club_id', 'status',
     ];
 
     protected $hidden = [
@@ -33,6 +33,11 @@ class User extends Authenticatable
     public function archer(): HasOne
     {
         return $this->hasOne(Archer::class);
+    }
+
+    public function coach(): HasOne
+    {
+        return $this->hasOne(Coach::class);
     }
 
     public function hasRole(string|array $roles): bool
@@ -58,5 +63,15 @@ class User extends Authenticatable
     public function isArcher(): bool
     {
         return $this->role === 'archer';
+    }
+
+    public function isStateAdmin(): bool
+    {
+        return in_array($this->role, ['super_admin', 'state_admin']);
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended';
     }
 }

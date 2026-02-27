@@ -22,13 +22,14 @@ class End extends Model
         return $this->belongsTo(Score::class);
     }
 
-    public function calculateTotal(): int
+    public function calculateTotal(string $scoringSystem = 'standard'): int
     {
-        $total = 0;
+        $xPoints = ($scoringSystem === 'field') ? 6 : 10;
+        $total   = 0;
         foreach ($this->arrow_values as $arrow) {
             if ($arrow === 'X') {
-                $total += 10;
-            } elseif ($arrow !== 'M' && $arrow !== '') {
+                $total += $xPoints;
+            } elseif ($arrow !== null && $arrow !== 'M' && $arrow !== '') {
                 $total += (int) $arrow;
             }
         }

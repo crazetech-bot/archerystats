@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Archer;
+use App\Models\Club;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,15 +36,49 @@ class SettingController extends Controller
         $newThisMonth  = Archer::whereMonth('created_at', now()->month)
                                ->whereYear('created_at', now()->year)
                                ->count();
+        $adminUsers    = \App\Models\User::whereIn('role', ['super_admin', 'club_admin', 'state_admin'])
+                               ->orderBy('role')->orderBy('name')->get();
+        $clubs         = Club::orderBy('name')->get();
+        $archerUsers   = \App\Models\User::where('role', 'archer')
+                               ->with('archer')->orderBy('name')->get();
+        $coachUsers    = \App\Models\User::where('role', 'coach')
+                               ->with('coach')->orderBy('name')->get();
+        $clubAdminUsers = \App\Models\User::where('role', 'club_admin')
+                               ->with('club')->orderBy('name')->get();
 
         return view('admin.settings.index', [
-            'settings'      => $settings,
-            'googleFonts'   => self::GOOGLE_FONTS,
-            'headingSizes'  => self::HEADING_SIZES,
-            'recentArchers' => $recentArchers,
-            'totalArchers'  => $totalArchers,
-            'newThisMonth'  => $newThisMonth,
+            'settings'       => $settings,
+            'googleFonts'    => self::GOOGLE_FONTS,
+            'headingSizes'   => self::HEADING_SIZES,
+            'recentArchers'  => $recentArchers,
+            'totalArchers'   => $totalArchers,
+            'newThisMonth'   => $newThisMonth,
+            'adminUsers'     => $adminUsers,
+            'clubs'          => $clubs,
+            'archerUsers'    => $archerUsers,
+            'coachUsers'     => $coachUsers,
+            'clubAdminUsers' => $clubAdminUsers,
+            'regSettings'    => [
+                'archer' => Setting::get('reg_archer_open', '1'),
+                'coach'  => Setting::get('reg_coach_open',  '1'),
+                'club'   => Setting::get('reg_club_open',   '1'),
+            ],
         ]);
+    }
+
+    public function updateRegistration(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'type'  => ['required', 'in:archer,coach,club'],
+            'value' => ['required', 'in:0,1'],
+        ]);
+
+        Setting::set('reg_' . $validated['type'] . '_open', $validated['value']);
+
+        $label  = ['archer' => 'Archer', 'coach' => 'Coach', 'club' => 'Club'][$validated['type']];
+        $status = $validated['value'] === '1' ? 'registration opened' : 'registration suspended';
+
+        return redirect()->back()->with('success', "{$label} {$status} successfully.");
     }
 
     public function update(Request $request): RedirectResponse

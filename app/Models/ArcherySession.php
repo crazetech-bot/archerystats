@@ -12,13 +12,15 @@ class ArcherySession extends Model
     protected $table = 'archery_sessions';
 
     protected $fillable = [
-        'archer_id', 'round_type_id', 'date', 'location',
-        'weather', 'is_competition', 'competition_name', 'notes',
+        'archer_id', 'round_type_id', 'distance_meters', 'target_face_cm',
+        'date', 'location', 'weather', 'is_competition', 'competition_name', 'notes',
+        'training_session_id', 'assigned_by_coach',
     ];
 
     protected $casts = [
-        'date'           => 'date',
-        'is_competition' => 'boolean',
+        'date'               => 'date',
+        'is_competition'     => 'boolean',
+        'assigned_by_coach'  => 'boolean',
     ];
 
     public function archer(): BelongsTo
@@ -34,5 +36,22 @@ class ArcherySession extends Model
     public function score(): HasOne
     {
         return $this->hasOne(Score::class, 'archery_session_id');
+    }
+
+    public function trainingSession(): BelongsTo
+    {
+        return $this->belongsTo(TrainingSession::class);
+    }
+
+    /** Effective distance: session override or round type default */
+    public function getEffectiveDistanceAttribute(): ?int
+    {
+        return $this->distance_meters ?? $this->roundType?->distance_meters;
+    }
+
+    /** Effective target face: session override or round type default */
+    public function getEffectiveFaceAttribute(): ?int
+    {
+        return $this->target_face_cm ?? $this->roundType?->target_face_cm;
     }
 }

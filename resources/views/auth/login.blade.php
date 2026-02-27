@@ -6,12 +6,12 @@
     }
     $loginBodyFont    = $s['login_body_font']    ?? $s['body_font']    ?? 'Inter';
     $loginHeadingFont = $s['login_heading_font'] ?? $s['heading_font'] ?? $loginBodyFont;
-    $loginHeadingSize = (int)($s['login_heading_size'] ?? $s['heading_size'] ?? '28');
+    $loginHeadingSize = (int)($s['login_heading_size'] ?? $s['heading_size'] ?? '32');
     $logoPath         = !empty($s['logo']) ? asset('storage/' . $s['logo']) : null;
     $footerText       = $s['footer_text'] ?? ('© ' . date('Y') . ' Archery Stats Management System');
-    $fontsToLoad      = array_unique([$loginBodyFont, $loginHeadingFont]);
+    $fontsToLoad      = array_unique([$loginBodyFont, $loginHeadingFont, 'Barlow']);
     $fontsParam       = collect($fontsToLoad)
-                            ->map(fn($f) => str_replace(' ', '+', $f) . ':wght@400;500;600;700')
+                            ->map(fn($f) => str_replace(' ', '+', $f) . ':wght@400;500;600;700;800;900')
                             ->join('&family=');
 @endphp
 <!DOCTYPE html>
@@ -26,21 +26,26 @@
     <link href="https://fonts.googleapis.com/css2?family={{ $fontsParam }}&display=swap" rel="stylesheet">
     <style>
         body { font-family: '{{ $loginBodyFont }}', sans-serif; }
-        .login-heading { font-family: '{{ $loginHeadingFont }}', sans-serif; font-size: {{ $loginHeadingSize }}px; line-height: 1.2; }
+        .login-heading { font-family: '{{ $loginHeadingFont }}', sans-serif; font-size: {{ $loginHeadingSize }}px; line-height: 1.1; }
 
         .branding-panel {
-            background: #0c0a1e;
+            background: #0f172a;
             background-image:
-                radial-gradient(ellipse 80% 55% at 50% -10%, rgba(99,102,241,0.45) 0%, transparent 65%),
-                radial-gradient(ellipse 50% 40% at 85% 85%,  rgba(139,92,246,0.2)  0%, transparent 55%);
+                radial-gradient(ellipse 70% 50% at 50% 0%,   rgba(245,158,11,0.18) 0%, transparent 65%),
+                radial-gradient(ellipse 40% 35% at 90% 90%,  rgba(245,158,11,0.10) 0%, transparent 55%);
         }
         .dot-grid {
-            background-image: radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px);
-            background-size: 24px 24px;
+            background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+        .target-ring {
+            border: 2px solid rgba(245,158,11,0.25);
+            border-radius: 50%;
+            position: absolute;
         }
 
         @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(18px); }
+            from { opacity: 0; transform: translateY(20px); }
             to   { opacity: 1; transform: translateY(0); }
         }
         .fade-1 { animation: fadeUp 0.45s 0.00s ease both; }
@@ -49,82 +54,109 @@
         .fade-4 { animation: fadeUp 0.45s 0.24s ease both; }
     </style>
 </head>
-<body class="h-full bg-white">
+<body class="h-full" style="background:#f1f5f9;">
 
 <div class="min-h-screen flex">
 
-    {{-- ── Left: Branding panel ── --}}
+    {{-- Left: Branding panel --}}
     <div class="hidden lg:flex lg:w-[46%] xl:w-[48%] flex-col branding-panel relative overflow-hidden">
         <div class="absolute inset-0 dot-grid pointer-events-none"></div>
+
+        {{-- Decorative target rings --}}
+        <div class="target-ring" style="width:500px;height:500px;top:-120px;left:-180px;"></div>
+        <div class="target-ring" style="width:340px;height:340px;top:-40px;left:-100px;"></div>
+        <div class="target-ring" style="width:180px;height:180px;top:30px;left:-30px;"></div>
+        <div class="target-ring" style="width:500px;height:500px;bottom:-200px;right:-200px;border-color:rgba(245,158,11,0.12);"></div>
 
         {{-- Centre content --}}
         <div class="relative z-10 flex flex-col items-center justify-center flex-1 px-14 text-center">
 
-            {{-- Logo --}}
+            {{-- Logo / Icon --}}
             @if($logoPath)
                 <div class="mb-8 p-5 rounded-3xl"
-                     style="background: rgba(255,255,255,0.07); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+                     style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);">
                     <img src="{{ $logoPath }}" alt="Logo" class="h-20 max-w-[200px] object-contain">
                 </div>
             @else
-                <div class="mb-8 h-20 w-20 rounded-3xl flex items-center justify-center"
-                     style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);">
-                    <svg class="h-10 w-10 text-white opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 6a4 4 0 100 8 4 4 0 000-8zm0 2a2 2 0 110 4 2 2 0 010-4z"/>
+                <div class="mb-8 h-24 w-24 rounded-3xl flex items-center justify-center"
+                     style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25);">
+                    <svg viewBox="0 0 48 48" fill="none" class="h-14 w-14">
+                        <circle cx="24" cy="24" r="22" stroke="#f59e0b" stroke-width="2"/>
+                        <circle cx="24" cy="24" r="15" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.6"/>
+                        <circle cx="24" cy="24" r="8"  stroke="#f59e0b" stroke-width="2" stroke-opacity="0.4"/>
+                        <circle cx="24" cy="24" r="3"  fill="#f59e0b"/>
                     </svg>
                 </div>
             @endif
 
-            <h1 class="text-4xl font-bold text-white tracking-tight">Archery Stats</h1>
-            <p class="mt-3 text-indigo-300 text-sm max-w-xs leading-relaxed">
+            <h1 class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</h1>
+            <p class="mt-4 text-sm font-medium max-w-xs leading-relaxed" style="color:#94a3b8;">
                 Precision tracking for every archer, every shot, every competition.
             </p>
 
-            {{-- Decorative pills --}}
+            {{-- Feature pills --}}
             <div class="mt-10 flex flex-wrap justify-center gap-2.5">
-                @foreach(['Archer Management', 'Score Tracking', 'Performance Analytics'] as $pill)
-                    <span class="px-4 py-1.5 rounded-full text-xs font-medium text-white/60"
-                          style="background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);">
+                @foreach(['Archer Management', 'Score Tracking', 'Coach Tools', 'Performance Analytics'] as $pill)
+                    <span class="px-4 py-1.5 rounded-full text-xs font-semibold"
+                          style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: #fbbf24;">
                         {{ $pill }}
                     </span>
                 @endforeach
             </div>
         </div>
 
-        {{-- Footer on branding side --}}
+        {{-- Footer --}}
         <div class="relative z-10 px-14 py-5">
-            <p class="text-xs text-white/25 text-center">{{ $footerText }}</p>
+            <p class="text-xs text-center" style="color:rgba(255,255,255,0.2);">{{ $footerText }}</p>
         </div>
     </div>
 
-    {{-- ── Right: Form panel ── --}}
+    {{-- Right: Form panel --}}
     <div class="flex-1 flex flex-col min-h-screen bg-white">
 
-        {{-- Vertical centering wrapper --}}
         <div class="flex-1 flex items-center justify-center px-6 py-12 sm:px-10">
             <div class="w-full max-w-sm">
 
-                {{-- Mobile logo (hidden on desktop) --}}
+                {{-- Mobile logo --}}
                 <div class="lg:hidden mb-8 text-center fade-1">
                     @if($logoPath)
                         <img src="{{ $logoPath }}" alt="Logo" class="h-14 object-contain mx-auto mb-4">
+                    @else
+                        <div class="mx-auto mb-4 h-14 w-14 rounded-2xl flex items-center justify-center"
+                             style="background:#0f172a;">
+                            <svg viewBox="0 0 48 48" fill="none" class="h-9 w-9">
+                                <circle cx="24" cy="24" r="22" stroke="#f59e0b" stroke-width="2.5"/>
+                                <circle cx="24" cy="24" r="13" stroke="#f59e0b" stroke-width="2" stroke-opacity="0.6"/>
+                                <circle cx="24" cy="24" r="4"  fill="#f59e0b"/>
+                            </svg>
+                        </div>
                     @endif
-                    <p class="text-lg font-bold text-gray-900">Archery Stats</p>
+                    <p class="text-lg font-black text-slate-900" style="font-family:'Barlow',sans-serif;">ARCHERY STATS</p>
                 </div>
 
                 {{-- Heading --}}
                 <div class="mb-8 fade-1">
-                    <h2 class="login-heading font-bold text-gray-900">Welcome back</h2>
-                    <p class="text-sm text-gray-500 mt-2">Sign in to your account to continue</p>
+                    <h2 class="login-heading font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Welcome back</h2>
+                    <p class="text-sm text-slate-500 mt-2">Sign in to your account to continue</p>
                 </div>
+
+                {{-- Status (e.g. password reset success) --}}
+                @if(session('status'))
+                    <div class="mb-5 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 fade-2">
+                        <svg class="h-5 w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd"/>
+                        </svg>
+                        <p class="text-sm text-green-700 font-medium">{{ session('status') }}</p>
+                    </div>
+                @endif
 
                 {{-- Error --}}
                 @if($errors->any())
-                    <div class="mb-5 flex items-center gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 fade-2">
+                    <div class="mb-5 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 fade-2">
                         <svg class="h-5 w-5 text-red-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd"/>
                         </svg>
-                        <p class="text-sm text-red-700">{{ $errors->first() }}</p>
+                        <p class="text-sm text-red-700 font-medium">{{ $errors->first() }}</p>
                     </div>
                 @endif
 
@@ -133,40 +165,47 @@
                     @csrf
 
                     <div class="fade-2">
-                        <label for="email" class="block text-sm font-semibold text-gray-700 mb-1.5">Email address</label>
+                        <label for="email" class="block text-sm font-bold text-slate-700 mb-1.5">Email address</label>
                         <input type="email" id="email" name="email"
                                value="{{ old('email') }}" required autofocus
                                placeholder="you@example.com"
-                               class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm
-                                      text-gray-900 placeholder-gray-400 transition
-                                      focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none
-                                      @error('email') border-red-400 bg-red-50 @enderror">
+                               class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm
+                                      text-slate-900 placeholder-slate-400 transition
+                                      focus:border-amber-500 focus:ring-2 focus:bg-white outline-none
+                                      @error('email') border-red-400 bg-red-50 @enderror"
+                               style="focus:ring-color:rgba(245,158,11,0.2);">
                     </div>
 
                     <div class="fade-3">
-                        <label for="password" class="block text-sm font-semibold text-gray-700 mb-1.5">Password</label>
+                        <label for="password" class="block text-sm font-bold text-slate-700 mb-1.5">Password</label>
                         <input type="password" id="password" name="password" required
                                placeholder="••••••••"
-                               class="block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm
-                                      text-gray-900 placeholder-gray-400 transition
-                                      focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none">
+                               class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm
+                                      text-slate-900 placeholder-slate-400 transition
+                                      focus:border-amber-500 focus:bg-white outline-none">
                     </div>
 
-                    <div class="flex items-center fade-3">
+                    <div class="flex items-center justify-between fade-3">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="remember"
-                                   class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                            <span class="text-sm text-gray-600">Remember me</span>
+                                   class="h-4 w-4 rounded border-slate-300 accent-amber-500 focus:ring-amber-500">
+                            <span class="text-sm text-slate-600 font-medium">Remember me</span>
                         </label>
+                        <a href="{{ route('password.request') }}"
+                           class="text-sm font-semibold" style="color:#f59e0b;">Forgot password?</a>
                     </div>
 
                     <div class="fade-4">
                         <button type="submit"
-                                class="w-full rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-md
-                                       transition-all duration-150 hover:opacity-90 active:scale-95"
-                                style="background: linear-gradient(135deg, #4338ca, #6366f1);">
-                            Sign in
+                                class="w-full rounded-xl px-4 py-3 text-sm font-black tracking-wide
+                                       transition-all duration-150 active:scale-95"
+                                style="background:#f59e0b; color:#0f172a; font-family:'Barlow',sans-serif; font-size:15px; letter-spacing:0.04em;">
+                            SIGN IN
                         </button>
+                        <p class="mt-4 text-center text-sm text-slate-500">
+                            Don't have an account?
+                            <a href="{{ route('register') }}" class="font-semibold" style="color:#f59e0b;">Sign up</a>
+                        </p>
                     </div>
                 </form>
 
@@ -174,8 +213,8 @@
         </div>
 
         {{-- Footer --}}
-        <div class="px-6 py-4 border-t border-gray-100">
-            <p class="text-xs text-gray-400 text-center">{{ $footerText }}</p>
+        <div class="px-6 py-4 border-t border-slate-100">
+            <p class="text-xs text-slate-400 text-center">{{ $footerText }}</p>
         </div>
 
     </div>

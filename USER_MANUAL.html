@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Archery Stats Management System — User Manual</title>
+<style>
+  /* ── Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #1e293b;
+    background: #fff;
+  }
+
+  /* ── Print / PDF ── */
+  @media print {
+    body { font-size: 11px; }
+    .cover { page-break-after: always; }
+    .toc   { page-break-after: always; }
+    h2 { page-break-before: auto; }
+    .no-break { page-break-inside: avoid; }
+    @page { margin: 20mm 18mm; }
+  }
+
+  /* ── Page wrapper ── */
+  .page { max-width: 900px; margin: 0 auto; padding: 40px 48px; }
+
+  /* ── Cover ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 60px 60px 40px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -120px; left: -120px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    border: 2px solid rgba(245,158,11,0.18);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    border: 2px solid rgba(245,158,11,0.12);
+  }
+  .cover-badge {
+    display: inline-block;
+    background: rgba(245,158,11,0.15);
+    border: 1px solid rgba(245,158,11,0.35);
+    color: #f59e0b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 28px;
+  }
+  .cover h1 {
+    font-size: 44px;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #fff;
+    margin-bottom: 10px;
+    position: relative; z-index: 1;
+  }
+  .cover h1 span { color: #f59e0b; }
+  .cover-subtitle {
+    font-size: 18px;
+    color: #94a3b8;
+    margin-bottom: 40px;
+    position: relative; z-index: 1;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    margin-top: 40px;
+    position: relative; z-index: 1;
+  }
+  .cover-meta-item { }
+  .cover-meta-item .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; }
+  .cover-meta-item .value { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-top: 2px; }
+  .cover-url {
+    margin-top: 8px;
+    color: #f59e0b;
+    font-size: 12px;
+  }
+  .cover-rings {
+    position: absolute;
+    bottom: -60px; right: -60px;
+    opacity: 0.08;
+  }
+
+  /* ── Table of contents ── */
+  .toc {
+    padding: 48px;
+    background: #f8fafc;
+    border-left: 4px solid #f59e0b;
+  }
+  .toc h2 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #0f172a;
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
+  }
+  .toc ol {
+    list-style: none;
+    counter-reset: toc-counter;
+  }
+  .toc > ol > li {
+    counter-increment: toc-counter;
+    margin-bottom: 6px;
+  }
+  .toc > ol > li::before {
+    content: counter(toc-counter) ". ";
+    font-weight: 700;
+    color: #f59e0b;
+    min-width: 24px;
+    display: inline-block;
+  }
+  .toc a { color: #1e293b; text-decoration: none; font-weight: 600; font-size: 13px; }
+  .toc a:hover { color: #f59e0b; }
+  .toc .sub {
+    margin-left: 24px;
+    list-style: none;
+    margin-top: 3px;
+  }
+  .toc .sub li { margin-bottom: 2px; }
+  .toc .sub li::before { content: "–  "; color: #94a3b8; }
+  .toc .sub a { font-weight: 400; font-size: 12px; color: #475569; }
+
+  /* ── Main content ── */
+  .content { padding: 48px; }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 900;
+    color: #0f172a;
+    margin-top: 48px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f59e0b;
+    letter-spacing: -0.01em;
+  }
+  h2:first-child { margin-top: 0; }
+
+  h3 {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    padding-left: 10px;
+    border-left: 3px solid #f59e0b;
+  }
+
+  h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-top: 18px;
+    margin-bottom: 8px;
+  }
+
+  p { margin-bottom: 12px; color: #334155; }
+
+  ul, ol {
+    margin: 10px 0 14px 20px;
+    color: #334155;
+  }
+  li { margin-bottom: 5px; }
+  li strong { color: #0f172a; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin: 16px 0 24px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead tr {
+    background: #0f172a;
+    color: #fff;
+  }
+  thead th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #fffbeb; }
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+  }
+  .tick { color: #16a34a; font-weight: 700; }
+  .cross { color: #94a3b8; }
+  .center { text-align: center; }
+
+  /* ── Callout boxes ── */
+  .note {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-left: 4px solid #f59e0b;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 12px;
+    color: #78350f;
+  }
+  .note strong { color: #92400e; }
+  .info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 12px;
+    color: #1e40af;
+  }
+
+  /* ── Code / monospace ── */
+  code {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 11.5px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: #be123c;
+  }
+
+  /* ── Section divider ── */
+  .divider {
+    border: none;
+    border-top: 1px solid #e2e8f0;
+    margin: 32px 0;
+  }
+
+  /* ── Role badge ── */
+  .role {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .role-super  { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+  .role-club   { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+  .role-coach  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .role-archer { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+
+  /* ── Step list ── */
+  .steps { counter-reset: steps; list-style: none; margin-left: 0; }
+  .steps li {
+    counter-increment: steps;
+    padding-left: 32px;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .steps li::before {
+    content: counter(steps);
+    position: absolute;
+    left: 0;
+    top: 1px;
+    width: 20px;
+    height: 20px;
+    background: #f59e0b;
+    color: #0f172a;
+    font-size: 10px;
+    font-weight: 900;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 24px 48px;
+    color: #94a3b8;
+    font-size: 11px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 48px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ COVER ═══════════════════ -->
+<div class="cover">
+  <svg class="cover-rings" viewBox="0 0 400 400" width="400" height="400" fill="none">
+    <circle cx="200" cy="200" r="190" stroke="white" stroke-width="1.5"/>
+    <circle cx="200" cy="200" r="140" stroke="white" stroke-width="1.5"/>
+    <circle cx="200" cy="200" r="90"  stroke="white" stroke-width="1.5"/>
+    <circle cx="200" cy="200" r="45"  stroke="white" stroke-width="1.5"/>
+    <circle cx="200" cy="200" r="12"  fill="white"/>
+  </svg>
+
+  <div class="cover-badge">User Manual</div>
+  <h1>ARCHERY<br><span>STATS</span></h1>
+  <div class="cover-subtitle">Management System</div>
+  <p style="color:#94a3b8;max-width:420px;font-size:13px;position:relative;z-index:1;">
+    A comprehensive web-based platform for managing archers, coaches, clubs and performance data.
+    This manual covers all modules and user roles.
+  </p>
+  <div class="cover-url">https://sportdns.com/laravel/public/</div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="label">Version</div>
+      <div class="value">1.1</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Last Updated</div>
+      <div class="value">February 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="label">Default Admin</div>
+      <div class="value">admin@archery.my</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ TOC ═══════════════════ -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li><a href="#s1">Introduction</a></li>
+    <li><a href="#s2">User Roles</a></li>
+    <li><a href="#s3">Getting Started</a>
+      <ul class="sub">
+        <li><a href="#s3-1">Registration</a></li>
+        <li><a href="#s3-2">Login</a></li>
+        <li><a href="#s3-3">Forgot Password</a></li>
+      </ul>
+    </li>
+    <li><a href="#s4">Navigation</a></li>
+    <li><a href="#s5">Module: Archers</a>
+      <ul class="sub">
+        <li><a href="#s5-1">Archer List</a></li>
+        <li><a href="#s5-2">Adding an Archer</a></li>
+        <li><a href="#s5-3">Archer Profile</a></li>
+        <li><a href="#s5-4">Editing Archer Information</a></li>
+        <li><a href="#s5-5">Personal Achievements</a></li>
+        <li><a href="#s5-6">Performance Analytics</a></li>
+      </ul>
+    </li>
+    <li><a href="#s6">Module: Coaches</a>
+      <ul class="sub">
+        <li><a href="#s6-1">Coach List</a></li>
+        <li><a href="#s6-2">Adding a Coach</a></li>
+        <li><a href="#s6-3">Coach Profile</a></li>
+        <li><a href="#s6-4">Assigning Archers</a></li>
+        <li><a href="#s6-5">Training Sessions</a></li>
+      </ul>
+    </li>
+    <li><a href="#s7">Module: Sessions &amp; Scorecards</a>
+      <ul class="sub">
+        <li><a href="#s7-1">Starting a New Session</a></li>
+        <li><a href="#s7-2">Round Types</a></li>
+        <li><a href="#s7-3">Entering Scores</a></li>
+        <li><a href="#s7-4">Scoring Systems</a></li>
+        <li><a href="#s7-5">Session History</a></li>
+      </ul>
+    </li>
+    <li><a href="#s8">Module: Clubs</a>
+      <ul class="sub">
+        <li><a href="#s8-1">Creating a Club</a></li>
+        <li><a href="#s8-2">Club Profile &amp; Edit</a></li>
+        <li><a href="#s8-3">Club Dashboard</a></li>
+        <li><a href="#s8-4">Managing Members</a></li>
+        <li><a href="#s8-5">Membership Invitations</a></li>
+      </ul>
+    </li>
+    <li><a href="#s9">Module: Admin Settings</a>
+      <ul class="sub">
+        <li><a href="#s9-reg">Registration Control</a></li>
+        <li><a href="#s9-brand">Branding &amp; Typography</a></li>
+      </ul>
+    </li>
+    <li><a href="#s10">Role Permissions Summary</a></li>
+    <li><a href="#s11">Frequently Asked Questions</a></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════ CONTENT ═══════════════════ -->
+<div class="content">
+
+<!-- 1. Introduction -->
+<h2 id="s1">1. Introduction</h2>
+<p>The <strong>Archery Stats Management System</strong> is a web-based platform for managing archers, coaches, clubs, and performance data. It supports multi-role access — super administrators, club administrators, coaches, and archers each have a tailored experience suited to their needs.</p>
+<p><strong>Key features:</strong></p>
+<ul>
+  <li>Archer and coach profile management with photo upload</li>
+  <li>Live scorecard entry with WA-compliant round types</li>
+  <li>Performance analytics with trend charts and comparison tools</li>
+  <li>Club management with performance dashboard and member invitations</li>
+  <li>Personal achievement records for each archer</li>
+  <li>Multi-role access control (Super Admin, Club Admin, Coach, Archer)</li>
+  <li>Admin-controlled registration suspension per module</li>
+</ul>
+
+<!-- 2. User Roles -->
+<h2 id="s2">2. User Roles</h2>
+<div class="table-wrap no-break">
+<table>
+  <thead><tr><th>Role</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><span class="role role-super">Super Admin</span></td>
+      <td>Full access to all modules. Can create/delete archers, coaches, clubs, and manage system settings.</td>
+    </tr>
+    <tr>
+      <td><span class="role role-club">Club Admin</span></td>
+      <td>Manages their own club — can view/edit club info, invite/remove archers and coaches, and view the club performance dashboard.</td>
+    </tr>
+    <tr>
+      <td><span class="role role-coach">Coach</span></td>
+      <td>Can view assigned archers, log training sessions, and view performance data for their archers.</td>
+    </tr>
+    <tr>
+      <td><span class="role role-archer">Archer</span></td>
+      <td>Can view and edit their own profile, enter scores, and manage their personal achievements.</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<div class="note"><strong>Default admin login:</strong> <code>admin@archery.my</code> / <code>password</code></div>
+
+<!-- 3. Getting Started -->
+<h2 id="s3">3. Getting Started</h2>
+
+<h3 id="s3-1">3.1 Registration</h3>
+<p>New users can self-register at <code>/register</code>. Three account types are available:</p>
+
+<h4>Archer</h4>
+<ul>
+  <li>Select the <strong>Archer</strong> card</li>
+  <li>Fill in: Full Name, Email, Password, Confirm Password</li>
+  <li>You are logged in immediately and redirected to your archer profile to complete it</li>
+</ul>
+
+<h4>Coach</h4>
+<ul>
+  <li>Select the <strong>Coach</strong> card</li>
+  <li>Fill in: Full Name, Email, Password, Confirm Password</li>
+  <li>You are logged in immediately and redirected to your coach profile to complete it</li>
+</ul>
+
+<h4>Club (Club Administrator)</h4>
+<ul>
+  <li>Select the <strong>Club</strong> card — a <em>Club Name</em> field appears (required)</li>
+  <li>Fill in: Club Name, Full Name, Email, Password, Confirm Password</li>
+  <li>A new club record is created and linked to your account automatically</li>
+</ul>
+
+<div class="info"><strong>No email verification is required.</strong> You are logged in and taken to your profile straight after registering.</div>
+<div class="note"><strong>Registration suspended?</strong> If a role button is grayed out and labelled <strong>"Suspended"</strong>, the administrator has closed registration for that account type. Contact your system administrator for assistance, or ask them to create your account manually.</div>
+
+<h3 id="s3-2">3.2 Login</h3>
+<p>Go to <code>/login</code> and enter your registered email and password. Tick <em>Remember me</em> to stay logged in. Upon login, you are redirected based on your role:</p>
+<ul>
+  <li><strong>Super Admin</strong> → Archers list</li>
+  <li><strong>Club Admin</strong> → Own Club Dashboard</li>
+  <li><strong>Coach</strong> → Coach profile</li>
+  <li><strong>Archer</strong> → Own archer profile</li>
+</ul>
+
+<h3 id="s3-3">3.3 Forgot Password</h3>
+<ol class="steps">
+  <li>On the login page, click <strong>"Forgot password?"</strong></li>
+  <li>Enter your registered email address and submit</li>
+  <li>A password reset link is sent to your email</li>
+  <li>Click the link and enter a new password (minimum 8 characters)</li>
+  <li>You are redirected to login with a success message</li>
+</ol>
+
+<!-- 4. Navigation -->
+<h2 id="s4">4. Navigation</h2>
+<p>The left sidebar provides navigation based on your role:</p>
+<div class="table-wrap no-break">
+<table>
+  <thead><tr><th>Sidebar Item</th><th>Visible To</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Archers</strong></td><td>Super Admin, Club Admin, Coach</td><td>List of all archers</td></tr>
+    <tr><td><strong>Coaches</strong></td><td>Super Admin, Club Admin, Coach</td><td>List of all coaches</td></tr>
+    <tr><td><strong>Clubs</strong></td><td>Super Admin</td><td>List of all clubs</td></tr>
+    <tr><td><strong>My Club</strong></td><td>Club Admin</td><td>Dashboard for own club</td></tr>
+    <tr><td><strong>Settings</strong></td><td>Super Admin</td><td>System settings</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="note">On <strong>mobile</strong>, tap the ☰ hamburger button at the top-left to open the sidebar. Tap the overlay or the × button to close it.</div>
+
+<!-- 5. Archers -->
+<h2 id="s5">5. Module: Archers</h2>
+
+<h3 id="s5-1">5.1 Archer List</h3>
+<p><strong>URL:</strong> <code>/archers</code> &nbsp;|&nbsp; <strong>Access:</strong> Super Admin, Club Admin, Coach</p>
+<p>Displays a table of all registered archers with: Ref No, Name, Email, Gender, Division(s), State, Club, and action buttons (View / Edit / Delete). A stats bar shows Total · Male · Female · Showing counts.</p>
+
+<h3 id="s5-2">5.2 Adding an Archer</h3>
+<p><strong>Access:</strong> Super Admin, Club Admin only</p>
+<ol class="steps">
+  <li>Click <strong>+ ADD ARCHER</strong> (top-right of archer list)</li>
+  <li>Fill in the required fields: Full Name, Email, Date of Birth, Gender</li>
+  <li>Select <strong>Division(s)</strong> — Recurve, Compound, Barebow, etc. (multi-select)</li>
+  <li>Choose <strong>Classification</strong> <em>(required)</em> — <strong>U12</strong>, <strong>U15</strong>, <strong>U18</strong>, or <strong>Open</strong></li>
+  <li>Optionally fill in: Club (optional), State/National Team, Equipment, Personal Best scores, Photo, Notes</li>
+  <li>Click <strong>SAVE ARCHER</strong></li>
+</ol>
+<div class="info">The system auto-generates a unique reference number (e.g. <code>ARCH-00001</code>).</div>
+<div class="note"><strong>Classification is required</strong> when creating or editing an archer profile. Choose the age-group category that matches the archer's competition class: U12, U15, U18, or Open. Club is optional and can be assigned later.</div>
+
+<h3 id="s5-3">5.3 Archer Profile</h3>
+<p><strong>URL:</strong> <code>/archers/{id}</code></p>
+<p>The profile page displays: photo & identity card, divisions & classification badges, personal information, location, equipment, personal best scores (unofficial & official), notes, recent sessions, performance summary, and personal achievements.</p>
+<p><strong>Action buttons</strong> (top-right of page):</p>
+<ul>
+  <li><strong>NEW SESSION</strong> — start a new scoring session</li>
+  <li><strong>EDIT</strong> — edit profile (visible to owner and admins)</li>
+  <li><strong>DELETE</strong> — permanently delete (Super Admin only)</li>
+</ul>
+
+<h3 id="s5-4">5.4 Editing Archer Information</h3>
+<p><strong>Access:</strong> The archer themselves, Club Admin, Super Admin</p>
+<ol class="steps">
+  <li>Open the archer profile and click <strong>EDIT</strong></li>
+  <li>Update any fields across the sections: Basic Info, Contact, Location, Equipment, Classification, Personal Best, Notes, Photo</li>
+  <li>Click <strong>SAVE CHANGES</strong></li>
+</ol>
+<div class="note">Archers can only edit their <strong>own</strong> profile. They cannot edit other archers' profiles.</div>
+
+<h3 id="s5-5">5.5 Personal Achievements</h3>
+<p>Located at the bottom of the archer profile page. Displays a table of: Date | Achievement | Team | Tournament.</p>
+<p><strong>Adding an achievement:</strong></p>
+<ol class="steps">
+  <li>Click <strong>+ Add Achievement</strong> (top-right of the section header)</li>
+  <li>Fill in: Date (required), Achievement title (required), Team, Tournament</li>
+  <li>Click <strong>SAVE ACHIEVEMENT</strong></li>
+</ol>
+<p><strong>Removing an achievement:</strong> Click <strong>Remove</strong> on any row (a confirmation dialog appears).</p>
+<div class="note">Archers can manage their own achievements. Club Admins and Super Admins can manage any archer's achievements.</div>
+
+<h3 id="s5-6">5.6 Performance Analytics</h3>
+<p><strong>URL:</strong> <code>/archers/{id}/performance</code></p>
+<p>Click <strong>View Full Analytics →</strong> in the Performance Summary card to open this page.</p>
+<ul>
+  <li><strong>Date range selector</strong> — Last 7 Days, Last 30 Days, This Year, Last Year, or Custom</li>
+  <li><strong>Stat cards</strong> — Sessions count, Best Score, Average Score, Hit Rate %</li>
+  <li><strong>Score Trend chart</strong> — Line chart; competition sessions highlighted in amber</li>
+  <li><strong>Round Type Breakdown</strong> — Bar chart comparing averages per round type</li>
+  <li><strong>Competition vs Training</strong> — Grouped bar chart with counts, averages, bests</li>
+  <li><strong>Sessions table</strong> — Full list with date, round, score, X count, hits, competition badge</li>
+</ul>
+
+<!-- 6. Coaches -->
+<h2 id="s6">6. Module: Coaches</h2>
+
+<h3 id="s6-1">6.1 Coach List</h3>
+<p><strong>URL:</strong> <code>/coaches</code> &nbsp;|&nbsp; <strong>Access:</strong> Super Admin, Club Admin, Coach</p>
+<p>Displays all coaches with: Ref No (e.g. <code>COACH-00001</code>), Name, Email, Club, Coaching Level, State, and action buttons.</p>
+
+<h3 id="s6-2">6.2 Adding a Coach</h3>
+<p><strong>Access:</strong> Super Admin, Club Admin only</p>
+<ol class="steps">
+  <li>Click <strong>+ ADD COACH</strong></li>
+  <li>Fill in: Full Name, Email (required), Date of Birth, Gender, Phone</li>
+  <li>Select <strong>Coaching Level</strong> — None / Kursus Asas Kejurulatihan / Level 1 / Level 2 / Level 3</li>
+  <li>Optionally fill in: Club, Team, Address, State, Country, Photo, Notes</li>
+  <li>Click <strong>SAVE COACH</strong></li>
+</ol>
+
+<h3 id="s6-3">6.3 Coach Profile</h3>
+<p><strong>URL:</strong> <code>/coaches/{id}</code></p>
+<p>Displays coach details, assigned archers list, and training session history. Coaches can edit their own profile via the <strong>EDIT</strong> button.</p>
+
+<h3 id="s6-4">6.4 Assigning Archers to a Coach</h3>
+<ol class="steps">
+  <li>Open the coach profile</li>
+  <li>Click the <strong>Archers</strong> button (or navigate to <code>/coaches/{id}/archers</code>)</li>
+  <li>Select an archer from the dropdown and click <strong>Assign</strong></li>
+  <li>To remove, click <strong>Remove</strong> next to their name</li>
+</ol>
+
+<h3 id="s6-5">6.5 Training Sessions</h3>
+<p><strong>URL:</strong> <code>/coaches/{id}/training</code></p>
+<p>Coaches can log group training sessions for their assigned archers. Click <strong>+ New Training Session</strong>, fill in: Date, Title, Location, Notes, participating archers, then save. Training sessions are separate from individual scoring sessions.</p>
+
+<!-- 7. Sessions -->
+<h2 id="s7">7. Module: Sessions &amp; Scorecards</h2>
+
+<h3 id="s7-1">7.1 Starting a New Session</h3>
+<p><strong>Access:</strong> All roles (archers can only start sessions for themselves)</p>
+<ol class="steps">
+  <li>Go to an archer's profile and click <strong>NEW SESSION</strong>, or navigate to <code>/archers/{id}/sessions/create</code></li>
+  <li>Select a <strong>Round Type</strong> from the category tabs (Indoor / Outdoor / Field / 3D / Clout)</li>
+  <li>Optionally override <strong>Distance (m)</strong> and <strong>Target Face (cm)</strong></li>
+  <li>Choose session type: <strong>Training</strong> or <strong>Competition</strong></li>
+  <li>Enter a <strong>Date</strong></li>
+  <li>Click <strong>Start Session</strong></li>
+</ol>
+<div class="info">The system pre-selects the most common round type based on the archer's primary division:<br>
+Recurve → WA 70m Outdoor Recurve &nbsp;·&nbsp; Compound → WA 50m Outdoor Compound &nbsp;·&nbsp; Barebow → WA 50m Outdoor Barebow</div>
+
+<h3 id="s7-2">7.2 Round Types</h3>
+<div class="table-wrap no-break">
+<table>
+  <thead><tr><th>Category</th><th>Round Types</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Indoor</strong></td><td>WA 18m Indoor (Recurve/Barebow), WA 18m Indoor Compound, WA 25m Indoor</td></tr>
+    <tr><td><strong>Outdoor</strong></td><td>WA 70m, 60m, 50m (Recurve/Compound/Barebow), 30m, 90m</td></tr>
+    <tr><td><strong>Field</strong></td><td>WA Field Marked, WA Field Unmarked</td></tr>
+    <tr><td><strong>3D</strong></td><td>WA 3D Round</td></tr>
+    <tr><td><strong>Clout</strong></td><td>WA Clout (Men), WA Clout (Women/Junior)</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3 id="s7-3">7.3 Entering Scores</h3>
+<p>The scorecard displays <strong>6 arrows per end</strong>. Ends are grouped into sets of 6, displayed one set at a time. End totals update automatically.</p>
+<ul>
+  <li><strong>Typing:</strong> Click an input, type the value, press Enter or Tab to advance</li>
+  <li><strong>Navigation:</strong> Use ← Previous / Next → buttons to move between sets</li>
+  <li><strong>Saving:</strong> Click <strong>SAVE</strong> to save the current set to the database</li>
+</ul>
+
+<h3 id="s7-4">7.4 Scoring Systems</h3>
+<div class="table-wrap no-break">
+<table>
+  <thead><tr><th>System</th><th>Used For</th><th>Valid Values</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Standard</strong></td><td>Recurve, Barebow, Longbow</td><td>X, 10–1, M</td></tr>
+    <tr><td><strong>Compound</strong></td><td>Compound rounds</td><td>X, 10–6, M &nbsp;(1–5 not valid)</td></tr>
+    <tr><td><strong>Field</strong></td><td>WA Field rounds</td><td>X (= 6 pts), 6–1, M</td></tr>
+    <tr><td><strong>3D</strong></td><td>WA 3D Round</td><td>20, 17, 10, M</td></tr>
+    <tr><td><strong>Clout</strong></td><td>WA Clout</td><td>5–1, M</td></tr>
+  </tbody>
+</table>
+</div>
+<div class="note">Invalid values are rejected with a shake animation. The hint text at the bottom of the scorecard shows the valid values for the current round.</div>
+
+<h3 id="s7-5">7.5 Session History</h3>
+<p><strong>URL:</strong> <code>/archers/{id}/sessions</code></p>
+<p>Lists all sessions in reverse chronological order with: Date, Round Type, Score, Competition badge, and a link to the scorecard.</p>
+
+<!-- 8. Clubs -->
+<h2 id="s8">8. Module: Clubs</h2>
+
+<h3 id="s8-1">8.1 Creating a Club</h3>
+<p><strong>Method A — Self-registration (Club Admin):</strong> Go to <code>/register</code>, select <strong>Club</strong>, enter a Club Name and personal details. A club is automatically created and linked to the new account.</p>
+<p><strong>Method B — Admin creation (Super Admin):</strong></p>
+<ol class="steps">
+  <li>Go to <strong>Clubs</strong> in the sidebar and click <strong>+ CREATE CLUB</strong></li>
+  <li>Fill in: Club Name (required), Registration No., Founded Year, Description</li>
+  <li>Add contact details: Email, Phone, Website</li>
+  <li>Add location: City, Full Address, State</li>
+  <li>Upload a club logo (JPG/PNG/WebP, max 2MB)</li>
+  <li>Toggle <strong>Active</strong> status as needed</li>
+  <li>Click <strong>SAVE CLUB</strong></li>
+</ol>
+
+<h3 id="s8-2">8.2 Club Profile &amp; Edit</h3>
+<p><strong>URL:</strong> <code>/clubs/{id}</code></p>
+<p>Displays: club logo, registration number, founded year, active/inactive status, contact information, location, and quick stats (archers count, coaches count, sessions this month).</p>
+<p>Click <strong>EDIT</strong> to update any club details. Club Admins can only edit their own club.</p>
+
+<h3 id="s8-3">8.3 Club Dashboard</h3>
+<p><strong>URL:</strong> <code>/clubs/{id}/dashboard</code></p>
+<p>Aggregated performance data for all archers in the club.</p>
+<ul>
+  <li><strong>Date range:</strong> Last 7 Days / Last 30 Days / This Year / Last Year / Custom</li>
+  <li><strong>Stat cards:</strong> Total Archers, Active Archers, Best Score, Club Average Score</li>
+  <li><strong>Score Trend chart:</strong> Line chart — daily club average score</li>
+  <li><strong>Top Archers Leaderboard:</strong> Horizontal bar chart — top 8 by average score</li>
+  <li><strong>Archer Performance Table:</strong> Sessions, Best, Avg, Hit Rate %, link to individual analytics</li>
+  <li><strong>Recent Sessions Table:</strong> Date, Archer, Round, Score, Competition badge</li>
+</ul>
+
+<h3 id="s8-4">8.4 Managing Members</h3>
+<p><strong>URL:</strong> <code>/clubs/{id}/members</code></p>
+<p>Two tabs: <strong>Archers</strong> and <strong>Coaches</strong>. Each tab shows current members, pending invitations, and an invite form.</p>
+<p><strong>Removing a member:</strong> Click <strong>Remove from Club</strong> next to any member. The association is cleared immediately — no email required.</p>
+
+<h3 id="s8-5">8.5 Membership Invitations</h3>
+<p>Inviting archers/coaches requires their acceptance via email.</p>
+<ol class="steps">
+  <li>On the Members page, select the Archers or Coaches tab</li>
+  <li>Search for an archer/coach in the Invite section and select them</li>
+  <li>If the person is already in another club, a transfer warning appears</li>
+  <li>Click <strong>Send Invitation</strong></li>
+</ol>
+<p><strong>What happens:</strong> An email is sent with secure Accept/Decline links (valid 7 days). Accepting updates the archer/coach's club automatically. Pending invitations can be cancelled by the club admin.</p>
+
+<!-- 9. Settings -->
+<h2 id="s9">9. Module: Admin Settings</h2>
+<p><strong>URL:</strong> <code>/admin/settings</code> &nbsp;|&nbsp; <strong>Access:</strong> Super Admin only</p>
+
+<h3 id="s9-reg">9.1 Registration Control</h3>
+<p>The <strong>Registration Control</strong> card at the top of the Settings page lets you suspend or re-open public self-registration independently for each module.</p>
+<div class="table-wrap no-break">
+<table>
+  <thead><tr><th>Module</th><th>Effect when Suspended</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Archer</strong></td><td>The "Archer" button on <code>/register</code> is grayed out and labelled "Suspended". New archer self-registration is blocked server-side.</td></tr>
+    <tr><td><strong>Coach</strong></td><td>The "Coach" button on <code>/register</code> is grayed out and labelled "Suspended". New coach self-registration is blocked server-side.</td></tr>
+    <tr><td><strong>Club</strong></td><td>The "Club" button on <code>/register</code> is grayed out and labelled "Suspended". New club self-registration is blocked server-side.</td></tr>
+  </tbody>
+</table>
+</div>
+<p><strong>To suspend registration for a module:</strong></p>
+<ol class="steps">
+  <li>Find the module row (Archer / Coach / Club) — the status badge shows <strong>Open</strong> (green) or <strong>Suspended</strong> (red)</li>
+  <li>Click <strong>Suspend</strong> and confirm the dialog</li>
+  <li>Status changes to Suspended immediately</li>
+</ol>
+<p><strong>To re-open registration:</strong> Click <strong>Open Registration</strong> on the suspended row and confirm.</p>
+<div class="note">Suspension only affects public self-registration at <code>/register</code>. Admins can still create archers, coaches, and clubs manually through the system regardless of this setting.</div>
+
+<h3 id="s9-brand">9.2 Branding &amp; Typography</h3>
+<div class="table-wrap no-break">
+<table>
+  <thead><tr><th>Setting</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td><strong>System Logo</strong></td><td>Upload a logo (JPG/PNG/WebP, max 2MB). Appears in the sidebar, login, and registration pages. Click <em>Remove Logo</em> to revert to default.</td></tr>
+    <tr><td><strong>Body Font / Heading Font</strong></td><td>Select from available Google Fonts for the main app typography.</td></tr>
+    <tr><td><strong>Heading Size</strong></td><td>Adjust heading font size in px.</td></tr>
+    <tr><td><strong>Login Page Fonts</strong></td><td>Separate font/size controls for the login page only.</td></tr>
+    <tr><td><strong>Footer Text</strong></td><td>Customise the footer text shown across all pages.</td></tr>
+  </tbody>
+</table>
+</div>
+<p>Click <strong>SAVE SETTINGS</strong> to apply changes.</p>
+
+<!-- 10. Permissions -->
+<h2 id="s10">10. Role Permissions Summary</h2>
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th>Action</th>
+      <th class="center">Super Admin</th>
+      <th class="center">Club Admin</th>
+      <th class="center">Coach</th>
+      <th class="center">Archer</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>View all archers</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td></tr>
+    <tr><td>Create archer</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Edit any archer</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Edit own archer profile</td><td class="center cross">—</td><td class="center cross">—</td><td class="center cross">—</td><td class="center tick">✓</td></tr>
+    <tr><td>Delete archer</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>View all coaches</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td></tr>
+    <tr><td>Create coach</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Edit any coach</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Edit own coach profile</td><td class="center cross">—</td><td class="center cross">—</td><td class="center tick">✓</td><td class="center cross">—</td></tr>
+    <tr><td>Delete coach</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Create session (any archer)</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td></tr>
+    <tr><td>Create session (own)</td><td class="center cross">—</td><td class="center cross">—</td><td class="center cross">—</td><td class="center tick">✓</td></tr>
+    <tr><td>View scorecards</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center tick">own</td></tr>
+    <tr><td>View clubs list</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Create / delete club</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Edit own club</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>View club dashboard</td><td class="center tick">✓</td><td class="center tick">own</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Invite / remove members</td><td class="center tick">✓</td><td class="center tick">own</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+    <tr><td>Add / remove achievements</td><td class="center tick">✓</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center tick">own</td></tr>
+    <tr><td>Admin settings</td><td class="center tick">✓</td><td class="center cross">—</td><td class="center cross">—</td><td class="center cross">—</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- 11. FAQ -->
+<h2 id="s11">11. Frequently Asked Questions</h2>
+
+<h3>I registered but the role button I need is grayed out.</h3>
+<p>The administrator has suspended registration for that account type. Contact your system administrator to have it re-opened, or ask them to create your account manually.</p>
+
+<h3>I'm an archer and I can't see the Archers list.</h3>
+<p>Archers cannot browse the full archer list. When you log in, you are taken directly to your own profile page. You can only view and edit your own information.</p>
+
+<h3>How do I assign a coach to an archer?</h3>
+<p>Go to the coach's profile → click the <strong>Archers</strong> button → use the dropdown to select and assign archers to that coach.</p>
+
+<h3>The archer's default round type is wrong when creating a session.</h3>
+<p>The system pre-selects based on the archer's first division. If no division is set, no default is applied. You can always select any round type manually by clicking the correct category tab.</p>
+
+<h3>I entered a score but it was rejected.</h3>
+<p>Each round type has a specific scoring system. For example, Compound rounds do not accept scores of 1–5. The valid values are displayed at the bottom of the scorecard. Refer to Section 7.4 for the full scoring table.</p>
+
+<h3>Can an archer be in multiple clubs?</h3>
+<p>No. Each archer belongs to at most one club at a time. If you invite an archer already in another club, a transfer warning is shown. The archer must accept the invitation for their club to change.</p>
+
+<h3>An invitation I sent has expired. What do I do?</h3>
+<p>Cancel the expired invitation on the Members page and send a new one. Invitations expire after 7 days.</p>
+
+<h3>I'm a Club Admin but I get a 403 error when accessing another club's dashboard.</h3>
+<p>Club Admins can only access their own club's pages. Attempting to access another club's URL will return a 403 Forbidden error.</p>
+
+<h3>How do I delete a club?</h3>
+<p>Only a Super Admin can delete a club. Go to the Clubs list, find the club, and use the Delete action. This action is irreversible.</p>
+
+<h3>How do I change my password?</h3>
+<p>Log out, go to the login page, and click "Forgot password?" to reset your password via email.</p>
+
+</div><!-- /content -->
+
+<div class="footer">
+  Archery Stats Management System — User Manual v1.1 &nbsp;·&nbsp; February 2026 &nbsp;·&nbsp; https://sportdns.com/laravel/public/
+</div>
+
+</body>
+</html>

@@ -23,28 +23,43 @@ class Score extends Model
         return $this->hasMany(End::class)->orderBy('end_number');
     }
 
-    public function recalculate(): void
+    public function recalculate(string $scoringSystem = 'standard'): void
     {
-        $total = 0;
-        $xCount = 0;
+        $total     = 0;
+        $xCount    = 0;
         $goldCount = 0;
-        $hitCount = 0;
+        $hitCount  = 0;
         $missCount = 0;
+
+        // Gold zone thresholds per scoring system
+        // standard/compound: 10 or X; field: X (=6); 3d: 20; clout: 5
+        $goldValue = match ($scoringSystem) {
+            'field' => 6,
+            '3d'    => 20,
+            'clout' => 5,
+            default => 10,
+        };
+        $xPoints = ($scoringSystem === 'field') ? 6 : 10;
 
         foreach ($this->ends as $end) {
             foreach ($end->arrow_values as $arrow) {
+                if ($arrow === null || $arrow === '') {
+                    continue; // unscored arrow
+                }
+
                 if ($arrow === 'X') {
-                    $total += 10;
+                    // X exists only in standard, compound, field
+                    $total += $xPoints;
                     $xCount++;
                     $goldCount++;
                     $hitCount++;
-                } elseif ($arrow === 'M' || $arrow === 0) {
+                } elseif ($arrow === 'M' || $arrow === 0 || $arrow === '0') {
                     $missCount++;
                 } else {
                     $val = (int) $arrow;
                     $total += $val;
                     $hitCount++;
-                    if ($val === 10) {
+                    if ($val >= $goldValue) {
                         $goldCount++;
                     }
                 }

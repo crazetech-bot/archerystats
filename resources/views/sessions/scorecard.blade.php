@@ -23,6 +23,38 @@
     $endsPerSet  = 6;
     $totalSets   = (int) ceil($rt->num_ends / $endsPerSet);
 
+    // Build per-set distance labels and scoring systems for multi-distance rounds
+    $distSegments   = $rt->distance_segments ?? null;
+    $segmentLabels  = [];
+    $segmentScoring = [];
+    if ($distSegments) {
+        $setIdx = 1;
+        foreach ($distSegments as $seg) {
+            $pages  = (int) ceil(($seg['num_ends'] ?? $endsPerSet) / $endsPerSet);
+            $segSys = $seg['scoring'] ?? $scoringSystem;
+            for ($p = 0; $p < $pages; $p++) {
+                $segmentLabels[$setIdx]  = $seg['label'] ?? ($seg['distance'] . 'm · ' . $seg['face'] . 'cm');
+                $segmentScoring[$setIdx] = $segSys;
+                $setIdx++;
+            }
+        }
+    }
+
+    // Build per-set valid hints only when scoring differs across sets
+    $validHintMap = [];
+    if ($segmentScoring && count(array_unique($segmentScoring)) > 1) {
+        foreach ($segmentScoring as $setNum => $sys) {
+            $validHintMap[$setNum] = match($sys) {
+                'compound' => 'X &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
+                'field'    => 'X (=6 pts) &nbsp;·&nbsp; 6–1 &nbsp;·&nbsp; M (miss)',
+                '3d'       => '20 &nbsp;·&nbsp; 17 &nbsp;·&nbsp; 10 &nbsp;·&nbsp; M (miss)',
+                'clout'    => '5–1 &nbsp;·&nbsp; M (miss)',
+                'reduced'  => 'X &nbsp;·&nbsp; 10–5 &nbsp;·&nbsp; M (miss)',
+                default    => 'X &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
+            };
+        }
+    }
+
     $initialEnds = [];
     for ($e = 1; $e <= $rt->num_ends; $e++) {
         $end = $ends->get($e);
@@ -33,31 +65,80 @@
         }
         $initialEnds[] = ['arrows' => $arrows];
     }
+
+    $validHint = match($scoringSystem) {
+        'compound' => 'X &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
+        'field'    => 'X (=6 pts) &nbsp;·&nbsp; 6–1 &nbsp;·&nbsp; M (miss)',
+        '3d'       => '20 &nbsp;·&nbsp; 17 &nbsp;·&nbsp; 10 &nbsp;·&nbsp; M (miss)',
+        'clout'    => '5–1 &nbsp;·&nbsp; M (miss)',
+        default    => 'X &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
+    };
+    $goldLabel = match($scoringSystem) {
+        'field'  => 'X',
+        '3d'     => '20s',
+        'clout'  => '5s',
+        default  => '10+X',
+    };
+    $maxScore = $rt->num_ends * $ape * $rt->max_score_per_arrow;
 @endphp
 
 <div class="max-w-5xl mx-auto space-y-5"
      x-data="{
-         ends: {{ Js::from($initialEnds) }},
-         endsPerSet: {{ $endsPerSet }},
-         currentSet: 1,
+         ends:           {{ Js::from($initialEnds) }},
+         endsPerSet:     {{ $endsPerSet }},
+         currentSet:     1,
+         scoringSystem:  '{{ $scoringSystem }}',
+         segmentScoring: {{ Js::from($segmentScoring) }},
 
          get totalSets() {
              return Math.ceil(this.ends.length / this.endsPerSet);
          },
 
+         get currentScoringSystem() {
+             return this.segmentScoring[this.currentSet] || this.scoringSystem;
+         },
+
          arrowVal(v) {
              v = String(v).toUpperCase().trim();
-             if (v === 'X')  return 10;
              if (v === 'M' || v === '') return 0;
+             const sys = this.currentScoringSystem;
+             if (sys === 'field') {
+                 if (v === 'X') return 6;
+                 const n = parseInt(v);
+                 return (!isNaN(n) && n >= 1 && n <= 6) ? n : 0;
+             }
+             if (sys === '3d') {
+                 const n = parseInt(v);
+                 return [20, 17, 10].includes(n) ? n : 0;
+             }
+             if (sys === 'clout') {
+                 const n = parseInt(v);
+                 return (!isNaN(n) && n >= 1 && n <= 5) ? n : 0;
+             }
+             if (sys === 'reduced') {
+                 if (v === 'X') return 10;
+                 const n = parseInt(v);
+                 return (!isNaN(n) && n >= 5 && n <= 10) ? n : 0;
+             }
+             // standard / compound
+             if (v === 'X') return 10;
              const n = parseInt(v);
              return (!isNaN(n) && n >= 1 && n <= 10) ? n : 0;
          },
 
-         isX(v)      { return String(v).toUpperCase().trim() === 'X'; },
-         isTenPlus(v){ v = String(v).toUpperCase().trim(); return v === 'X' || v === '10'; },
+         isX(v) { return String(v).toUpperCase().trim() === 'X'; },
+
+         isGold(v) {
+             v = String(v).toUpperCase().trim();
+             const sys = this.currentScoringSystem;
+             if (sys === 'field')  return v === 'X';
+             if (sys === '3d')     return v === '20';
+             if (sys === 'clout')  return v === '5';
+             return v === 'X' || v === '10';  // standard / compound / reduced
+         },
 
          endSum(i)     { return this.ends[i].arrows.reduce((s, v) => s + this.arrowVal(v), 0); },
-         endTenX(i)    { return this.ends[i].arrows.filter(v => this.isTenPlus(v)).length; },
+         endGold(i)    { return this.ends[i].arrows.filter(v => this.isGold(v)).length; },
          endX(i)       { return this.ends[i].arrows.filter(v => this.isX(v)).length; },
          endComplete(i){ return this.ends[i].arrows.every(v => String(v).trim() !== '' && v !== null); },
 
@@ -75,11 +156,11 @@
              return t;
          },
 
-         setTenX(setNum) {
+         setGold(setNum) {
              const start = (setNum - 1) * this.endsPerSet;
              const end   = Math.min(setNum * this.endsPerSet, this.ends.length);
              let t = 0;
-             for (let i = start; i < end; i++) t += this.endTenX(i);
+             for (let i = start; i < end; i++) t += this.endGold(i);
              return t;
          },
 
@@ -92,20 +173,41 @@
          },
 
          grandTotal() { return this.ends.reduce((s, _, i) => s + this.endSum(i), 0); },
-         totalTenX()  { return this.ends.reduce((s, _, i) => s + this.endTenX(i), 0); },
+         totalGold()  { return this.ends.reduce((s, _, i) => s + this.endGold(i), 0); },
          totalX()     { return this.ends.reduce((s, _, i) => s + this.endX(i), 0); },
 
          handleInput(endIdx, arrowIdx, event) {
              let v = event.target.value.toUpperCase().trim();
-             // Only accept: X, M, or integer 1–10. Anything else is cleared.
-             if (v !== '' && v !== 'X' && v !== 'M') {
-                 const n = parseInt(v);
-                 if (isNaN(n) || n < 1 || n > 10) {
-                     v = '';
+             const sys = this.currentScoringSystem;
+
+             if (v !== '') {
+                 let valid = false;
+                 if (sys === 'field') {
+                     const n = parseInt(v);
+                     valid = v === 'X' || v === 'M' || (!isNaN(n) && n >= 1 && n <= 6);
+                 } else if (sys === '3d') {
+                     const n = parseInt(v);
+                     if (v === 'M')                      valid = true;
+                     else if ([20, 17, 10].includes(n))  valid = true;
+                     else if (v.length === 1 && ['1','2'].includes(v)) valid = true; // partial prefix
+                     else valid = false;
+                 } else if (sys === 'clout') {
+                     const n = parseInt(v);
+                     valid = v === 'M' || (!isNaN(n) && n >= 1 && n <= 5);
+                 } else if (sys === 'compound') {
+                     const n = parseInt(v);
+                     valid = v === 'X' || v === 'M' || (!isNaN(n) && n >= 6 && n <= 10);
+                 } else if (sys === 'reduced') {
+                     const n = parseInt(v);
+                     valid = v === 'X' || v === 'M' || (!isNaN(n) && n >= 5 && n <= 10);
                  } else {
-                     v = String(n);
+                     const n = parseInt(v);
+                     valid = v === 'X' || v === 'M' || (!isNaN(n) && n >= 1 && n <= 10);
                  }
+                 if (!valid) v = '';
+                 else if (v !== 'X' && v !== 'M' && !isNaN(parseInt(v))) v = String(parseInt(v));
              }
+
              event.target.value = v;
              this.ends[endIdx].arrows[arrowIdx] = v;
          }
@@ -144,11 +246,11 @@
             <div class="px-6 py-4 text-center">
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Total Score</p>
                 <p class="text-3xl font-black text-indigo-700" x-text="grandTotal()">{{ $score->total_score }}</p>
-                <p class="text-xs text-gray-400">of {{ $rt->num_ends * $ape * 10 }}</p>
+                <p class="text-xs text-gray-400">of {{ $maxScore }}</p>
             </div>
             <div class="px-6 py-4 text-center">
-                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">10+X</p>
-                <p class="text-3xl font-black text-amber-600" x-text="totalTenX()">{{ $score->gold_count }}</p>
+                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{{ $goldLabel }}</p>
+                <p class="text-3xl font-black text-amber-600" x-text="totalGold()">{{ $score->gold_count }}</p>
             </div>
             <div class="px-6 py-4 text-center">
                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">X</p>
@@ -181,7 +283,15 @@
                 </span>
                 <div>
                     <h2 class="text-sm font-bold text-gray-900">Score Entry</h2>
-                    <p class="text-xs text-gray-500">Valid: X &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)</p>
+                    @if($validHintMap)
+                        @foreach($validHintMap as $setNum => $hint)
+                        <p class="text-xs text-gray-500"
+                           x-show="currentSet === {{ $setNum }}"
+                           @if($setNum > 1) style="display:none" @endif>{!! "Valid: $hint" !!}</p>
+                        @endforeach
+                    @else
+                        <p class="text-xs text-gray-500">{!! "Valid: $validHint" !!}</p>
+                    @endif
                 </div>
             </div>
             @if($totalSets > 1)
@@ -219,6 +329,10 @@
                 <p class="text-xs text-gray-500"
                    x-text="`Ends ${(currentSet - 1) * endsPerSet + 1}–${Math.min(currentSet * endsPerSet, ends.length)}`">
                 </p>
+                @if($segmentLabels)
+                <p class="text-xs font-semibold text-emerald-600 mt-0.5"
+                   x-text="({{ Js::from($segmentLabels) }})[currentSet] || ''"></p>
+                @endif
             </div>
 
             <button type="button"
@@ -257,7 +371,7 @@
                             @endfor
                             <th class="px-3 py-3 text-center text-xs font-bold text-amber-600 uppercase tracking-wider bg-amber-50/60">Sum</th>
                             <th class="px-3 py-3 text-center text-xs font-bold text-indigo-600 uppercase tracking-wider bg-indigo-50/60">Tot.</th>
-                            <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">10+X</th>
+                            <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">{{ $goldLabel }}</th>
                             <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">X</th>
                         </tr>
                     </thead>
@@ -299,7 +413,7 @@
                                               x-text="endRunning({{ $ei }})"></span>
                                     </td>
                                     <td class="px-3 py-2 text-center">
-                                        <span class="text-sm font-bold text-gray-600" x-text="endTenX({{ $ei }})"></span>
+                                        <span class="text-sm font-bold text-gray-600" x-text="endGold({{ $ei }})"></span>
                                     </td>
                                     <td class="px-3 py-2 text-center">
                                         <span class="text-sm font-bold text-gray-600" x-text="endX({{ $ei }})"></span>
@@ -324,7 +438,7 @@
                                           x-text="endRunning({{ $lastEndOfSet }})"></span>
                                 </td>
                                 <td class="px-3 py-3 text-center">
-                                    <span class="text-base font-black text-gray-700" x-text="setTenX({{ $set }})"></span>
+                                    <span class="text-base font-black text-gray-700" x-text="setGold({{ $set }})"></span>
                                 </td>
                                 <td class="px-3 py-3 text-center">
                                     <span class="text-base font-black text-gray-700" x-text="setX({{ $set }})"></span>

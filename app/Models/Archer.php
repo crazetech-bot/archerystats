@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -16,16 +17,39 @@ class Archer extends Model
         'Kuala Lumpur', 'Labuan', 'Putrajaya',
     ];
 
+    const STATE_TEAM_OPTIONS = [
+        'Johor', 'Kedah', 'Kelantan', 'Melaka', 'Negeri Sembilan',
+        'Pahang', 'Perak', 'Perlis', 'Pulau Pinang', 'Sabah',
+        'Sarawak', 'Selangor', 'Terengganu',
+        'Kuala Lumpur', 'Labuan', 'Putrajaya',
+        'Polis DiRaja Malaysia (PDRM)',
+        'Angkatan Tentera Malaysia (ATM)',
+        'Majlis Sukan Universiti Malaysia (MASUM)',
+    ];
+
     const DIVISIONS = ['Recurve', 'Compound', 'Barebow', 'Traditional'];
 
+    const NATIONAL_TEAM_OPTIONS = ['No', 'Podium', 'Pelapis Kebangsaan', 'PARA'];
+
+    const STATUS_OPTIONS = [
+        'active'           => 'Active',
+        'no_longer_active' => 'No Longer Active',
+        'injury'           => 'Injury',
+    ];
+
     protected $fillable = [
-        'user_id', 'club_id',
+        'user_id', 'club_id', 'state_team_id',
         'ref_no',
-        'date_of_birth', 'gender', 'phone',
+        'mareos_id', 'wareos_id', 'division', 'para_archery',
+        'state_team', 'national_team',
+        'date_of_birth', 'nric', 'passport_number', 'passport_expiry_date', 'place_of_birth', 'gender', 'phone',
         'team', 'hand', 'state', 'country',
         'address_line', 'postcode', 'address_state',
         'bow_style', 'divisions',
         'classification', 'photo', 'active', 'notes',
+        'status', 'injury_date', 'injury_type', 'injury_return_date',
+        'next_of_kin_name', 'next_of_kin_relationship', 'next_of_kin_email', 'next_of_kin_phone',
+        'school', 'school_address', 'school_postcode', 'school_state',
         'arrow_type', 'arrow_size', 'arrow_length',
         'limb_type', 'limb_length', 'limb_poundage', 'actual_poundage',
         'pb_unofficial_36_score', 'pb_unofficial_36_date',
@@ -37,11 +61,15 @@ class Archer extends Model
     protected $casts = [
         'date_of_birth'           => 'date',
         'active'                  => 'boolean',
+        'para_archery'            => 'boolean',
         'divisions'               => 'array',
         'pb_unofficial_36_date'   => 'date',
         'pb_unofficial_72_date'   => 'date',
         'pb_official_36_date'     => 'date',
         'pb_official_72_date'     => 'date',
+        'injury_date'             => 'date',
+        'injury_return_date'      => 'date',
+        'passport_expiry_date'    => 'date',
     ];
 
     protected static function boot(): void
@@ -65,6 +93,11 @@ class Archer extends Model
         return $this->belongsTo(Club::class);
     }
 
+    public function stateTeam(): BelongsTo
+    {
+        return $this->belongsTo(StateTeam::class);
+    }
+
     public function equipment(): HasMany
     {
         return $this->hasMany(Equipment::class);
@@ -75,9 +108,25 @@ class Archer extends Model
         return $this->hasOne(Equipment::class)->where('current', true)->latestOfMany();
     }
 
+    public function achievements(): HasMany
+    {
+        return $this->hasMany(ArcherAchievement::class)->orderByDesc('date');
+    }
+
     public function sessions(): HasMany
     {
         return $this->hasMany(ArcherySession::class);
+    }
+
+    public function coaches(): BelongsToMany
+    {
+        return $this->belongsToMany(Coach::class, 'coach_archers')->withTimestamps();
+    }
+
+    public function trainingSessions(): BelongsToMany
+    {
+        return $this->belongsToMany(TrainingSession::class, 'training_session_archer')
+                    ->withPivot('attended');
     }
 
     public function getAgeAttribute(): ?int
