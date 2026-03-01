@@ -10,12 +10,13 @@ class RoundType extends Model
     protected $fillable = [
         'name', 'category', 'discipline', 'distance_meters', 'target_face_cm',
         'distance_segments', 'scoring_system', 'num_ends', 'arrows_per_end',
-        'max_score_per_arrow', 'description', 'active',
+        'max_score_per_arrow', 'description', 'active', 'is_custom',
     ];
 
     protected $casts = [
-        'active'             => 'boolean',
-        'distance_segments'  => 'array',
+        'active'            => 'boolean',
+        'is_custom'         => 'boolean',
+        'distance_segments' => 'array',
     ];
 
     public function sessions(): HasMany

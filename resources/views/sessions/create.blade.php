@@ -21,10 +21,10 @@
     foreach ($roundTypes as $cat => $rounds) {
         foreach ($rounds as $rt) {
             $rtMeta[$rt->id] = [
-                'distance'      => $rt->distance_meters,
-                'face'          => $rt->target_face_cm,
-                'scoring'       => $rt->scoring_system ?? 'standard',
-                'name'          => $rt->name,
+                'distance' => $rt->distance_meters,
+                'face'     => $rt->target_face_cm,
+                'scoring'  => $rt->scoring_system ?? 'standard',
+                'name'     => $rt->name,
             ];
         }
     }
@@ -39,6 +39,7 @@
         '3d'      => ['bg' => '#ffedd5', 'text' => '#7c2d12', 'active_bg' => '#ea580c', 'active_text' => '#ffffff', 'border' => '#fdba74'],
         'mssm'    => ['bg' => '#fce7f3', 'text' => '#9d174d', 'active_bg' => '#db2777', 'active_text' => '#ffffff', 'border' => '#f9a8d4'],
         'bakat'   => ['bg' => '#ccfbf1', 'text' => '#134e4a', 'active_bg' => '#0d9488', 'active_text' => '#ffffff', 'border' => '#5eead4'],
+        'custom'  => ['bg' => '#f5f3ff', 'text' => '#5b21b6', 'active_bg' => '#7c3aed', 'active_text' => '#ffffff', 'border' => '#c4b5fd'],
     ];
     $disciplineColors = [
         'recurve'  => ['bg' => '#dbeafe', 'text' => '#1d4ed8'],
@@ -52,6 +53,7 @@
     $scoringLabels = [
         'standard' => 'X · 10–1 · M',
         'compound' => 'X · 10–6 · M',
+        'reduced'  => 'X · 10–5 · M',
         'field'    => 'X(6) · 6–1 · M',
         '3d'       => '20 · 17 · 10 · M',
         'clout'    => '5–1 · M',
@@ -60,10 +62,18 @@
 
 <div class="max-w-2xl mx-auto"
      x-data="{
-         activeTab:    '{{ $firstCat }}',
-         selectedId:   {{ old('round_type_id') ? (int) old('round_type_id') : ($defaultRoundTypeId ?? 'null') }},
-         isComp:       {{ old('is_competition') ? 'true' : 'false' }},
-         roundMeta:    {{ Js::from($rtMeta) }},
+         activeTab:        '{{ $firstCat }}',
+         selectedId:       {{ old('round_type_id') ? (int) old('round_type_id') : ($defaultRoundTypeId ?? 'null') }},
+         isComp:           {{ old('is_competition') ? 'true' : 'false' }},
+         roundMeta:        {{ Js::from($rtMeta) }},
+         archerDiscipline: '{{ $archerDiscipline }}',
+
+         customSegments: [
+             { distance: '', face: '', scoring: 'standard', num_ends: 6, arrows_per_end: 6 }
+         ],
+
+         get isCustom() { return this.activeTab === 'custom'; },
+
          get selected() { return this.selectedId ? this.roundMeta[this.selectedId] : null; },
          get distPlaceholder() {
              if (!this.selected) return 'Distance (m)';
@@ -73,10 +83,68 @@
              if (!this.selected) return 'Target face (cm)';
              return this.selected.face ? this.selected.face + 'cm (default)' : 'Not specified';
          },
+
+         get customTotalEnds() {
+             return this.customSegments.reduce((s, seg) => s + (parseInt(seg.num_ends) || 0), 0);
+         },
+         get customArrowsPerEnd() {
+             return parseInt(this.customSegments[0]?.arrows_per_end) || 6;
+         },
+         get customTotalArrows() {
+             return this.customSegments.reduce((s, seg) => {
+                 return s + (parseInt(seg.num_ends) || 0) * (parseInt(seg.arrows_per_end) || 6);
+             }, 0);
+         },
+
+         scoringForFace(face, discipline) {
+             face = parseInt(face);
+             if (!face) return 'standard';
+             // Compound discipline: 80cm face uses 5-ring scoring (X·10–5·M)
+             if (discipline === 'compound') return 'reduced';
+             if (face === 80) return 'reduced';
+             return 'standard';
+         },
+
+         onFaceChange(i) {
+             const f = parseInt(this.customSegments[i].face);
+             if (f) {
+                 this.customSegments[i].scoring = this.scoringForFace(f, this.archerDiscipline);
+             }
+         },
+
+         addSegment() {
+             const last = this.customSegments[this.customSegments.length - 1];
+             this.customSegments.push({
+                 distance:       last ? last.distance : '',
+                 face:           last ? last.face     : '',
+                 scoring:        last ? last.scoring  : 'standard',
+                 num_ends:       6,
+                 arrows_per_end: last ? last.arrows_per_end : 6,
+             });
+         },
+         removeSegment(i) {
+             if (this.customSegments.length > 1) this.customSegments.splice(i, 1);
+         },
      }">
 
     <form method="POST" action="{{ route('sessions.store', $archer) }}">
         @csrf
+
+        {{-- Hidden custom-round inputs, submitted only when isCustom --}}
+        <template x-if="isCustom">
+            <div>
+                <input type="hidden" name="is_custom" value="1">
+                <template x-for="(seg, i) in customSegments" :key="i">
+                    <div>
+                        <input type="hidden" :name="`custom_segments[${i}][distance]`"        :value="seg.distance">
+                        <input type="hidden" :name="`custom_segments[${i}][face]`"             :value="seg.face">
+                        <input type="hidden" :name="`custom_segments[${i}][scoring]`"          :value="seg.scoring">
+                        <input type="hidden" :name="`custom_segments[${i}][num_ends]`"         :value="seg.num_ends">
+                        <input type="hidden" :name="`custom_segments[${i}][arrows_per_end]`"   :value="seg.arrows_per_end">
+                    </div>
+                </template>
+            </div>
+        </template>
 
         <div class="space-y-6">
 
@@ -91,7 +159,7 @@
                     </span>
                     <div>
                         <h2 class="text-sm font-bold text-gray-900">Round Type</h2>
-                        <p class="text-xs text-gray-500">Select the format for this session</p>
+                        <p class="text-xs text-gray-500">Select a predefined format or build a custom round</p>
                     </div>
                 </div>
 
@@ -111,10 +179,23 @@
                         {{ $cat === '3d' ? '3D' : ($cat === 'mssm' ? 'MSSM' : ($cat === 'bakat' ? 'Bakat Kebangsaan' : ucfirst($cat))) }}
                     </button>
                     @endforeach
+                    {{-- Custom Tab (always shown) --}}
+                    @php $cc = $catColors['custom']; @endphp
+                    <button type="button"
+                            @click="activeTab = 'custom'"
+                            :class="activeTab === 'custom'
+                                ? 'border-b-2 font-semibold text-xs'
+                                : 'text-gray-500 hover:text-gray-700 text-xs font-medium'"
+                            :style="activeTab === 'custom'
+                                ? 'border-color: {{ $cc['active_bg'] }}; color: {{ $cc['active_bg'] }}; background: {{ $cc['bg'] }};'
+                                : ''"
+                            class="flex-shrink-0 px-4 py-3 transition-colors">
+                        Custom
+                    </button>
                 </div>
 
-                {{-- Round Type Cards per Category --}}
                 <div class="p-5">
+                    {{-- Predefined Round Cards --}}
                     @foreach($roundTypes as $category => $rounds)
                     @php $c = $catColors[$category] ?? $catColors['indoor']; @endphp
                     <div x-show="activeTab === '{{ $category }}'"
@@ -175,15 +256,123 @@
                         </div>
                     </div>
                     @endforeach
+
+                    {{-- Custom Round Builder --}}
+                    <div x-show="isCustom" style="display:none">
+
+                        <div class="mb-5">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                Round Name <span class="normal-case font-normal text-gray-400">(optional)</span>
+                            </label>
+                            <input type="text" name="custom_name"
+                                   value="{{ old('custom_name') }}"
+                                   placeholder="e.g. Training Round — Mixed Distance"
+                                   class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                          focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:bg-white outline-none transition">
+                        </div>
+
+                        {{-- Column headings --}}
+                        <div class="grid gap-2 px-1 mb-1" style="grid-template-columns: 1fr 1fr 1.4fr 70px 70px 32px;">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Distance (m)</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Face (cm)</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Scoring System</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Ends</p>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Arr/End</p>
+                            <p></p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <template x-for="(seg, i) in customSegments" :key="i">
+                                <div class="grid gap-2 items-center" style="grid-template-columns: 1fr 1fr 1.4fr 70px 70px 32px;">
+                                    <select x-model="seg.distance"
+                                            class="w-full rounded-lg border border-gray-300 bg-gray-50 text-sm py-2 px-2
+                                                   focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 focus:bg-white outline-none transition">
+                                        <option value="">— choose distance —</option>
+                                        <option value="90">90m</option>
+                                        <option value="70">70m</option>
+                                        <option value="60">60m</option>
+                                        <option value="50">50m</option>
+                                        <option value="40">40m</option>
+                                        <option value="30">30m</option>
+                                        <option value="25">25m</option>
+                                        <option value="20">20m</option>
+                                        <option value="18">18m</option>
+                                        <option value="15">15m</option>
+                                        <option value="10">10m</option>
+                                        <option value="5">5m</option>
+                                    </select>
+                                    <input type="text" inputmode="numeric"
+                                           x-model="seg.face"
+                                           @input="onFaceChange(i)"
+                                           placeholder="e.g. 122"
+                                           class="w-full rounded-lg border border-gray-300 bg-gray-50 text-sm py-2 px-3
+                                                  focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 focus:bg-white outline-none transition">
+                                    <select x-model="seg.scoring"
+                                            class="w-full rounded-lg border border-gray-300 bg-gray-50 text-sm py-2 px-2
+                                                   focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 focus:bg-white outline-none transition">
+                                        <option value="standard">Complete (1 – 10 +X)</option>
+                                        <option value="reduced">Reduced (5 – 10 +X)</option>
+                                        <option value="six_ring">Reduced (6 – 10 +X)</option>
+                                        <option value="field">Field (1 – 6)</option>
+                                        <option value="standard_x11">Complete (1 – 10 =X=11)</option>
+                                        <option value="six_ring_x11">Reduced (6 – 10 +X=11)</option>
+                                    </select>
+                                    <input type="number" min="1" max="24"
+                                           x-model="seg.num_ends"
+                                           class="w-full rounded-lg border border-gray-300 bg-gray-50 text-sm py-2 px-2
+                                                  focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 focus:bg-white outline-none transition text-center">
+                                    <input type="number" min="1" max="12"
+                                           x-model="seg.arrows_per_end"
+                                           class="w-full rounded-lg border border-gray-300 bg-gray-50 text-sm py-2 px-2
+                                                  focus:border-violet-400 focus:ring-2 focus:ring-violet-400/20 focus:bg-white outline-none transition text-center">
+                                    <button type="button" @click="removeSegment(i)"
+                                            :disabled="customSegments.length <= 1"
+                                            :class="customSegments.length <= 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-red-600'"
+                                            class="h-8 w-8 flex items-center justify-center rounded-lg text-gray-400 transition-colors">
+                                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+
+                        <button type="button" @click="addSegment()"
+                                class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-violet-700 hover:text-violet-900 transition-colors">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                            </svg>
+                            Add Ends
+                        </button>
+
+                        {{-- Summary --}}
+                        <div class="mt-4 flex items-center gap-2 text-xs text-violet-700 bg-violet-50 border border-violet-100 rounded-xl px-4 py-2.5">
+                            <svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+                            </svg>
+                            <span>
+                                Total: <strong x-text="customTotalEnds"></strong> ends
+                                &times; <strong x-text="customArrowsPerEnd"></strong> arrows
+                                = <strong x-text="customTotalArrows"></strong> arrows
+                            </span>
+                        </div>
+
+                        <p class="mt-2 text-[11px] text-gray-400">
+                            Scoring is auto-suggested from face size + discipline. Override each dropdown as needed.
+                        </p>
+                    </div>
                 </div>
 
                 @error('round_type_id')
                 <p class="px-5 pb-4 text-xs text-red-600">{{ $message }}</p>
                 @enderror
+                @error('custom_segments')
+                <p class="px-5 pb-4 text-xs text-red-600">{{ $message }}</p>
+                @enderror
             </div>
 
-            {{-- Distance / Target Face Overrides --}}
-            <div x-show="selectedId !== null" x-cloak
+            {{-- Distance / Target Face Overrides (predefined rounds only) --}}
+            <div x-show="selectedId !== null && !isCustom" x-cloak
                  class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
                      style="background: linear-gradient(135deg, #fafaf9, #f5f5f4);">

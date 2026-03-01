@@ -45,12 +45,15 @@
     if ($segmentScoring && count(array_unique($segmentScoring)) > 1) {
         foreach ($segmentScoring as $setNum => $sys) {
             $validHintMap[$setNum] = match($sys) {
-                'compound' => 'X &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
-                'field'    => 'X (=6 pts) &nbsp;·&nbsp; 6–1 &nbsp;·&nbsp; M (miss)',
-                '3d'       => '20 &nbsp;·&nbsp; 17 &nbsp;·&nbsp; 10 &nbsp;·&nbsp; M (miss)',
-                'clout'    => '5–1 &nbsp;·&nbsp; M (miss)',
-                'reduced'  => 'X &nbsp;·&nbsp; 10–5 &nbsp;·&nbsp; M (miss)',
-                default    => 'X &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
+                'compound',
+                'reduced'       => 'X &nbsp;·&nbsp; 10–5 &nbsp;·&nbsp; M (miss)',
+                'six_ring'      => 'X &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
+                'standard_x11'  => 'X (=11 pts) &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
+                'six_ring_x11'  => 'X (=11 pts) &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
+                'field'         => 'X (=6 pts) &nbsp;·&nbsp; 6–1 &nbsp;·&nbsp; M (miss)',
+                '3d'            => '20 &nbsp;·&nbsp; 17 &nbsp;·&nbsp; 10 &nbsp;·&nbsp; M (miss)',
+                'clout'         => '5–1 &nbsp;·&nbsp; M (miss)',
+                default         => 'X &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
             };
         }
     }
@@ -67,11 +70,15 @@
     }
 
     $validHint = match($scoringSystem) {
-        'compound' => 'X &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
-        'field'    => 'X (=6 pts) &nbsp;·&nbsp; 6–1 &nbsp;·&nbsp; M (miss)',
-        '3d'       => '20 &nbsp;·&nbsp; 17 &nbsp;·&nbsp; 10 &nbsp;·&nbsp; M (miss)',
-        'clout'    => '5–1 &nbsp;·&nbsp; M (miss)',
-        default    => 'X &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
+        'compound',
+        'reduced'       => 'X &nbsp;·&nbsp; 10–5 &nbsp;·&nbsp; M (miss)',
+        'six_ring'      => 'X &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
+        'standard_x11'  => 'X (=11 pts) &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
+        'six_ring_x11'  => 'X (=11 pts) &nbsp;·&nbsp; 10–6 &nbsp;·&nbsp; M (miss)',
+        'field'         => 'X (=6 pts) &nbsp;·&nbsp; 6–1 &nbsp;·&nbsp; M (miss)',
+        '3d'            => '20 &nbsp;·&nbsp; 17 &nbsp;·&nbsp; 10 &nbsp;·&nbsp; M (miss)',
+        'clout'         => '5–1 &nbsp;·&nbsp; M (miss)',
+        default         => 'X &nbsp;·&nbsp; 10–1 &nbsp;·&nbsp; M (miss)',
     };
     $goldLabel = match($scoringSystem) {
         'field'  => 'X',
@@ -384,6 +391,24 @@
                         <tbody x-show="currentSet === {{ $set }}"
                                @if($set > 1) style="display: none;" @endif
                                class="divide-y divide-gray-100">
+
+                            {{-- Segment header row for multi-distance rounds --}}
+                            @if($segmentLabels && isset($segmentLabels[$set]))
+                            <tr class="bg-emerald-50 border-b border-emerald-200">
+                                <td colspan="{{ $ape + 5 }}" class="px-4 py-2">
+                                    <div class="flex items-center gap-3 flex-wrap">
+                                        <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">
+                                            {{ $segmentLabels[$set] }}
+                                        </span>
+                                        @if(isset($validHintMap[$set]))
+                                        <span class="text-xs text-emerald-600 font-medium">
+                                            &mdash; Valid: {!! $validHintMap[$set] !!}
+                                        </span>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                            @endif
 
                             @for($e = $setStart; $e <= $setEnd; $e++)
                                 @php $ei = $e - 1; @endphp

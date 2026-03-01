@@ -40,6 +40,7 @@ class SessionController extends Controller
         }
 
         $roundTypes = RoundType::where('active', true)
+            ->where('is_custom', false)
             ->orderByRaw("FIELD(category,'indoor','outdoor','field','3d','mssm','bakat') ASC")
             ->orderBy('distance_meters')
             ->orderBy('name')
@@ -62,8 +63,11 @@ class SessionController extends Controller
             : null;
         $defaultRoundTypeId = $defaultRoundType?->id;
         $defaultTab         = $defaultRoundType?->category;
+        $archerDiscipline   = $primaryDivision ?: 'recurve';
 
-        return view('sessions.create', compact('archer', 'roundTypes', 'defaultRoundTypeId', 'defaultTab'));
+        return view('sessions.create', compact(
+            'archer', 'roundTypes', 'defaultRoundTypeId', 'defaultTab', 'archerDiscipline'
+        ));
     }
 
     public function store(Archer $archer, Request $request): RedirectResponse
@@ -76,8 +80,52 @@ class SessionController extends Controller
             abort(403);
         }
 
+        if ($request->boolean('is_custom')) {
+            // ── Custom Round Path ────────────────────────────────────────────
+            $request->validate([
+                'custom_name'                      => ['nullable', 'string', 'max:100'],
+                'custom_segments'                  => ['required', 'array', 'min:1', 'max:10'],
+                'custom_segments.*.distance'       => ['required', 'integer', 'min:1', 'max:300'],
+                'custom_segments.*.face'           => ['required', 'integer', 'min:1'],
+                'custom_segments.*.scoring'        => ['required', 'in:standard,compound,reduced,six_ring,field,3d,clout,standard_x11,six_ring_x11'],
+                'custom_segments.*.num_ends'       => ['required', 'integer', 'min:1', 'max:24'],
+                'custom_segments.*.arrows_per_end' => ['required', 'integer', 'min:1', 'max:12'],
+            ]);
+
+            $segs      = $request->input('custom_segments');
+            $totalEnds = array_sum(array_column($segs, 'num_ends'));
+            $ape       = (int) $segs[0]['arrows_per_end'];
+
+            $roundType = RoundType::create([
+                'name'                => $request->input('custom_name') ?: 'Custom Round',
+                'category'            => 'custom',
+                'is_custom'           => true,
+                'num_ends'            => $totalEnds,
+                'arrows_per_end'      => $ape,
+                'scoring_system'      => $segs[0]['scoring'] ?? 'standard',
+                'distance_meters'     => (int) $segs[0]['distance'],
+                'target_face_cm'      => (int) $segs[0]['face'],
+                'max_score_per_arrow' => 10,
+                'active'              => true,
+                'distance_segments'   => array_values(array_map(fn($s) => [
+                    'distance'       => (int) $s['distance'],
+                    'face'           => (int) $s['face'],
+                    'scoring'        => $s['scoring'],
+                    'num_ends'       => (int) $s['num_ends'],
+                    'arrows_per_end' => (int) $s['arrows_per_end'],
+                    'label'          => $s['distance'] . 'm · ' . $s['face'] . 'cm',
+                ], $segs)),
+            ]);
+        } else {
+            // ── Predefined Round Path ────────────────────────────────────────
+            $request->validate([
+                'round_type_id' => ['required', 'exists:round_types,id'],
+            ]);
+            $roundType = RoundType::findOrFail($request->input('round_type_id'));
+        }
+
+        // ── Shared Session Fields ────────────────────────────────────────────
         $validated = $request->validate([
-            'round_type_id'    => ['required', 'exists:round_types,id'],
             'date'             => ['required', 'date'],
             'distance_meters'  => ['nullable', 'integer', 'min:1', 'max:300'],
             'target_face_cm'   => ['nullable', 'integer', 'min:1'],
@@ -87,8 +135,6 @@ class SessionController extends Controller
             'competition_name' => ['nullable', 'string', 'max:200'],
             'notes'            => ['nullable', 'string'],
         ]);
-
-        $roundType = RoundType::findOrFail($validated['round_type_id']);
 
         $session = ArcherySession::create([
             'archer_id'        => $archer->id,
@@ -112,12 +158,26 @@ class SessionController extends Controller
             'miss_count'         => 0,
         ]);
 
+        // Build end→scoring map from distance_segments
+        $segScoring = [];
+        if ($segments = $roundType->distance_segments) {
+            $endNum = 1;
+            foreach ($segments as $seg) {
+                $segEnds = (int) ($seg['num_ends'] ?? 6);
+                $sys     = $seg['scoring'] ?? $roundType->scoring_system ?? 'standard';
+                for ($i = 0; $i < $segEnds; $i++) {
+                    $segScoring[$endNum++] = $sys;
+                }
+            }
+        }
+
         for ($e = 1; $e <= $roundType->num_ends; $e++) {
             End::create([
-                'score_id'     => $score->id,
-                'end_number'   => $e,
-                'arrow_values' => array_fill(0, $roundType->arrows_per_end, null),
-                'end_total'    => 0,
+                'score_id'       => $score->id,
+                'end_number'     => $e,
+                'arrow_values'   => array_fill(0, $roundType->arrows_per_end, null),
+                'end_total'      => 0,
+                'scoring_system' => $segScoring[$e] ?? $roundType->scoring_system ?? 'standard',
             ]);
         }
 
@@ -163,25 +223,26 @@ class SessionController extends Controller
         $scoringSystem = $session->roundType->scoring_system ?? 'standard';
         $score   = $session->score;
         $endsMap = $score->ends->keyBy('end_number');
+        $ape     = $session->roundType->arrows_per_end;
         $input   = $request->input('arrows', []);
 
         foreach ($endsMap as $endNumber => $end) {
+            $endSys    = $end->scoring_system ?? $scoringSystem;
             $rawArrows = $input[$endNumber] ?? [];
             $arrows    = [];
 
             foreach ($rawArrows as $val) {
                 $v = strtoupper(trim((string) $val));
-                $arrows[] = $this->normalizeArrow($v, $scoringSystem);
+                $arrows[] = $this->normalizeArrow($v, $endSys);
             }
 
             // Pad to arrows_per_end length
-            $ape = $session->roundType->arrows_per_end;
             while (count($arrows) < $ape) {
                 $arrows[] = null;
             }
 
             $end->arrow_values = $arrows;
-            $end->end_total    = $end->calculateTotal($scoringSystem);
+            $end->end_total    = $end->calculateTotal($endSys);
             $end->save();
         }
 
@@ -190,8 +251,8 @@ class SessionController extends Controller
 
         // Auto-update Personal Best if this score beats the stored PB
         $score->refresh();
-        $newTotal   = $score->total_score;
-        $roundType  = $session->roundType;
+        $newTotal    = $score->total_score;
+        $roundType   = $session->roundType;
         $totalArrows = $roundType->num_ends * $roundType->arrows_per_end;
         $archer      = $session->archer;
         $pbUpdated   = false;
@@ -252,32 +313,50 @@ class SessionController extends Controller
                 default                                  => null,
             },
             '3d' => match (true) {
-                $v === 'M'                                              => 'M',
-                is_numeric($v) && in_array((int)$v, [20, 17, 10])      => (int)$v,
-                default                                                 => null,
+                $v === 'M'                                         => 'M',
+                is_numeric($v) && in_array((int)$v, [20, 17, 10]) => (int)$v,
+                default                                            => null,
             },
             'clout' => match (true) {
-                $v === 'M' || $v === '0'                               => 'M',
-                is_numeric($v) && (int)$v >= 1 && (int)$v <= 5        => (int)$v,
-                default                                                => null,
+                $v === 'M' || $v === '0'                        => 'M',
+                is_numeric($v) && (int)$v >= 1 && (int)$v <= 5 => (int)$v,
+                default                                         => null,
             },
-            'compound' => match (true) {
-                $v === 'X'                                              => 'X',
-                $v === 'M' || $v === '0'                               => 'M',
-                is_numeric($v) && (int)$v >= 6 && (int)$v <= 10       => (int)$v,
-                default                                                => null,
+            'compound' => match (true) {  // X·10–5·M (WA compound = same as reduced)
+                $v === 'X'                                         => 'X',
+                $v === 'M' || $v === '0'                          => 'M',
+                is_numeric($v) && (int)$v >= 5 && (int)$v <= 10  => (int)$v,
+                default                                            => null,
             },
-            'reduced' => match (true) {
-                $v === 'X'                                              => 'X',
-                $v === 'M' || $v === '0'                               => 'M',
-                is_numeric($v) && (int)$v >= 5 && (int)$v <= 10       => (int)$v,
-                default                                                => null,
+            'reduced' => match (true) {  // X·10–5·M
+                $v === 'X'                                         => 'X',
+                $v === 'M' || $v === '0'                          => 'M',
+                is_numeric($v) && (int)$v >= 5 && (int)$v <= 10  => (int)$v,
+                default                                            => null,
             },
-            default => match (true) { // standard
-                $v === 'X'                                              => 'X',
-                $v === 'M' || $v === '0'                               => 'M',
-                is_numeric($v) && (int)$v >= 1 && (int)$v <= 10       => (int)$v,
-                default                                                => null,
+            'six_ring' => match (true) {  // X·10–6·M (6-ring face)
+                $v === 'X'                                         => 'X',
+                $v === 'M' || $v === '0'                          => 'M',
+                is_numeric($v) && (int)$v >= 6 && (int)$v <= 10  => (int)$v,
+                default                                            => null,
+            },
+            'standard_x11' => match (true) {  // X=11·10–1·M
+                $v === 'X'                                         => 'X',
+                $v === 'M' || $v === '0'                          => 'M',
+                is_numeric($v) && (int)$v >= 1 && (int)$v <= 10  => (int)$v,
+                default                                            => null,
+            },
+            'six_ring_x11' => match (true) {  // X=11·10–6·M
+                $v === 'X'                                         => 'X',
+                $v === 'M' || $v === '0'                          => 'M',
+                is_numeric($v) && (int)$v >= 6 && (int)$v <= 10  => (int)$v,
+                default                                            => null,
+            },
+            default => match (true) { // standard: X·10–1·M
+                $v === 'X'                                         => 'X',
+                $v === 'M' || $v === '0'                          => 'M',
+                is_numeric($v) && (int)$v >= 1 && (int)$v <= 10  => (int)$v,
+                default                                            => null,
             },
         };
     }

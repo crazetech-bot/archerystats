@@ -10,7 +10,7 @@ class End extends Model
     protected $table = 'ends';
 
     protected $fillable = [
-        'score_id', 'end_number', 'arrow_values', 'end_total',
+        'score_id', 'end_number', 'arrow_values', 'end_total', 'scoring_system',
     ];
 
     protected $casts = [
@@ -22,9 +22,14 @@ class End extends Model
         return $this->belongsTo(Score::class);
     }
 
-    public function calculateTotal(string $scoringSystem = 'standard'): int
+    public function calculateTotal(string $scoringSystem = null): int
     {
-        $xPoints = ($scoringSystem === 'field') ? 6 : 10;
+        $scoringSystem = $scoringSystem ?? $this->scoring_system ?? 'standard';
+        $xPoints = match ($scoringSystem) {
+            'field'                            => 6,
+            'standard_x11', 'six_ring_x11'    => 11,
+            default                            => 10,
+        };
         $total   = 0;
         foreach ($this->arrow_values as $arrow) {
             if ($arrow === 'X') {

@@ -31,17 +31,22 @@ class Score extends Model
         $hitCount  = 0;
         $missCount = 0;
 
-        // Gold zone thresholds per scoring system
-        // standard/compound: 10 or X; field: X (=6); 3d: 20; clout: 5
-        $goldValue = match ($scoringSystem) {
-            'field' => 6,
-            '3d'    => 20,
-            'clout' => 5,
-            default => 10,
-        };
-        $xPoints = ($scoringSystem === 'field') ? 6 : 10;
-
         foreach ($this->ends as $end) {
+            // Per-end scoring system — stored on the end, falls back to session-level
+            $sys = $end->scoring_system ?? $scoringSystem;
+
+            $xPoints   = match ($sys) {
+                'field'                            => 6,
+                'standard_x11', 'six_ring_x11'    => 11,
+                default                            => 10,
+            };
+            $goldValue = match ($sys) {
+                'field' => 6,
+                '3d'    => 20,
+                'clout' => 5,
+                default => 10,  // standard / compound / reduced
+            };
+
             foreach ($end->arrow_values as $arrow) {
                 if ($arrow === null || $arrow === '') {
                     continue; // unscored arrow
