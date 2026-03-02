@@ -17,6 +17,7 @@ use App\Http\Controllers\CoachArcherInvitationController;
 use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EliminationMatchController;
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\LiveScoringRealtimeController;
 use App\Http\Controllers\NationalTeamController;
 use App\Http\Controllers\StateTeamController;
 use App\Http\Controllers\TrainingSessionController;
@@ -159,6 +160,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:super_admin'])->group(function () {
         Route::delete('/coaches/{coach}', [CoachController::class, 'destroy'])->name('coaches.destroy');
+    });
+
+    // Live scoring — real-time scoreboard
+    Route::middleware(['role:super_admin,club_admin,state_admin,national_team'])->group(function () {
+        Route::get('/live-scoring/realtime',       [LiveScoringRealtimeController::class, 'index'])->name('live-scoring.realtime');
+        Route::get('/live-scoring/realtime/data',  [LiveScoringRealtimeController::class, 'data'])->name('live-scoring.realtime.data');
     });
 
     // Clubs — list: super_admin + state_admin + national_team (read-only)

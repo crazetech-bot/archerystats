@@ -249,6 +249,15 @@ class SessionController extends Controller
         $score->load('ends');
         $score->recalculate($scoringSystem);
 
+        // Broadcast live score update (fires via Pusher if configured, silently skipped otherwise)
+        try {
+            $session->load(['archer.club', 'archer.stateTeam', 'roundType', 'score.ends']);
+            $row = app(\App\Services\LiveScoringFormatterService::class)->formatRow($session);
+            \App\Events\ScoreUpdated::dispatch($row);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('ScoreUpdated broadcast failed: ' . $e->getMessage());
+        }
+
         // Auto-update Personal Best if this score beats the stored PB
         $score->refresh();
         $newTotal    = $score->total_score;
