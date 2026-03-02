@@ -304,6 +304,114 @@
             </div>
         </div>
 
+        {{-- SEO --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+                 style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+                <span class="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0016.803 15.803z"/>
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">SEO</h2>
+                    <p class="text-xs text-gray-500">Search engine visibility &amp; social sharing</p>
+                </div>
+            </div>
+            <div class="p-6 space-y-5">
+
+                {{-- Site Name --}}
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Site Name</label>
+                    <input type="text" name="seo_site_name"
+                           value="{{ $settings['seo_site_name'] ?? '' }}"
+                           placeholder="Archery Stats"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition">
+                    <p class="mt-1.5 text-xs text-gray-400">Used as <code class="bg-gray-100 px-1 rounded">og:site_name</code> and default page title fallback.</p>
+                </div>
+
+                {{-- Default Meta Description --}}
+                <div x-data="{ len: {{ strlen($settings['seo_description'] ?? '') }} }">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Default Meta Description</label>
+                        <span class="text-xs" :class="len > 160 ? 'text-red-500 font-semibold' : 'text-gray-400'">
+                            <span x-text="len"></span>/160
+                        </span>
+                    </div>
+                    <textarea name="seo_description" rows="3" maxlength="300"
+                              @input="len = $event.target.value.length"
+                              placeholder="Describe your site in 1–2 sentences for search engines and social sharing…"
+                              class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                     focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition resize-none">{{ $settings['seo_description'] ?? '' }}</textarea>
+                    <p class="mt-1.5 text-xs text-gray-400">Shown in Google search results and as the default social share description. Aim for 120–160 characters.</p>
+                </div>
+
+                {{-- Social Share (OG) Image --}}
+                <div x-data="{ preview: '{{ !empty($settings['seo_og_image']) ? asset('storage/' . $settings['seo_og_image']) : '' }}', hasImg: {{ !empty($settings['seo_og_image']) ? 'true' : 'false' }} }">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Social Share Image (OG Image)</label>
+
+                    {{-- Preview --}}
+                    <div class="mb-3">
+                        <div x-show="hasImg || preview"
+                             class="rounded-xl border-2 border-gray-200 bg-gray-50 overflow-hidden shadow-sm"
+                             style="max-width: 360px; aspect-ratio: 1200/630;">
+                            <img :src="preview || '{{ !empty($settings['seo_og_image']) ? asset('storage/' . $settings['seo_og_image']) : '' }}'"
+                                 class="w-full h-full object-cover" alt="OG image preview">
+                        </div>
+                        <div x-show="!hasImg && !preview"
+                             class="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex flex-col items-center justify-center text-gray-400 py-8"
+                             style="max-width: 360px;">
+                            <svg class="h-10 w-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                            </svg>
+                            <span class="text-xs">No image set</span>
+                        </div>
+                    </div>
+
+                    <input type="file" name="seo_og_image" accept=".png,.jpg,.jpeg,.webp"
+                           @change="const f=$event.target.files[0]; if(f){ preview=URL.createObjectURL(f); hasImg=true; }"
+                           class="block w-full text-sm text-gray-500
+                                  file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0
+                                  file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700
+                                  hover:file:bg-emerald-100 file:cursor-pointer">
+                    @error('seo_og_image')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                    <p class="mt-1.5 text-xs text-gray-400">PNG or JPG, recommended 1200 × 630 px. Shown when pages are shared on Facebook, X, LinkedIn, etc.</p>
+
+                    @if(!empty($settings['seo_og_image']))
+                        <button type="button" form="remove-seo-image-form"
+                                class="mt-2 text-xs font-medium text-red-500 hover:text-red-700 hover:underline"
+                                onclick="if(confirm('Remove SEO image?')) document.getElementById('remove-seo-image-form').submit()">
+                            &times; Remove current image
+                        </button>
+                    @endif
+                </div>
+
+                {{-- Google Analytics 4 --}}
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Google Analytics 4 ID</label>
+                    <input type="text" name="seo_ga_id"
+                           value="{{ $settings['seo_ga_id'] ?? '' }}"
+                           placeholder="G-XXXXXXXXXX"
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition font-mono">
+                    <p class="mt-1.5 text-xs text-gray-400">Your GA4 Measurement ID. Leave blank to disable tracking. Find it in Google Analytics → Admin → Data Streams.</p>
+                </div>
+
+                {{-- Google Search Console --}}
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Google Search Console Verification</label>
+                    <input type="text" name="seo_gsc_token"
+                           value="{{ $settings['seo_gsc_token'] ?? '' }}"
+                           placeholder="abc123XYZ..."
+                           class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
+                                  focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white outline-none transition font-mono">
+                    <p class="mt-1.5 text-xs text-gray-400">Paste only the <strong>content</strong> value from the Google Search Console HTML meta tag (e.g. <code class="bg-gray-100 px-1 rounded">abc123XYZ</code>). Leave blank if not needed.</p>
+                </div>
+
+            </div>
+        </div>
+
         {{-- Save --}}
         <div class="flex justify-end pb-2">
             <button type="submit"
@@ -317,6 +425,14 @@
     {{-- Standalone remove-logo form (outside main form to avoid nesting) --}}
     @if(!empty($settings['logo']))
         <form id="remove-logo-form" method="POST" action="{{ route('admin.settings.logo.remove') }}" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+    @endif
+
+    {{-- Standalone remove-seo-image form --}}
+    @if(!empty($settings['seo_og_image']))
+        <form id="remove-seo-image-form" method="POST" action="{{ route('admin.settings.seo.image.remove') }}" class="hidden">
             @csrf
             @method('DELETE')
         </form>
@@ -503,6 +619,7 @@
         {{-- User rows --}}
         <div class="divide-y divide-gray-50 min-h-[60px]">
             <template x-for="u in filtered" :key="u.id">
+                <div x-data="{ promoting: false, promoteRole: '' }">
                 <div class="px-6 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors">
 
                     {{-- Avatar --}}
@@ -535,6 +652,13 @@
                     {{-- Actions --}}
                     <div x-show="!u.isMe" class="flex items-center gap-2 flex-shrink-0">
 
+                        {{-- Appoint as Admin --}}
+                        <button type="button" @click="promoting = !promoting"
+                                :class="promoting ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'"
+                                class="px-2.5 py-1 rounded-lg border text-xs font-bold transition-colors">
+                            Appoint
+                        </button>
+
                         {{-- Suspend / Reactivate --}}
                         <form :action="`{{ url('admin/accounts') }}/${u.id}/toggle-status`"
                               method="POST" style="display:inline;">
@@ -566,6 +690,49 @@
                     </div>
                     <div x-show="u.isMe" class="text-xs text-gray-300 italic flex-shrink-0">you</div>
                 </div>
+
+                {{-- Promote panel --}}
+                <div x-show="promoting" x-cloak
+                     class="px-6 pb-4 pt-2 bg-indigo-50 border-t border-indigo-100">
+                    <form :action="`{{ url('admin/users') }}/${u.id}/promote`" method="POST">
+                        @csrf
+                        <p class="text-xs font-bold text-indigo-700 mb-3">Appoint <span x-text="u.name"></span> as:</p>
+                        <div class="flex items-end gap-3 flex-wrap">
+                            <div>
+                                <label class="text-xs font-semibold text-gray-600 mb-1 block">New Role</label>
+                                <select name="role" x-model="promoteRole" required
+                                        class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none">
+                                    <option value="">— select role —</option>
+                                    <option value="club_admin">Club Admin</option>
+                                    <option value="state_admin">State Admin</option>
+                                    <option value="national_team">National Team</option>
+                                </select>
+                            </div>
+                            <div x-show="promoteRole === 'club_admin'" x-cloak>
+                                <label class="text-xs font-semibold text-gray-600 mb-1 block">Assign to Club</label>
+                                <select name="club_id"
+                                        class="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none">
+                                    <option value="">— select club —</option>
+                                    @foreach($clubs as $club)
+                                        <option value="{{ $club->id }}">{{ $club->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                    :onclick="`return confirm('Appoint ' + u.name + ' as ' + (promoteRole === 'club_admin' ? 'Club Admin' : 'State Admin') + '? Their current role will be replaced.')`"
+                                    style="background:linear-gradient(135deg,#4338ca,#6366f1);"
+                                    class="px-4 py-1.5 rounded-lg text-white text-xs font-bold transition-opacity"
+                                    :disabled="!promoteRole">
+                                Confirm Appointment
+                            </button>
+                            <button type="button" @click="promoting = false"
+                                    class="px-4 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 text-xs font-semibold hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                </div>{{-- end x-data wrapper --}}
             </template>
 
             {{-- Empty state --}}
@@ -597,14 +764,16 @@
                     <div class="flex items-center gap-4">
                         @php
                             $badgeBg = match($admin->role) {
-                                'super_admin'  => 'background:#fef3c7;color:#b45309;',
-                                'state_admin'  => 'background:#d1fae5;color:#065f46;',
-                                default        => 'background:#ede9fe;color:#6d28d9;',
+                                'super_admin'    => 'background:#fef3c7;color:#b45309;',
+                                'state_admin'    => 'background:#d1fae5;color:#065f46;',
+                                'national_team'  => 'background:#e0e7ff;color:#3730a3;',
+                                default          => 'background:#ede9fe;color:#6d28d9;',
                             };
                             $badgeLabel = match($admin->role) {
-                                'super_admin'  => 'Super Admin',
-                                'state_admin'  => 'State Admin',
-                                default        => 'Club Admin',
+                                'super_admin'    => 'Super Admin',
+                                'state_admin'    => 'State Admin',
+                                'national_team'  => 'National Team',
+                                default          => 'Club Admin',
                             };
                         @endphp
                         <div class="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm"
@@ -727,9 +896,10 @@
                                 class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm px-4 py-2.5
                                        focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
                             <option value="">Select role…</option>
-                            <option value="super_admin"  @selected(old('role') === 'super_admin')>Super Admin</option>
-                            <option value="club_admin"   @selected(old('role') === 'club_admin')>Club Admin</option>
-                            <option value="state_admin"  @selected(old('role') === 'state_admin')>State Admin</option>
+                            <option value="super_admin"    @selected(old('role') === 'super_admin')>Super Admin</option>
+                            <option value="club_admin"     @selected(old('role') === 'club_admin')>Club Admin</option>
+                            <option value="state_admin"    @selected(old('role') === 'state_admin')>State Admin</option>
+                            <option value="national_team"  @selected(old('role') === 'national_team')>National Team</option>
                         </select>
                     </div>
                     <div>
@@ -825,6 +995,201 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    {{-- ============================================================ --}}
+    {{-- Popup Manager                                                --}}
+    {{-- ============================================================ --}}
+    @php
+        $pc = $settings; // reuse cached settings array
+        $popupDefs = [
+            'manualcta' => [
+                'label'    => 'Manual CTA',
+                'desc'     => 'Slide-in on /manual — converts readers to registered users',
+                'color'    => 'amber',
+                'gradient' => 'linear-gradient(135deg,#fffbeb,#fef3c7)',
+                'badge'    => 'Slide-in · /manual',
+                'fields'   => [
+                    ['key' => 'heading', 'label' => 'Heading',     'type' => 'text',   'max' => 200, 'default' => 'Ready to start tracking?'],
+                    ['key' => 'body',    'label' => 'Body text',   'type' => 'textarea','max' => 500, 'default' => 'Everything in this guide is live. Create a free account and start scoring today.'],
+                ],
+                'timing' => [
+                    ['key' => 'scroll_pct',  'label' => 'Scroll trigger (%)',   'default' => 60,  'min' => 1,  'max' => 100, 'unit' => '%'],
+                    ['key' => 'time_s',      'label' => 'Time trigger (s)',      'default' => 45,  'min' => 1,  'max' => 600, 'unit' => 's'],
+                    ['key' => 'cooldown_h',  'label' => 'Cooldown (hours)',      'default' => 24,  'min' => 0,  'max' => 720, 'unit' => 'h'],
+                    ['key' => 'max_total',   'label' => 'Max shows (total)',     'default' => 3,   'min' => 0,  'max' => 99,  'unit' => '×'],
+                ],
+            ],
+            'announcement' => [
+                'label'    => 'Announcement Bar',
+                'desc'     => 'Sticky top bar for guests sitewide — feature highlight',
+                'color'    => 'blue',
+                'gradient' => 'linear-gradient(135deg,#eff6ff,#dbeafe)',
+                'badge'    => 'Sticky bar · Guests · Sitewide',
+                'fields'   => [
+                    ['key' => 'text', 'label' => 'Announcement text', 'type' => 'textarea', 'max' => 300, 'default' => 'New: Elimination match scoring (WA Set Point & Compound Cumulative) is now live for club admins.'],
+                ],
+                'timing' => [
+                    ['key' => 'delay_s',     'label' => 'Delay (seconds)',   'default' => 3,  'min' => 1,  'max' => 60,  'unit' => 's'],
+                    ['key' => 'cooldown_d',  'label' => 'Cooldown (days)',   'default' => 7,  'min' => 0,  'max' => 365, 'unit' => 'd'],
+                    ['key' => 'max_total',   'label' => 'Max shows (total)', 'default' => 4,  'min' => 0,  'max' => 99,  'unit' => '×'],
+                ],
+            ],
+            'exitregister' => [
+                'label'    => 'Exit Intent Modal',
+                'desc'     => 'Last-chance registration push when guest tries to leave /manual',
+                'color'    => 'violet',
+                'gradient' => 'linear-gradient(135deg,#f5f3ff,#ede9fe)',
+                'badge'    => 'Modal · Guests · /manual',
+                'fields'   => [
+                    ['key' => 'heading', 'label' => 'Heading',   'type' => 'text',    'max' => 200, 'default' => 'Before you go…'],
+                    ['key' => 'body',    'label' => 'Body text', 'type' => 'textarea','max' => 500, 'default' => 'Track every score, every end, every session. Free for archers, coaches and clubs.'],
+                ],
+                'timing' => [
+                    ['key' => 'cooldown_h', 'label' => 'Cooldown (hours)',  'default' => 48, 'min' => 0, 'max' => 720, 'unit' => 'h'],
+                    ['key' => 'max_total',  'label' => 'Max shows (total)', 'default' => 2,  'min' => 0, 'max' => 99,  'unit' => '×'],
+                ],
+            ],
+            'helpsurvey' => [
+                'label'    => 'Role Helper',
+                'desc'     => 'Inactivity slide-in on /register — reduces role-confusion drop-off',
+                'color'    => 'teal',
+                'gradient' => 'linear-gradient(135deg,#f0fdfa,#ccfbf1)',
+                'badge'    => 'Slide-in · /register',
+                'fields'   => [
+                    ['key' => 'heading', 'label' => 'Heading',   'type' => 'text',    'max' => 200, 'default' => 'Not sure which role to pick?'],
+                    ['key' => 'body',    'label' => 'Body text', 'type' => 'textarea','max' => 500, 'default' => 'Choose the one that fits best — you can always update later.'],
+                ],
+                'timing' => [
+                    ['key' => 'inactivity_s', 'label' => 'Inactivity trigger (s)', 'default' => 20, 'min' => 5,  'max' => 300, 'unit' => 's'],
+                    ['key' => 'cooldown_h',   'label' => 'Cooldown (hours)',        'default' => 1,  'min' => 0,  'max' => 720, 'unit' => 'h'],
+                    ['key' => 'max_total',    'label' => 'Max shows (total)',       'default' => 2,  'min' => 0,  'max' => 99,  'unit' => '×'],
+                ],
+            ],
+        ];
+        $colorMap = [
+            'amber'  => ['bg' => '#fef3c7', 'text' => '#92400e', 'icon' => '#d97706', 'ring' => '#fbbf24'],
+            'blue'   => ['bg' => '#dbeafe', 'text' => '#1e40af', 'icon' => '#3b82f6', 'ring' => '#60a5fa'],
+            'violet' => ['bg' => '#ede9fe', 'text' => '#5b21b6', 'icon' => '#7c3aed', 'ring' => '#a78bfa'],
+            'teal'   => ['bg' => '#ccfbf1', 'text' => '#134e4a', 'icon' => '#0d9488', 'ring' => '#2dd4bf'],
+        ];
+    @endphp
+
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+             style="background: linear-gradient(135deg,#fdf4ff,#faf5ff);">
+            <span class="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style="background:#f3e8ff;">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="#9333ea" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
+                </svg>
+            </span>
+            <div>
+                <h2 class="text-sm font-bold text-gray-900">Popup Manager</h2>
+                <p class="text-xs text-gray-500">Enable, customise and tune every site popup from one place</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('admin.settings.popups') }}" class="divide-y divide-gray-50">
+            @csrf
+
+            @foreach($popupDefs as $id => $def)
+            @php
+                $col     = $colorMap[$def['color']];
+                $enabled = ($pc['popup_' . $id . '_enabled'] ?? '1') === '1';
+            @endphp
+            <div class="px-6 py-5" x-data="{ open: false }">
+
+                {{-- Row header --}}
+                <div class="flex items-start gap-4">
+                    {{-- Enable toggle --}}
+                    <label class="relative inline-flex items-center cursor-pointer mt-0.5 flex-shrink-0">
+                        <input type="checkbox" name="popup_{{ $id }}_enabled" value="1"
+                               {{ $enabled ? 'checked' : '' }}
+                               class="sr-only peer">
+                        <div class="w-10 h-5 rounded-full peer-checked:bg-indigo-600 bg-gray-200 transition-colors
+                                    after:content-[''] after:absolute after:top-0.5 after:left-0.5
+                                    after:bg-white after:rounded-full after:h-4 after:w-4
+                                    after:transition-transform peer-checked:after:translate-x-5"></div>
+                    </label>
+
+                    {{-- Label + badge --}}
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <p class="text-sm font-bold text-gray-900">{{ $def['label'] }}</p>
+                            <span class="text-xs font-medium px-2 py-0.5 rounded-full"
+                                  style="background:{{ $col['bg'] }};color:{{ $col['text'] }};">
+                                {{ $def['badge'] }}
+                            </span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-0.5">{{ $def['desc'] }}</p>
+                    </div>
+
+                    {{-- Expand toggle --}}
+                    <button type="button" @click="open = !open"
+                            class="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200
+                                   text-gray-500 hover:text-gray-800 hover:border-gray-300 transition-colors">
+                        <span x-text="open ? 'Collapse' : 'Configure'"></span>
+                    </button>
+                </div>
+
+                {{-- Expandable config --}}
+                <div x-show="open" x-cloak class="mt-5 space-y-5">
+
+                    {{-- Text fields --}}
+                    @foreach($def['fields'] as $field)
+                    @php $fKey = 'popup_' . $id . '_' . $field['key']; @endphp
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">{{ $field['label'] }}</label>
+                        @if($field['type'] === 'textarea')
+                            <textarea name="{{ $fKey }}" rows="2" maxlength="{{ $field['max'] }}"
+                                      class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm
+                                             text-gray-800 outline-none focus:border-indigo-400 focus:bg-white
+                                             transition resize-none">{{ $pc[$fKey] ?? $field['default'] }}</textarea>
+                        @else
+                            <input type="text" name="{{ $fKey }}" maxlength="{{ $field['max'] }}"
+                                   value="{{ $pc[$fKey] ?? $field['default'] }}"
+                                   class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm
+                                          text-gray-800 outline-none focus:border-indigo-400 focus:bg-white transition">
+                        @endif
+                    </div>
+                    @endforeach
+
+                    {{-- Timing fields --}}
+                    <div>
+                        <p class="text-xs font-bold text-gray-600 mb-2">Timing & Frequency</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            @foreach($def['timing'] as $t)
+                            @php $tKey = 'popup_' . $id . '_' . $t['key']; @endphp
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">{{ $t['label'] }}</label>
+                                <div class="flex rounded-xl border border-gray-200 overflow-hidden focus-within:border-indigo-400 transition bg-gray-50 focus-within:bg-white">
+                                    <input type="number" name="{{ $tKey }}"
+                                           value="{{ $pc[$tKey] ?? $t['default'] }}"
+                                           min="{{ $t['min'] }}" max="{{ $t['max'] }}"
+                                           class="flex-1 w-0 min-w-0 px-3 py-2 text-sm text-gray-800 outline-none bg-transparent">
+                                    <span class="px-2 py-2 text-xs font-bold text-gray-400 select-none">{{ $t['unit'] }}</span>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            @endforeach
+
+            {{-- Save button --}}
+            <div class="px-6 py-4 flex justify-end" style="background:#f8fafc;">
+                <button type="submit"
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm transition
+                               hover:opacity-90 active:scale-95"
+                        style="background:linear-gradient(135deg,#7c3aed,#9333ea);">
+                    Save Popup Settings
+                </button>
+            </div>
+        </form>
     </div>
 
 </div>

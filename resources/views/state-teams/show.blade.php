@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', $stateTeam->name . ' — State Team Profile')
+@section('og_image', $stateTeam->logo ? asset('storage/' . $stateTeam->logo) : '')
+@section('og_description', $stateTeam->name . ' · State Archery Team · Archery Stats')
 @section('header', 'State Team Profile')
 @section('subheader', $stateTeam->name)
 
@@ -63,6 +65,25 @@
                     @if($stateTeam->description)
                         <p class="text-sm text-slate-600 mt-3 leading-relaxed">{{ $stateTeam->description }}</p>
                     @endif
+
+                    {{-- Team Admin badge --}}
+                    <div class="mt-4 pt-4 border-t border-slate-100">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Team Admin</p>
+                        @if($stateTeam->admin)
+                            <div class="flex items-center gap-2">
+                                <div class="h-7 w-7 rounded-lg flex items-center justify-center text-white text-xs font-black flex-shrink-0"
+                                     style="background:linear-gradient(135deg,#0d9488,#14b8a6);">
+                                    {{ strtoupper(substr($stateTeam->admin->name, 0, 1)) }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-800">{{ $stateTeam->admin->name }}</p>
+                                    <p class="text-xs text-slate-400">{{ $stateTeam->admin->email }}</p>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-sm text-slate-400 italic">No admin appointed</p>
+                        @endif
+                    </div>
                 </div>
             </div>
 
@@ -190,6 +211,67 @@
             </div>
         @endif
     </div>
+
+    {{-- Appoint Admin — visible to super_admin / state_admin only --}}
+    @if(auth()->user()->isAdmin() || auth()->user()->role === 'state_admin')
+    <div class="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;"
+         x-data="{ open: false }">
+        <div class="flex items-center justify-between px-6 py-4 cursor-pointer"
+             style="background:linear-gradient(135deg,#1e1b4b,#3730a3); border-bottom:3px solid #6366f1;"
+             @click="open = !open">
+            <div class="flex items-center gap-3">
+                <svg class="h-4 w-4 text-indigo-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                </svg>
+                <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Appoint Team Admin</h3>
+            </div>
+            <svg class="h-4 w-4 text-indigo-300 transition-transform" :class="open ? 'rotate-180' : ''"
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+            </svg>
+        </div>
+
+        <div x-show="open" x-cloak class="px-6 py-5">
+            @if($stateTeam->admin)
+            <div class="flex items-center gap-3 mb-4 p-3 rounded-xl" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                <svg class="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm text-emerald-700">
+                    Current admin: <strong>{{ $stateTeam->admin->name }}</strong>
+                    — appointing a new one will replace them.
+                </p>
+            </div>
+            @endif
+
+            <form method="POST" action="{{ route('state-teams.appoint-admin', $stateTeam) }}">
+                @csrf
+                <div class="flex items-end gap-3 flex-wrap">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Select Coach</label>
+                        <select name="user_id" required
+                                class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none">
+                            <option value="">— select a coach —</option>
+                            @foreach($coachUsers as $cu)
+                                <option value="{{ $cu->id }}" @selected($stateTeam->admin_user_id === $cu->id)>
+                                    {{ $cu->name }}
+                                    @if($cu->coach?->ref_no) ({{ $cu->coach->ref_no }}) @endif
+                                    @if($cu->role !== 'coach') · {{ str_replace('_', ' ', $cu->role) }} @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit"
+                            onclick="return confirm('Appoint this coach as state team admin? They will be granted State Admin privileges.')"
+                            style="background:linear-gradient(135deg,#4338ca,#6366f1);"
+                            class="px-5 py-2 rounded-xl text-white text-sm font-bold shadow-sm transition-opacity hover:opacity-90">
+                        Appoint Admin
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 
     {{-- Archers in this state team --}}
     <div class="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;">

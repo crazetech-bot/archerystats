@@ -122,6 +122,17 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">National Team Coach</label>
+                    <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                        <input type="hidden" name="national_team" value="0">
+                        <input type="checkbox" name="national_team" value="1" id="national_team"
+                               class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                               {{ old('national_team', $coach?->national_team) ? 'checked' : '' }}>
+                        <span class="text-sm text-gray-700">This coach is part of the National Team</span>
+                    </label>
+                </div>
+
+                <div>
                     <label for="state_team_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State / National Team</label>
                     <select id="state_team_id" name="state_team_id"
                             class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
@@ -256,7 +267,7 @@
                     <div class="flex-1">
                         <label for="photo" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Upload Photo</label>
                         <input type="file" id="photo" name="photo"
-                               accept=".bmp,.jpg,.jpeg,.webp"
+                               accept=".png,.bmp,.jpg,.jpeg,.webp"
                                @change="handlePhoto($event)"
                                class="block w-full text-sm text-gray-500
                                       file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0

@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', $club->name . ' — Dashboard')
+@section('og_image', $club->logo ? asset('storage/' . $club->logo) : '')
+@section('og_description', $club->name . ' · Club Dashboard · Archery Stats')
 @section('header', $club->name)
 @section('subheader', 'Club Performance Dashboard')
 

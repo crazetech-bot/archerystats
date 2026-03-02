@@ -156,22 +156,44 @@
                     @error('classification')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
 
-                {{-- Para-Archery --}}
-                <div>
+                {{-- Para-Archery + Wheelchair --}}
+                <div x-data="{ isPara: {{ old('para_archery', $archer?->para_archery) ? 'true' : 'false' }} }">
                     <p class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Para-Archery <span class="text-red-500 normal-case font-normal">*</span></p>
                     <div class="flex gap-4">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="para_archery" value="0"
                                    @checked(!old('para_archery', $archer?->para_archery))
+                                   x-on:change="isPara = false"
                                    class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                             <span class="text-sm font-semibold text-gray-700">No</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="para_archery" value="1"
                                    @checked(old('para_archery', $archer?->para_archery))
+                                   x-on:change="isPara = true"
                                    class="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500">
                             <span class="text-sm font-semibold text-gray-700">Yes</span>
                         </label>
+                    </div>
+
+                    {{-- Wheelchair (only when Para = Yes) --}}
+                    @php
+                        $wcRaw = old('wheelchair', $archer?->wheelchair);
+                        $wcVal = ($wcRaw === true || $wcRaw === '1' || $wcRaw === 1) ? '1'
+                               : (($wcRaw === false || $wcRaw === '0' || $wcRaw === 0) ? '0' : '');
+                    @endphp
+                    <div x-show="isPara" x-cloak class="mt-4">
+                        <label for="wheelchair" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Wheelchair</label>
+                        <select id="wheelchair" name="wheelchair"
+                                class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                       focus:ring-2 focus:bg-white outline-none transition
+                                       @error('wheelchair') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                       @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
+                            <option value="">— Select —</option>
+                            <option value="1" @selected($wcVal === '1')>Yes</option>
+                            <option value="0" @selected($wcVal === '0')>No</option>
+                        </select>
+                        @error('wheelchair')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
@@ -219,13 +241,24 @@
                 {{-- National Team --}}
                 <div>
                     <label for="national_team" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">National Team</label>
-                    <select id="national_team" name="national_team"
-                            class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
-                                   focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">
-                        @foreach(\App\Models\Archer::NATIONAL_TEAM_OPTIONS as $opt)
-                            <option value="{{ $opt }}" @selected(old('national_team', $archer?->national_team ?? 'No') === $opt)>{{ $opt }}</option>
-                        @endforeach
-                    </select>
+                    @if(auth()->user()?->role === 'super_admin')
+                        <select id="national_team" name="national_team"
+                                class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
+                                       focus:ring-2 focus:bg-white outline-none transition
+                                       @error('national_team') border-red-400 focus:border-red-500 focus:ring-red-500/20
+                                       @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
+                            @foreach(\App\Models\Archer::NATIONAL_TEAM_OPTIONS as $opt)
+                                <option value="{{ $opt }}" @selected(old('national_team', $archer?->national_team ?? 'No') === $opt)>{{ $opt }}</option>
+                            @endforeach
+                        </select>
+                        @error('national_team')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
+                    @else
+                        <div class="block w-full rounded-xl border border-gray-200 bg-gray-100 text-sm py-2.5 px-4 text-gray-500 cursor-not-allowed select-none">
+                            {{ old('national_team', $archer?->national_team ?? 'No') }}
+                        </div>
+                        <input type="hidden" name="national_team" value="{{ old('national_team', $archer?->national_team ?? 'No') }}">
+                        <p class="mt-1.5 text-xs text-gray-400">Managed by super admin only.</p>
+                    @endif
                 </div>
 
                 {{-- RH / LH --}}
@@ -843,7 +876,7 @@
                             Upload Photo
                         </label>
                         <input type="file" id="photo" name="photo"
-                               accept=".bmp,.jpg,.jpeg,.webp"
+                               accept=".png,.bmp,.jpg,.jpeg,.webp"
                                @change="handlePhoto($event)"
                                class="block w-full text-sm text-gray-500
                                       file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0

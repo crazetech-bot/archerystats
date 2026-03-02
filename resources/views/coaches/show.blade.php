@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('title', $coach->full_name . ' — Coach Profile')
+@section('og_image', $coach->photo ? asset('storage/' . $coach->photo) : '')
+@section('og_description', $coach->full_name . ' · Coach' . ($coach->club ? ' · ' . $coach->club->name : '') . ' · Archery Stats')
 @section('header', 'Coach Profile')
 @section('subheader', $coach->ref_no)
 
@@ -255,14 +257,14 @@
                         @endphp
                         <tr class="hover:bg-teal-50/30 transition-colors">
                             <td class="px-5 py-3.5">
-                                <div class="flex items-center gap-3">
+                                <a href="{{ route('archers.show', $a) }}" class="flex items-center gap-3 group">
                                     <img src="{{ $a->photo_url }}" alt="{{ $a->full_name }}"
                                          class="h-8 w-8 rounded-xl object-cover bg-slate-100 flex-shrink-0">
                                     <div>
-                                        <p class="font-bold text-slate-900">{{ $a->full_name }}</p>
+                                        <p class="font-bold text-slate-900 group-hover:text-teal-700 transition-colors">{{ $a->full_name }}</p>
                                         <p class="text-xs text-slate-400 font-mono">{{ $a->ref_no }}</p>
                                     </div>
-                                </div>
+                                </a>
                             </td>
                             <td class="px-5 py-3.5 text-slate-600 font-medium whitespace-nowrap">
                                 {{ $lastSession ? $lastSession->date->format('d M Y') : '—' }}

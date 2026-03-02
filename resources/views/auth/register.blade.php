@@ -8,10 +8,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register — Archery Stats</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <title>Create Your Free Archery Stats Account — Archers, Coaches & Clubs | SportDNS</title>
+    <meta name="description" content="Create your free Archery Stats account on SportDNS. Register as an Archer to track scores, a Coach to manage athletes, or a Club Admin to run competitions and manage your club roster.">
+    <link rel="canonical" href="{{ url('/register') }}">
+    <meta property="og:type"         content="website">
+    <meta property="og:site_name"    content="Archery Stats | SportDNS">
+    <meta property="og:title"        content="Create Your Free Archery Stats Account — Archers, Coaches & Clubs | SportDNS">
+    <meta property="og:description"  content="Register as an Archer to track scores, a Coach to manage athletes, or a Club Admin to run competitions and manage your entire club roster.">
+    <meta property="og:url"          content="{{ url()->current() }}">
+    @if($logoUrl)
+    <meta property="og:image"        content="{{ $logoUrl }}">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image"       content="{{ $logoUrl }}">
+    @endif
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Create Your Free Archery Stats Account — Archers, Coaches & Clubs | SportDNS">
+    <meta name="twitter:description" content="Register as an Archer, Coach, or Club Admin on Archery Stats. Track scores, manage athletes, and run club competitions on SportDNS.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/popup.css') }}">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -53,7 +72,7 @@
             <div class="mb-8 h-48 w-48 rounded-3xl flex items-center justify-center overflow-hidden"
                  style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);">
                 @if($logoUrl)
-                    <img src="{{ $logoUrl }}" alt="Logo" class="h-40 w-40 object-contain">
+                    <img src="{{ $logoUrl }}" alt="Archery Stats logo — SportDNS" class="h-40 w-40 object-contain">
                 @else
                     <svg viewBox="0 0 48 48" fill="none" class="h-14 w-14">
                         <circle cx="24" cy="24" r="22" stroke="#f59e0b" stroke-width="2"/>
@@ -63,7 +82,7 @@
                     </svg>
                 @endif
             </div>
-            <h1 class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</h1>
+            <p class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</p>
             <p class="mt-4 text-sm font-medium max-w-xs leading-relaxed" style="color:#94a3b8;">
                 Create your account as an Archer, Coach or Club and start tracking your archery journey.
             </p>
@@ -111,7 +130,7 @@
                 <div class="lg:hidden mb-8 text-center fade-1">
                     <div class="mx-auto mb-4 h-28 w-28 rounded-2xl flex items-center justify-center overflow-hidden" style="background:#0f172a;">
                         @if($logoUrl)
-                            <img src="{{ $logoUrl }}" alt="Logo" class="h-24 w-24 object-contain">
+                            <img src="{{ $logoUrl }}" alt="Archery Stats logo — SportDNS" class="h-24 w-24 object-contain">
                         @else
                             <svg viewBox="0 0 48 48" fill="none" class="h-9 w-9">
                                 <circle cx="24" cy="24" r="22" stroke="#f59e0b" stroke-width="2.5"/>
@@ -125,7 +144,7 @@
 
                 {{-- Heading --}}
                 <div class="mb-7 fade-1">
-                    <h2 class="text-3xl font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Create Account</h2>
+                    <h1 class="text-3xl font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Create Your Free Account</h1>
                     <p class="text-sm text-slate-500 mt-2">Join as an Archer, Coach or Club.</p>
                 </div>
 
@@ -351,6 +370,20 @@
                             <a href="{{ route('login') }}" class="font-bold" style="color:#f59e0b;">Sign In</a>
                         </p>
                     </div>
+
+                    {{-- User Manual --}}
+                    <div class="text-center fade-5">
+                        <a href="{{ route('manual') }}" target="_blank"
+                           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+                           style="color:#64748b;background:#f1f5f9;"
+                           onmouseover="this.style.background='#e0e7ff';this.style.color='#4338ca'"
+                           onmouseout="this.style.background='#f1f5f9';this.style.color='#64748b'">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
+                            </svg>
+                            User Manual
+                        </a>
+                    </div>
                 </form>
 
             </div>
@@ -378,5 +411,7 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 </script>
+<script src="{{ asset('js/popup-engine.js') }}"></script>
+@include('partials.popups')
 </body>
 </html>

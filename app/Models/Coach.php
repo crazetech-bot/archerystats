@@ -34,7 +34,7 @@ class Coach extends Model
         'user_id', 'club_id', 'state_team_id',
         'ref_no',
         'date_of_birth', 'gender', 'phone',
-        'team', 'coaching_level', 'sports_science_course', 'state', 'country',
+        'team', 'national_team', 'coaching_level', 'sports_science_course', 'state', 'country',
         'address_line', 'postcode',
         'photo', 'active', 'notes',
     ];
@@ -42,6 +42,7 @@ class Coach extends Model
     protected $casts = [
         'date_of_birth' => 'date',
         'active'        => 'boolean',
+        'national_team' => 'boolean',
     ];
 
     protected static function boot(): void
@@ -99,6 +100,6 @@ class Coach extends Model
     {
         return $this->photo
             ? asset('storage/' . $this->photo)
-            : asset('images/default-archer.png');
+            : asset('images/default-coach.svg');
     }
 }

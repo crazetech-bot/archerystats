@@ -1,13 +1,28 @@
 @php
     try { $s = \App\Models\Setting::getAllCached(); } catch (\Throwable) { $s = []; }
     $footerText = $s['footer_text'] ?? ('© ' . date('Y') . ' Archery Stats Management System');
+    $logoPath   = !empty($s['logo']) ? asset('storage/' . $s['logo']) : null;
 @endphp
 <!DOCTYPE html>
 <html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password — Archery Stats</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <title>Reset Your Password — Archery Stats | SportDNS</title>
+    <meta name="description" content="Reset your Archery Stats password. Enter your registered email address and we'll send you a secure reset link.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="{{ url('/login') }}">
+    <meta property="og:type"        content="website">
+    <meta property="og:site_name"   content="Archery Stats | SportDNS">
+    <meta property="og:title"       content="Reset Your Password — Archery Stats | SportDNS">
+    <meta property="og:url"         content="{{ url()->current() }}">
+    @if($logoPath)
+    <meta property="og:image"       content="{{ $logoPath }}">
+    <meta name="twitter:image"      content="{{ $logoPath }}">
+    @endif
+    <meta name="twitter:card"       content="summary_large_image">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -55,7 +70,7 @@
                     <circle cx="24" cy="24" r="3"  fill="#f59e0b"/>
                 </svg>
             </div>
-            <h1 class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</h1>
+            <p class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</p>
             <p class="mt-4 text-sm font-medium max-w-xs leading-relaxed" style="color:#94a3b8;">
                 Enter your registered email and we'll send you a link to reset your password.
             </p>
@@ -84,7 +99,7 @@
 
                 {{-- Heading --}}
                 <div class="mb-8 fade-1">
-                    <h2 class="text-3xl font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Forgot Password</h2>
+                    <h1 class="text-3xl font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Reset Your Password</h1>
                     <p class="text-sm text-slate-500 mt-2">Enter your email and we'll send you a reset link.</p>
                 </div>
 

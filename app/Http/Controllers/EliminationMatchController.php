@@ -20,9 +20,26 @@ class EliminationMatchController extends Controller
             $query->where('category', $request->category);
         }
 
-        $matches   = $query->paginate(20)->withQueryString();
-        $total     = EliminationMatch::count();
-        $completed = EliminationMatch::where('status', 'completed')->count();
+        // Coaches see only matches involving their assigned archers or club archers
+        if (auth()->user()->role === 'coach') {
+            $coach = auth()->user()->coach;
+            $relevantIds = collect();
+            if ($coach) {
+                $relevantIds = $coach->archers()->pluck('archers.id');
+            }
+            if (auth()->user()->club_id) {
+                $clubIds = \App\Models\Archer::where('club_id', auth()->user()->club_id)->pluck('id');
+                $relevantIds = $relevantIds->merge($clubIds)->unique();
+            }
+            $query->where(function ($q) use ($relevantIds) {
+                $q->whereIn('archer_a_id', $relevantIds)
+                  ->orWhereIn('archer_b_id', $relevantIds);
+            });
+        }
+
+        $matches    = $query->paginate(20)->withQueryString();
+        $total      = EliminationMatch::count();
+        $completed  = EliminationMatch::where('status', 'completed')->count();
         $inProgress = $total - $completed;
 
         return view('elimination-matches.index', compact('matches', 'total', 'completed', 'inProgress'));

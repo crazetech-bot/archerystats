@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\NewUserRegisteredMail;
 use App\Models\Archer;
 use App\Models\Club;
 use App\Models\Coach;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class RegisterController extends Controller
@@ -58,6 +60,7 @@ class RegisterController extends Controller
             if ($validated['role'] === 'archer') {
                 Archer::create(['user_id' => $user->id]);
             } elseif ($validated['role'] === 'coach') {
+                $user->update(['is_coach' => true]);
                 Coach::create(['user_id' => $user->id]);
             } elseif ($validated['role'] === 'club_admin') {
                 $club = Club::create([
@@ -71,6 +74,12 @@ class RegisterController extends Controller
         });
 
         Auth::login($user);
+
+        // Notify all super_admins by email
+        $user->load('club');
+        User::where('role', 'super_admin')->each(function (User $admin) use ($user) {
+            Mail::to($admin->email)->send(new NewUserRegisteredMail($user));
+        });
 
         if ($user->role === 'archer') {
             return redirect()->route('archers.show', $user->archer)

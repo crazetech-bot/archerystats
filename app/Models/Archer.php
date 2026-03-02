@@ -40,7 +40,7 @@ class Archer extends Model
     protected $fillable = [
         'user_id', 'club_id', 'state_team_id',
         'ref_no',
-        'mareos_id', 'wareos_id', 'division', 'para_archery',
+        'mareos_id', 'wareos_id', 'division', 'para_archery', 'wheelchair',
         'state_team', 'national_team',
         'date_of_birth', 'nric', 'passport_number', 'passport_expiry_date', 'place_of_birth', 'gender', 'phone',
         'team', 'hand', 'state', 'country',
@@ -62,6 +62,7 @@ class Archer extends Model
         'date_of_birth'           => 'date',
         'active'                  => 'boolean',
         'para_archery'            => 'boolean',
+        'wheelchair'              => 'boolean',
         'divisions'               => 'array',
         'pb_unofficial_36_date'   => 'date',
         'pb_unofficial_72_date'   => 'date',
@@ -148,6 +149,6 @@ class Archer extends Model
     {
         return $this->photo
             ? asset('storage/' . $this->photo)
-            : asset('images/default-archer.png');
+            : asset('images/default-archer.svg');
     }
 }

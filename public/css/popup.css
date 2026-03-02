@@ -1,0 +1,407 @@
+/* ════════════════════════════════════════════════════
+   PopupEngine v1.0 — SportDNS
+   Formats: modal · slide-in · banner · fullScreen · stickyBar
+   Mobile-first, motion-safe, WCAG AA accessible
+   ════════════════════════════════════════════════════ */
+
+/* ── Scroll lock ── */
+body.sdn-pu-lock { overflow: hidden; }
+
+/* ── CSS custom properties (overridden per-popup via style="") ── */
+:root {
+  --pu-accent: #f59e0b;
+  --pu-bg:     #ffffff;
+  --pu-text:   #0f172a;
+  --pu-radius: 16px;
+  --pu-shadow: 0 20px 60px rgba(15, 23, 42, 0.18);
+  --pu-dur:    0.35s;
+  --pu-ease:   cubic-bezier(0.34, 1.25, 0.64, 1);
+}
+
+/* ── Wrapper (covers viewport, pointer-events off by default) ── */
+.sdn-pu {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+}
+
+/* ── Overlay ── */
+.sdn-pu__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity var(--pu-dur) ease;
+}
+
+/* ══════════════════════════════════════════════════
+   BOX — shared base for all formats
+   ══════════════════════════════════════════════════ */
+.sdn-pu__box {
+  position: absolute;
+  background: var(--pu-bg);
+  color: var(--pu-text);
+  pointer-events: auto;
+  opacity: 0;
+  will-change: transform, opacity;
+  transition:
+    opacity      var(--pu-dur) ease,
+    transform    var(--pu-dur) var(--pu-ease);
+}
+
+/* ══════════════════════════════════════════════════
+   CLOSE BUTTON
+   ══════════════════════════════════════════════════ */
+.sdn-pu__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  min-width: 44px;   /* touch target */
+  min-height: 44px;
+  margin-top: -6px;
+  margin-right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s;
+}
+.sdn-pu__close:hover  { background: rgba(0, 0, 0, 0.12); }
+.sdn-pu__close:focus-visible { outline: 2px solid var(--pu-accent); outline-offset: 2px; }
+.sdn-pu__close svg { width: 16px; height: 16px; pointer-events: none; }
+
+/* ══════════════════════════════════════════════════
+   FORMAT 1: MODAL
+   Desktop  — centered dialog, scales in
+   Mobile   — bottom sheet, slides up (less intrusive)
+   ══════════════════════════════════════════════════ */
+.sdn-pu__box--modal {
+  top: 50%;
+  left: 50%;
+  width: min(92vw, 460px);
+  max-height: 90vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 20px;
+  box-shadow: var(--pu-shadow);
+  transform: translate(-50%, -50%) scale(0.94);
+}
+.sdn-pu--visible .sdn-pu__box--modal { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.sdn-pu--hiding  .sdn-pu__box--modal { opacity: 0; transform: translate(-50%, -50%) scale(0.94); }
+
+/* ══════════════════════════════════════════════════
+   FORMAT 2: SLIDE-IN (bottom-right card)
+   Mobile: spans full width, pins to bottom
+   ══════════════════════════════════════════════════ */
+.sdn-pu__box--slide-in {
+  bottom: 24px;
+  right: 24px;
+  width: min(88vw, 340px);
+  border-radius: var(--pu-radius);
+  box-shadow: var(--pu-shadow);
+  transform: translateY(110%) translateZ(0);
+}
+.sdn-pu--visible .sdn-pu__box--slide-in { opacity: 1; transform: translateY(0) translateZ(0); }
+.sdn-pu--hiding  .sdn-pu__box--slide-in { opacity: 0; transform: translateY(110%) translateZ(0); }
+
+/* ══════════════════════════════════════════════════
+   FORMAT 3: BANNER (top or bottom, full-width)
+   ══════════════════════════════════════════════════ */
+.sdn-pu__box--banner {
+  left: 0; right: 0;
+  width: 100%;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.10);
+}
+.sdn-pu__box--banner-top    { top: 0;    transform: translateY(-100%); }
+.sdn-pu__box--banner-bottom { bottom: 0; transform: translateY(100%); }
+
+.sdn-pu--visible .sdn-pu__box--banner-top,
+.sdn-pu--visible .sdn-pu__box--banner-bottom { opacity: 1; transform: translateY(0); }
+.sdn-pu--hiding  .sdn-pu__box--banner-top    { opacity: 0; transform: translateY(-100%); }
+.sdn-pu--hiding  .sdn-pu__box--banner-bottom { opacity: 0; transform: translateY(100%); }
+
+/* ══════════════════════════════════════════════════
+   FORMAT 4: FULL-SCREEN TAKEOVER
+   ══════════════════════════════════════════════════ */
+.sdn-pu__box--fullscreen {
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+  transform: scale(0.97);
+}
+.sdn-pu--visible .sdn-pu__box--fullscreen { opacity: 1; transform: scale(1); }
+.sdn-pu--hiding  .sdn-pu__box--fullscreen { opacity: 0; transform: scale(0.97); }
+
+/* ══════════════════════════════════════════════════
+   FORMAT 5: STICKY BAR (persists until dismissed)
+   Uses higher z-index to sit above site header
+   ══════════════════════════════════════════════════ */
+.sdn-pu__box--sticky {
+  left: 0; right: 0;
+  width: 100%;
+  z-index: 9100;
+  box-shadow: 0 2px 16px rgba(15, 23, 42, 0.08);
+}
+.sdn-pu__box--sticky-top    { top: 0;    transform: translateY(-100%); }
+.sdn-pu__box--sticky-bottom { bottom: 0; transform: translateY(100%); }
+
+.sdn-pu--visible .sdn-pu__box--sticky-top,
+.sdn-pu--visible .sdn-pu__box--sticky-bottom { opacity: 1; transform: translateY(0); }
+.sdn-pu--hiding  .sdn-pu__box--sticky-top    { opacity: 0; transform: translateY(-100%); }
+.sdn-pu--hiding  .sdn-pu__box--sticky-bottom { opacity: 0; transform: translateY(100%); }
+
+/* ══════════════════════════════════════════════════
+   INNER CONTENT WRAPPERS
+   ══════════════════════════════════════════════════ */
+.sdn-pu__inner            { padding: 28px 24px; }
+.sdn-pu__inner--banner    { padding: 14px 20px; }
+.sdn-pu__inner--fullscreen { padding: 32px 24px; max-width: 540px; width: 100%; }
+.sdn-pu__inner--sticky {
+  padding: 10px 52px 10px 16px;  /* right: space for close btn */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 48px;
+}
+
+/* ══════════════════════════════════════════════════
+   TEMPLATE UTILITY CLASSES
+   ══════════════════════════════════════════════════ */
+
+/* Icon badge */
+.pu-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--pu-accent);
+  flex-shrink: 0;
+}
+.pu-icon svg { width: 24px; height: 24px; color: #fff; }
+
+/* Text */
+.pu-headline {
+  font-family: 'Barlow', sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 0 0 8px;
+  color: var(--pu-text);
+}
+.pu-sub {
+  font-size: 14px;
+  line-height: 1.55;
+  opacity: 0.62;
+  margin: 0 0 20px;
+}
+
+/* Benefit list */
+.pu-benefits { list-style: none; padding: 0; margin: 0 0 20px; }
+.pu-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.45;
+  margin-bottom: 9px;
+}
+.pu-check {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--pu-accent);
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.pu-check svg { width: 10px; height: 10px; stroke: #fff; stroke-width: 3; fill: none; }
+
+/* Input */
+.pu-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  margin-bottom: 10px;
+}
+.pu-input:focus { border-color: var(--pu-accent); background: #fff; }
+
+/* Buttons */
+.pu-btn {
+  display: block;
+  width: 100%;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  background: var(--pu-accent);
+  color: #0f172a;
+  transition: opacity 0.15s, transform 0.1s;
+  line-height: 1;
+  min-height: 44px;   /* touch target */
+}
+.pu-btn:hover  { opacity: 0.88; }
+.pu-btn:active { transform: scale(0.98); }
+
+.pu-btn--ghost {
+  background: transparent;
+  border: 1.5px solid currentColor;
+  opacity: 0.45;
+  margin-top: 8px;
+}
+.pu-btn--ghost:hover { opacity: 0.7; }
+
+.pu-btn--inline {
+  display: inline-flex; align-items: center;
+  width: auto;
+  padding: 10px 20px;
+}
+
+.pu-btn--white {
+  background: #fff;
+  color: #1e3a5f;
+}
+
+/* Divider */
+.pu-divider {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.07);
+}
+
+/* Role card (for survey template) */
+.pu-role-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-decoration: none;
+  color: inherit;
+}
+.pu-role-card:hover { border-color: var(--pu-accent); background: #fff; }
+.pu-role-emoji { font-size: 20px; flex-shrink: 0; line-height: 1.2; }
+.pu-role-title { font-size: 13px; font-weight: 700; margin: 0 0 2px; }
+.pu-role-desc  { font-size: 12px; opacity: 0.55; margin: 0; line-height: 1.4; }
+
+/* Dismiss link */
+.pu-dismiss {
+  display: block;
+  margin-top: 14px;
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.45;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  text-decoration: underline;
+  width: 100%;
+}
+.pu-dismiss:hover { opacity: 0.7; }
+
+/* ══════════════════════════════════════════════════
+   MOBILE OVERRIDES  (≤ 767px)
+   Google Intrusive Interstitial compliant:
+   – Modals become bottom sheets (< full viewport)
+   – Slide-ins pin to bottom edge, full width
+   – Banners avoid covering core navigation
+   ══════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+
+  /* Modal → bottom sheet */
+  .sdn-pu__box--modal {
+    top: auto;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 88vh;
+    transform: translateY(100%);
+  }
+  .sdn-pu--visible .sdn-pu__box--modal { transform: translateY(0); opacity: 1; }
+  .sdn-pu--hiding  .sdn-pu__box--modal { transform: translateY(100%); opacity: 0; }
+
+  /* Slide-in → bottom strip */
+  .sdn-pu__box--slide-in {
+    bottom: 0; right: 0; left: 0;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%) translateZ(0);
+  }
+
+  /* Inner padding reduction */
+  .sdn-pu__inner { padding: 20px 16px 28px; }
+
+  /* Headline scale */
+  .pu-headline { font-size: 19px; }
+
+  /* Banner top: avoid browser chrome + notch */
+  .sdn-pu__box--banner-top {
+    top: env(safe-area-inset-top, 0);
+  }
+
+  /* Sticky bar: full-width, touch-safe close */
+  .sdn-pu__inner--sticky {
+    padding: 12px 52px 12px 14px;
+    min-height: 52px;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   OVERLAY visible state for modal/fullscreen
+   ══════════════════════════════════════════════════ */
+.sdn-pu--modal.sdn-pu--visible    .sdn-pu__overlay,
+.sdn-pu--fullScreen.sdn-pu--visible .sdn-pu__overlay { opacity: 1; }
+.sdn-pu--modal.sdn-pu--hiding    .sdn-pu__overlay,
+.sdn-pu--fullScreen.sdn-pu--hiding .sdn-pu__overlay  { opacity: 0; }
+
+/* ══════════════════════════════════════════════════
+   REDUCED MOTION
+   ══════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .sdn-pu__box,
+  .sdn-pu__overlay {
+    transition: opacity 0.15s ease !important;
+    transform: none !important;
+  }
+  .sdn-pu__box--modal    { transform: translate(-50%, -50%) !important; }
+  .sdn-pu--hiding .sdn-pu__box--modal { transform: translate(-50%, -50%) !important; }
+}
+
+/* ══════════════════════════════════════════════════
+   SCROLLBAR for tall modals
+   ══════════════════════════════════════════════════ */
+.sdn-pu__box::-webkit-scrollbar        { width: 4px; }
+.sdn-pu__box::-webkit-scrollbar-track  { background: transparent; }
+.sdn-pu__box::-webkit-scrollbar-thumb  { background: rgba(0,0,0,0.15); border-radius: 2px; }

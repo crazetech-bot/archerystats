@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ArcherController extends Controller
@@ -53,7 +54,7 @@ class ArcherController extends Controller
             'divisions'      => ['nullable', 'array'],
             'divisions.*'    => ['in:Recurve,Compound,Barebow,Traditional'],
             'notes'          => ['nullable', 'string'],
-            'photo'          => ['nullable', 'file', 'mimes:bmp,jpg,jpeg,webp', 'max:2048'],
+            'photo'          => ['nullable', 'file', 'mimes:png,bmp,jpg,jpeg,webp', 'max:2048'],
             'arrow_type'     => ['nullable', 'string', 'max:100'],
             'arrow_size'     => ['nullable', 'string', 'max:100'],
             'arrow_length'   => ['nullable', 'numeric', 'min:0', 'max:999'],
@@ -79,6 +80,7 @@ class ArcherController extends Controller
             'wareos_id'                 => ['nullable', 'string', 'max:100', 'unique:archers,wareos_id'],
             'division'                  => ['required', 'in:Recurve,Compound,Barebow,Traditional'],
             'para_archery'              => ['required', 'boolean'],
+            'wheelchair'                => ['nullable', 'boolean'],
             'state_team_id'             => ['nullable', 'exists:state_teams,id'],
             'state_team'                => ['nullable', 'string', 'max:100'],
             'national_team'             => ['nullable', 'string', 'max:50'],
@@ -166,6 +168,7 @@ class ArcherController extends Controller
                 'wareos_id'                => $validated['wareos_id']               ?? null,
                 'division'                 => $validated['division']                ?? null,
                 'para_archery'             => $validated['para_archery']            ?? false,
+                'wheelchair'              => ($validated['para_archery'] ?? false) ? ($validated['wheelchair'] ?? null) : null,
                 'state_team_id'            => $validated['state_team_id']           ?? null,
                 'state_team'               => $validated['state_team']              ?? null,
                 'national_team'            => $validated['national_team']           ?? 'No',
@@ -190,6 +193,208 @@ class ArcherController extends Controller
 
         return redirect()->route('archers.show', $archer)
             ->with('success', "Archer {$archer->ref_no} created successfully.");
+    }
+
+    // ── CSV Import ────────────────────────────────────────────────────────────
+
+    public function importForm(): View
+    {
+        return view('archers.import');
+    }
+
+    public function importTemplate(): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $columns = [
+            'name', 'email', 'nric', 'date_of_birth', 'gender', 'place_of_birth',
+            'hand', 'classification', 'state', 'country',
+            'phone', 'club_name', 'division', 'divisions',
+            'state_team', 'national_team', 'mareos_id', 'wareos_id',
+            'address_line', 'postcode', 'address_state', 'notes',
+            'status', 'para_archery',
+        ];
+
+        $example = [
+            'Ahmad Fariz bin Zakaria', 'ahmad.fariz@example.com', '030414071234', '2003-04-14',
+            'male', 'Kuala Lumpur',
+            'right', 'Open', 'Selangor', 'Malaysia',
+            '0123456789', 'Selangor Archery Club', 'Recurve', 'Recurve;Barebow',
+            'Selangor', 'No', '', '',
+            'No 12 Jalan Utama', '47500', 'Selangor', '',
+            'active', '0',
+        ];
+
+        return response()->stream(function () use ($columns, $example) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, $columns);
+            fputcsv($out, $example);
+            fclose($out);
+        }, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="archers_template.csv"',
+        ]);
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'csv_file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+        ]);
+
+        $handle  = fopen($request->file('csv_file')->getRealPath(), 'r');
+        $headers = array_map('trim', fgetcsv($handle));
+
+        $imported = 0;
+        $skipped  = 0;
+        $errors   = [];
+        $row      = 1;
+
+        $validClassifications = ['U12', 'U15', 'U18', 'Open'];
+        $validGenders         = ['male', 'female'];
+        $validHands           = ['right', 'left'];
+        $validDivisions       = ['Recurve', 'Compound', 'Barebow', 'Traditional'];
+        $validStatuses        = ['active', 'no_longer_active', 'injury'];
+
+        while (($data = fgetcsv($handle)) !== false) {
+            $row++;
+
+            if (count($data) !== count($headers)) {
+                $errors[] = "Row {$row}: column count mismatch — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            $r = array_combine($headers, array_map('trim', $data));
+
+            // Required fields
+            foreach (['name', 'email', 'nric', 'date_of_birth', 'gender', 'place_of_birth', 'hand', 'classification', 'state', 'country'] as $field) {
+                if (empty($r[$field])) {
+                    $errors[] = "Row {$row}: '{$field}' is required — skipped.";
+                    $skipped++;
+                    continue 2;
+                }
+            }
+
+            if (!filter_var($r['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Row {$row}: invalid email '{$r['email']}' — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            if (User::where('email', $r['email'])->whereHas('archer')->exists()) {
+                $errors[] = "Row {$row}: email '{$r['email']}' already has an archer profile — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            if (!in_array($r['gender'], $validGenders)) {
+                $errors[] = "Row {$row}: gender must be 'male' or 'female' — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            if (!in_array($r['hand'], $validHands)) {
+                $errors[] = "Row {$row}: hand must be 'right' or 'left' — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            if (!in_array($r['classification'], $validClassifications)) {
+                $errors[] = "Row {$row}: classification must be one of U12, U15, U18, Open — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            // Parse date
+            try {
+                $dob = \Carbon\Carbon::parse($r['date_of_birth'])->toDateString();
+            } catch (\Exception $e) {
+                $errors[] = "Row {$row}: invalid date_of_birth '{$r['date_of_birth']}' (use YYYY-MM-DD) — skipped.";
+                $skipped++;
+                continue;
+            }
+
+            // Club lookup
+            $clubId = null;
+            if (!empty($r['club_name'])) {
+                $club = \App\Models\Club::whereRaw('LOWER(name) = ?', [strtolower($r['club_name'])])->first();
+                if (!$club) {
+                    $errors[] = "Row {$row}: club '{$r['club_name']}' not found — archer imported without club.";
+                }
+                $clubId = $club?->id;
+            }
+
+            // Divisions
+            $divisions = [];
+            if (!empty($r['divisions'])) {
+                $divisions = array_filter(
+                    array_map('trim', explode(';', $r['divisions'])),
+                    fn($d) => in_array($d, $validDivisions)
+                );
+                $divisions = array_values($divisions);
+            }
+
+            // Primary division
+            $division = in_array($r['division'] ?? '', $validDivisions) ? $r['division'] : null;
+
+            // Status
+            $status = in_array($r['status'] ?? '', $validStatuses) ? $r['status'] : 'active';
+
+            DB::transaction(function () use ($r, $dob, $clubId, $divisions, $division, $status) {
+                $existingUser = User::where('email', $r['email'])->first();
+                if ($existingUser) {
+                    $user = $existingUser;
+                    $user->update(['club_id' => $clubId ?? $user->club_id]);
+                } else {
+                    $user = User::create([
+                        'name'     => $r['name'],
+                        'email'    => $r['email'],
+                        'password' => Hash::make(Str::random(24)),
+                        'role'     => 'archer',
+                        'club_id'  => $clubId,
+                    ]);
+                }
+
+                Archer::create([
+                    'user_id'        => $user->id,
+                    'club_id'        => $clubId,
+                    'date_of_birth'  => $dob,
+                    'gender'         => $r['gender'],
+                    'nric'           => $r['nric'] ?: null,
+                    'place_of_birth' => $r['place_of_birth'],
+                    'phone'          => $r['phone'] ?: null,
+                    'hand'           => $r['hand'],
+                    'classification' => $r['classification'],
+                    'state'          => $r['state'],
+                    'country'        => $r['country'],
+                    'address_line'   => $r['address_line'] ?: null,
+                    'postcode'       => $r['postcode'] ?: null,
+                    'address_state'  => $r['address_state'] ?: null,
+                    'division'       => $division,
+                    'divisions'      => $divisions,
+                    'state_team'     => $r['state_team'] ?: null,
+                    'national_team'  => $r['national_team'] ?: 'No',
+                    'mareos_id'      => $r['mareos_id'] ?: null,
+                    'wareos_id'      => $r['wareos_id'] ?: null,
+                    'notes'          => $r['notes'] ?: null,
+                    'status'         => $status,
+                    'para_archery'   => ($r['para_archery'] ?? '0') === '1',
+                    'active'         => true,
+                ]);
+            });
+
+            $imported++;
+        }
+
+        fclose($handle);
+
+        $msg = "Import complete: {$imported} archer(s) imported";
+        if ($skipped) {
+            $msg .= ", {$skipped} skipped";
+        }
+
+        return redirect()->route('archers.import')
+            ->with('import_success', $msg)
+            ->with('import_errors', $errors);
     }
 
     public function show(Archer $archer): View
@@ -255,7 +460,7 @@ class ArcherController extends Controller
             'divisions'      => ['nullable', 'array'],
             'divisions.*'    => ['in:Recurve,Compound,Barebow,Traditional'],
             'notes'          => ['nullable', 'string'],
-            'photo'          => ['nullable', 'file', 'mimes:bmp,jpg,jpeg,webp', 'max:2048'],
+            'photo'          => ['nullable', 'file', 'mimes:png,bmp,jpg,jpeg,webp', 'max:2048'],
             'arrow_type'     => ['nullable', 'string', 'max:100'],
             'arrow_size'     => ['nullable', 'string', 'max:100'],
             'arrow_length'   => ['nullable', 'numeric', 'min:0', 'max:999'],
@@ -281,6 +486,7 @@ class ArcherController extends Controller
             'wareos_id'                 => ['nullable', 'string', 'max:100', 'unique:archers,wareos_id,' . $archer->id],
             'division'                  => ['required', 'in:Recurve,Compound,Barebow,Traditional'],
             'para_archery'              => ['required', 'boolean'],
+            'wheelchair'                => ['nullable', 'boolean'],
             'state_team_id'             => ['nullable', 'exists:state_teams,id'],
             'state_team'                => ['nullable', 'string', 'max:100'],
             'national_team'             => ['nullable', 'string', 'max:50'],
@@ -365,6 +571,7 @@ class ArcherController extends Controller
                 'wareos_id'                => $validated['wareos_id']               ?? null,
                 'division'                 => $validated['division']                ?? null,
                 'para_archery'             => $validated['para_archery']            ?? false,
+                'wheelchair'              => ($validated['para_archery'] ?? false) ? ($validated['wheelchair'] ?? null) : null,
                 'state_team_id'            => $validated['state_team_id']           ?? null,
                 'state_team'               => $validated['state_team']              ?? null,
                 'national_team'            => $validated['national_team']           ?? 'No',
@@ -390,6 +597,17 @@ class ArcherController extends Controller
         $redirect = redirect()->route('archers.show', $archer);
 
         return $redirect->with('success', 'Archer profile updated successfully.');
+    }
+
+    public function updateNationalTeam(Request $request, Archer $archer): RedirectResponse
+    {
+        $validated = $request->validate([
+            'national_team' => ['required', 'in:No,Podium,Pelapis Kebangsaan,PARA'],
+        ]);
+
+        $archer->update(['national_team' => $validated['national_team']]);
+
+        return redirect()->back()->with('success', 'National Team status updated for ' . $archer->full_name . '.');
     }
 
     public function destroy(Archer $archer): RedirectResponse

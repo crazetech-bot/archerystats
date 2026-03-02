@@ -111,7 +111,7 @@
                     <h2 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Logo</h2>
                 </div>
                 <div class="p-6">
-                    <input type="file" name="logo" accept=".jpg,.jpeg,.png,.webp"
+                    <input type="file" name="logo" accept=".png,.bmp,.jpg,.jpeg,.webp"
                            class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
                     <p class="text-xs text-slate-400 mt-2">JPG, PNG or WebP · max 2MB</p>
                     @error('logo')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror

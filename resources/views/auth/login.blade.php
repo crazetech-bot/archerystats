@@ -19,11 +19,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Archery Stats</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="alternate icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <title>Archery Stats — Score Tracking & Archer Management | SportDNS</title>
+    <meta name="description" content="Archery Stats by SportDNS is Malaysia's complete archery score tracking platform. Manage archers, record WA rounds, track personal bests, and run club competitions. Sign in or create a free account.">
+    <link rel="canonical" href="{{ url('/') }}">
+    @if(request()->is('login'))
+    <meta name="robots" content="noindex, follow">
+    @endif
+    <meta property="og:type"         content="website">
+    <meta property="og:site_name"    content="Archery Stats | SportDNS">
+    <meta property="og:title"        content="Archery Stats — Score Tracking & Archer Management | SportDNS">
+    <meta property="og:description"  content="Archery Stats by SportDNS is Malaysia's complete archery score tracking platform. Manage archers, record WA rounds, track personal bests, and run club competitions.">
+    <meta property="og:url"          content="{{ url()->current() }}">
+    @if($logoPath)
+    <meta property="og:image"        content="{{ $logoPath }}">
+    <meta property="og:image:width"  content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image"       content="{{ $logoPath }}">
+    @endif
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:title"       content="Archery Stats — Score Tracking & Archer Management | SportDNS">
+    <meta name="twitter:description" content="Malaysia's complete archery score tracking platform. Manage archers, record WA rounds, track personal bests, and run club competitions.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family={{ $fontsParam }}&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/popup.css') }}">
     <style>
         body { font-family: '{{ $loginBodyFont }}', sans-serif; }
         .login-heading { font-family: '{{ $loginHeadingFont }}', sans-serif; font-size: {{ $loginHeadingSize }}px; line-height: 1.1; }
@@ -75,7 +97,7 @@
             @if($logoPath)
                 <div class="mb-8 p-5 rounded-3xl"
                      style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2);">
-                    <img src="{{ $logoPath }}" alt="Logo" class="h-20 max-w-[200px] object-contain">
+                    <img src="{{ $logoPath }}" alt="Archery Stats logo — SportDNS" class="h-20 max-w-[200px] object-contain">
                 </div>
             @else
                 <div class="mb-8 h-24 w-24 rounded-3xl flex items-center justify-center"
@@ -89,7 +111,7 @@
                 </div>
             @endif
 
-            <h1 class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</h1>
+            <p class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</p>
             <p class="mt-4 text-sm font-medium max-w-xs leading-relaxed" style="color:#94a3b8;">
                 Precision tracking for every archer, every shot, every competition.
             </p>
@@ -120,7 +142,7 @@
                 {{-- Mobile logo --}}
                 <div class="lg:hidden mb-8 text-center fade-1">
                     @if($logoPath)
-                        <img src="{{ $logoPath }}" alt="Logo" class="h-14 object-contain mx-auto mb-4">
+                        <img src="{{ $logoPath }}" alt="Archery Stats logo — SportDNS" class="h-14 object-contain mx-auto mb-4">
                     @else
                         <div class="mx-auto mb-4 h-14 w-14 rounded-2xl flex items-center justify-center"
                              style="background:#0f172a;">
@@ -136,7 +158,7 @@
 
                 {{-- Heading --}}
                 <div class="mb-8 fade-1">
-                    <h2 class="login-heading font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Welcome back</h2>
+                    <h1 class="login-heading font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Sign In to Archery Stats</h1>
                     <p class="text-sm text-slate-500 mt-2">Sign in to your account to continue</p>
                 </div>
 
@@ -220,5 +242,7 @@
     </div>
 </div>
 
+<script src="{{ asset('js/popup-engine.js') }}"></script>
+@include('partials.popups')
 </body>
 </html>

@@ -64,7 +64,7 @@ class ClubController extends Controller
             'contact_email'       => ['nullable', 'email', 'max:150'],
             'contact_phone'       => ['nullable', 'string', 'max:30'],
             'website'             => ['nullable', 'url', 'max:200'],
-            'logo'                => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'logo'                => ['nullable', 'file', 'mimes:png,bmp,jpg,jpeg,webp', 'max:2048'],
             'active'              => ['nullable', 'boolean'],
         ]);
 
@@ -125,7 +125,7 @@ class ClubController extends Controller
             'contact_email'       => ['nullable', 'email', 'max:150'],
             'contact_phone'       => ['nullable', 'string', 'max:30'],
             'website'             => ['nullable', 'url', 'max:200'],
-            'logo'                => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'logo'                => ['nullable', 'file', 'mimes:png,bmp,jpg,jpeg,webp', 'max:2048'],
             'active'              => ['nullable', 'boolean'],
         ]);
 

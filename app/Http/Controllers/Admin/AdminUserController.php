@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Club;
+use App\Models\Coach;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class AdminUserController extends Controller
         $request->validate([
             'name'                  => ['required', 'string', 'max:255'],
             'email'                 => ['required', 'email', 'unique:users,email'],
-            'role'                  => ['required', 'in:super_admin,club_admin,state_admin'],
+            'role'                  => ['required', 'in:super_admin,club_admin,state_admin,national_team'],
             'password'              => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
         ]);
@@ -76,6 +77,36 @@ class AdminUserController extends Controller
         $label = $newStatus === 'active' ? 'reactivated' : 'suspended';
 
         return redirect()->route('admin.settings')->with('success', $user->name . ' has been ' . $label . '.');
+    }
+
+    public function promote(Request $request, User $user): RedirectResponse
+    {
+        if ($user->role === 'super_admin') {
+            return redirect()->route('admin.settings')->with('error', 'Cannot change the role of a super admin.');
+        }
+
+        $request->validate([
+            'role'    => ['required', 'in:club_admin,state_admin,national_team'],
+            'club_id' => ['required_if:role,club_admin', 'nullable', 'exists:clubs,id'],
+        ]);
+
+        $wasCoach = $user->role === 'coach' || $user->is_coach;
+
+        $user->update([
+            'role'     => $request->role,
+            'is_coach' => $wasCoach,
+            'club_id'  => $request->role === 'club_admin' ? $request->club_id : null,
+        ]);
+
+        // Ensure the coach profile exists if they carry the coach flag
+        if ($wasCoach && ! $user->coach) {
+            Coach::create(['user_id' => $user->id]);
+        }
+
+        $label = $request->role === 'club_admin' ? 'Club Admin' : 'State Admin';
+        $coachNote = $wasCoach ? ' (coach privileges retained)' : '';
+
+        return redirect()->route('admin.settings')->with('success', "{$user->name} has been appointed as {$label}{$coachNote}.");
     }
 
     public function destroy(User $user): RedirectResponse

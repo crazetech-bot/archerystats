@@ -12,6 +12,7 @@
         </svg>
         Profile
     </a>
+    @if(in_array(auth()->user()->role, ['super_admin', 'club_admin', 'archer']))
     <a href="{{ route('sessions.create', $archer) }}"
        class="inline-flex items-center gap-2 text-sm font-black px-4 py-2 rounded-xl shadow-md transition-all active:scale-95"
        style="background:#f59e0b; color:#0f172a; font-family:'Barlow',sans-serif;">
@@ -20,6 +21,7 @@
         </svg>
         NEW SESSION
     </a>
+    @endif
 @endsection
 
 @section('content')
@@ -66,12 +68,16 @@
                     </svg>
                 </div>
                 <p class="text-sm font-bold text-slate-600">No sessions yet</p>
+                @if(in_array(auth()->user()->role, ['super_admin', 'club_admin', 'archer']))
                 <p class="text-xs text-slate-400 mt-1 font-medium">Start a new session to record scores</p>
                 <a href="{{ route('sessions.create', $archer) }}"
                    class="mt-5 inline-flex items-center gap-2 text-sm font-black px-5 py-2.5 rounded-xl shadow-md transition-all active:scale-95"
                    style="background:#f59e0b; color:#0f172a; font-family:'Barlow',sans-serif;">
                     NEW SESSION
                 </a>
+                @else
+                <p class="text-xs text-slate-400 mt-1 font-medium">Sessions are recorded by the archer or club admin.</p>
+                @endif
             </div>
         @else
             <div class="overflow-x-auto">
@@ -131,6 +137,7 @@
                                            style="background:#0f172a; color:#ffffff;">
                                             Open
                                         </a>
+                                        @if(in_array(auth()->user()->role, ['super_admin', 'club_admin', 'archer']))
                                         <form method="POST" action="{{ route('sessions.destroy', $s) }}"
                                               x-data @submit.prevent="if(confirm('Delete this session?')) $el.submit()">
                                             @csrf @method('DELETE')
@@ -139,6 +146,7 @@
                                                 Del
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
