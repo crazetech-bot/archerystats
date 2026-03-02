@@ -18,7 +18,9 @@ class LiveScoringRealtimeController extends Controller
         $user      = auth()->user();
         $date      = $request->input('date', today()->toDateString());
         $sessions  = $this->fetchSessions($request, $date);
-        $scoreboard = app(LiveScoringFormatterService::class)->formatScoreboard($sessions);
+        $result       = app(LiveScoringFormatterService::class)->formatScoreboard($sessions);
+        $scoreboard   = $result['rows'];
+        $maxDistances = $result['max_distances'];
 
         // Filters for national_team / super_admin UI
         $clubs       = Club::orderBy('name')->get(['id', 'name']);
@@ -26,7 +28,7 @@ class LiveScoringRealtimeController extends Controller
         $ntOptions   = array_filter(Archer::NATIONAL_TEAM_OPTIONS ?? [], fn($o) => $o !== 'No');
 
         return view('live-scoring.realtime', compact(
-            'scoreboard', 'user', 'date',
+            'scoreboard', 'maxDistances', 'user', 'date',
             'clubs', 'stateTeams', 'ntOptions',
         ));
     }
@@ -35,9 +37,9 @@ class LiveScoringRealtimeController extends Controller
     {
         $date      = $request->input('date', today()->toDateString());
         $sessions  = $this->fetchSessions($request, $date);
-        $scoreboard = app(LiveScoringFormatterService::class)->formatScoreboard($sessions);
+        $result = app(LiveScoringFormatterService::class)->formatScoreboard($sessions);
 
-        return response()->json(['rows' => $scoreboard]);
+        return response()->json($result);
     }
 
     // -------------------------------------------------------------------------

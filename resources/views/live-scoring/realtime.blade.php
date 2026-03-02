@@ -174,8 +174,11 @@
                             <th class="px-4 py-3 text-left   text-xs font-bold text-slate-500 uppercase tracking-widest">Name</th>
                             <th class="px-4 py-3 text-left   text-xs font-bold text-slate-500 uppercase tracking-widest hidden md:table-cell">Club</th>
                             <th class="px-4 py-3 text-left   text-xs font-bold text-slate-500 uppercase tracking-widest hidden lg:table-cell">State</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:table-cell">Dist 1</th>
-                            <th class="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:table-cell">Dist 2</th>
+                            {{-- Dynamic distance columns --}}
+                            <template x-for="d in maxDistances" :key="'h'+d">
+                                <th class="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:table-cell"
+                                    x-text="'Dist ' + d"></th>
+                            </template>
                             <th class="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest">Total</th>
                             <th class="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:table-cell">10+X</th>
                             <th class="px-4 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest hidden sm:table-cell">X</th>
@@ -213,15 +216,12 @@
                                 {{-- State --}}
                                 <td class="px-4 py-3 text-slate-500 font-medium hidden lg:table-cell" x-text="row.state"></td>
 
-                                {{-- Distance 1 --}}
-                                <td class="px-4 py-3 text-center font-semibold text-slate-700 hidden sm:table-cell">
-                                    <span x-text="row.distance_1 !== null ? row.distance_1 : '—'"></span>
-                                </td>
-
-                                {{-- Distance 2 --}}
-                                <td class="px-4 py-3 text-center font-semibold text-slate-700 hidden sm:table-cell">
-                                    <span x-text="row.distance_2 !== null ? row.distance_2 : '—'"></span>
-                                </td>
+                                {{-- Dynamic distance cells --}}
+                                <template x-for="(dist, di) in row.distances" :key="'d'+di">
+                                    <td class="px-4 py-3 text-center font-semibold text-slate-700 hidden sm:table-cell">
+                                        <span x-text="dist !== null ? dist : '—'"></span>
+                                    </td>
+                                </template>
 
                                 {{-- Total --}}
                                 <td class="px-4 py-3 text-center">
@@ -277,12 +277,13 @@ document.addEventListener('alpine:init', () => {
 // ── Main component ─────────────────────────────────────────────────────────
 function liveScoring() {
     return {
-        rows:        @json($scoreboard),
-        wsConnected: false,
-        lastUpdated: '—',
-        countdown:   60,
-        _timer:      null,
-        _countTimer: null,
+        rows:         @json($scoreboard),
+        maxDistances: @json($maxDistances),
+        wsConnected:  false,
+        lastUpdated:  '—',
+        countdown:    60,
+        _timer:       null,
+        _countTimer:  null,
 
         init() {
             this.startPolling();
@@ -318,8 +319,9 @@ function liveScoring() {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 });
                 const json = await resp.json();
-                this.rows        = json.rows;
-                this.lastUpdated = new Date().toLocaleTimeString();
+                this.rows         = json.rows;
+                this.maxDistances = json.max_distances ?? this.maxDistances;
+                this.lastUpdated  = new Date().toLocaleTimeString();
                 this.countdown   = Alpine.store('live').interval;
             } catch (e) {
                 console.warn('Live scoring poll failed:', e);
@@ -357,11 +359,20 @@ function liveScoring() {
             const idx = this.rows.findIndex(r => r.session_id === updatedRow.session_id);
 
             if (idx !== -1) {
-                // Merge updated fields into existing row
                 Object.assign(this.rows[idx], updatedRow);
             } else {
-                // New archer appeared — add their row
                 this.rows.push({ ...updatedRow, flash: false });
+            }
+
+            // Expand maxDistances if this row has more segments than before
+            const newMax = Math.max(...this.rows.map(r => (r.distances || []).length));
+            if (newMax > this.maxDistances) {
+                this.maxDistances = newMax;
+                this.rows.forEach(r => {
+                    while ((r.distances || []).length < this.maxDistances) {
+                        r.distances = [...(r.distances || []), null];
+                    }
+                });
             }
 
             this.resort();

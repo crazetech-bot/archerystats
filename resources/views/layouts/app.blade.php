@@ -350,6 +350,17 @@
         {{-- Mobile user panel --}}
         @auth
         <div class="px-3 py-4" style="border-top: 1px solid rgba(255,255,255,0.07);">
+            @if(in_array(auth()->user()->role, ['super_admin', 'club_admin', 'state_admin', 'national_team']))
+            <a href="{{ route('live-scoring.realtime') }}" @click="mobileOpen = false"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-black mb-2 transition-all"
+               style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff;">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background:#f59e0b;"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2" style="background:#f59e0b;"></span>
+                </span>
+                LIVE SCORING
+            </a>
+            @endif
             <div class="flex items-center gap-3 px-3 py-3 rounded-xl" style="background: #1e293b;">
                 <div class="h-9 w-9 rounded-full flex items-center justify-center text-slate-900 text-sm font-black flex-shrink-0"
                      style="background: #f59e0b;">
@@ -595,6 +606,17 @@
         {{-- User panel --}}
         @auth
         <div class="px-3 py-4" style="border-top: 1px solid rgba(255,255,255,0.07);">
+            @if(in_array(auth()->user()->role, ['super_admin', 'club_admin', 'state_admin', 'national_team']))
+            <a href="{{ route('live-scoring.realtime') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-black mb-2 transition-all"
+               style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff;">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background:#f59e0b;"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2" style="background:#f59e0b;"></span>
+                </span>
+                LIVE SCORING
+            </a>
+            @endif
             <div class="flex items-center gap-3 px-3 py-3 rounded-xl" style="background: #1e293b;">
                 <div class="h-9 w-9 rounded-full flex items-center justify-center text-slate-900 text-sm font-black flex-shrink-0"
                      style="background: #f59e0b;">

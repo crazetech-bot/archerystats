@@ -10,8 +10,11 @@ class LiveScoringFormatterService
     /**
      * Format a full ranked scoreboard from a collection of sessions.
      *
+     * Returns ['rows' => [...], 'max_distances' => int].
+     * Every row's `distances` array is padded to max_distances length so the
+     * table always has a consistent column count.
+     *
      * @param  Collection<ArcherySession>  $sessions  Must be loaded with archer.club, roundType, score.ends
-     * @return array<int, array>
      */
     public function formatScoreboard(Collection $sessions): array
     {
@@ -24,8 +27,22 @@ class LiveScoringFormatterService
         foreach ($rows as $i => &$row) {
             $row['position'] = $i + 1;
         }
+        unset($row);
 
-        return $rows;
+        $maxDistances = empty($rows) ? 1 : max(array_map(fn($r) => count($r['distances']), $rows));
+
+        // Pad every row so all have the same column count
+        foreach ($rows as &$row) {
+            while (count($row['distances']) < $maxDistances) {
+                $row['distances'][] = null;
+            }
+        }
+        unset($row);
+
+        return [
+            'rows'          => $rows,
+            'max_distances' => $maxDistances,
+        ];
     }
 
     /**
@@ -38,7 +55,9 @@ class LiveScoringFormatterService
         $segments = $session->roundType?->distance_segments ?? [];
         $archer   = $session->archer;
 
-        [$d1, $d2] = $this->distanceTotals($ends, $segments);
+        $arrowsPerEnd = $session->roundType?->arrows_per_end ?? 6;
+        $numEnds      = $session->roundType?->num_ends ?? $ends->max('end_number') ?? 0;
+        $distances    = $this->distanceTotals($ends, $arrowsPerEnd, $numEnds);
 
         $totalArrows = ($score?->hit_count ?? 0) + ($score?->miss_count ?? 0);
         $avgPerArrow = $totalArrows > 0
@@ -58,8 +77,7 @@ class LiveScoringFormatterService
             'state'         => $archer->stateTeam?->state ?? $archer->state ?? '—',
             'state_team_id' => $archer->state_team_id,
             'national_team' => $archer->national_team ?? 'No',
-            'distance_1'    => $d1,
-            'distance_2'    => $d2,
+            'distances'     => $distances,   // array: [d1, d2, d3, ...] — length = num segments
             'total'         => $score?->total_score ?? 0,
             'tens_plus_x'   => $score?->gold_count ?? 0,
             'x_count'       => $score?->x_count ?? 0,
@@ -71,23 +89,31 @@ class LiveScoringFormatterService
     }
 
     /**
-     * Split end totals across distance segments.
+     * Split end totals into 36-arrow chunks.
      *
-     * Returns [distance_1_total, distance_2_total|null].
-     * - 0 or 1 segments  → all ends counted as D1, D2 is null
-     * - 2+ segments      → D1 = segment 1 ends, D2 = segment 2 ends
+     * Each chunk represents one "distance" column on the scoreboard.
+     * e.g. 72-arrow round (12 ends × 6 arrows) → [ends 1-6, ends 7-12]
+     *      144-arrow round (24 ends × 6 arrows) → [ends 1-6, ends 7-12, ends 13-18, ends 19-24]
+     *      18m indoor (10 ends × 3 arrows)       → [ends 1-12, ends 13-10...] → one chunk of 30 arrows
      */
-    private function distanceTotals(Collection $ends, array $segments): array
+    private function distanceTotals(Collection $ends, int $arrowsPerEnd, int $numEnds): array
     {
-        if (count($segments) < 2) {
-            return [$ends->sum('end_total'), null];
+        if ($arrowsPerEnd <= 0 || $numEnds <= 0) {
+            return [$ends->sum('end_total')];
         }
 
-        $seg1Ends = (int) ($segments[0]['num_ends'] ?? 6);
+        $endsPerChunk = max(1, (int) round(36 / $arrowsPerEnd));
+        $totals       = [];
+        $startEnd     = 1;
 
-        $d1 = $ends->filter(fn($e) => $e->end_number <= $seg1Ends)->sum('end_total');
-        $d2 = $ends->filter(fn($e) => $e->end_number > $seg1Ends)->sum('end_total');
+        while ($startEnd <= $numEnds) {
+            $endEnd   = min($startEnd + $endsPerChunk - 1, $numEnds);
+            $totals[] = $ends
+                ->filter(fn($e) => $e->end_number >= $startEnd && $e->end_number <= $endEnd)
+                ->sum('end_total');
+            $startEnd = $endEnd + 1;
+        }
 
-        return [$d1, $d2];
+        return $totals ?: [$ends->sum('end_total')];
     }
 }
