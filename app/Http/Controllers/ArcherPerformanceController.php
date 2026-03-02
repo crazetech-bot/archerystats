@@ -92,6 +92,18 @@ class ArcherPerformanceController extends Controller
         // Sessions table (most recent first)
         $sessionsTable = $sessions->sortByDesc('date')->values();
 
+        // Arrow analysis — reuse already-loaded ends, no extra DB query
+        $allEnds = $sessions->flatMap(fn($s) => $s->score?->ends ?? collect());
+
+        $arrowsPerEnd = (int) ($sessions
+            ->groupBy(fn($s) => $s->roundType?->arrows_per_end)
+            ->map->count()
+            ->sortDesc()
+            ->keys()
+            ->first() ?? 6);
+
+        $arrowAnalysis = app(\App\Services\ArrowAnalysisService::class)->analyse($allEnds, $arrowsPerEnd);
+
         return view('archers.performance', compact(
             'archer',
             'range', 'from', 'to',
@@ -100,6 +112,7 @@ class ArcherPerformanceController extends Controller
             'zoneDatasets',
             'compVsTrainData',
             'sessionsTable',
+            'arrowAnalysis',
         ));
     }
 

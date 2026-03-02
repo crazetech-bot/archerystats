@@ -105,7 +105,9 @@
             <p class="text-slate-400 font-semibold">No sessions with recorded scores found for this date range.</p>
             <p class="text-slate-300 text-sm mt-1">Try selecting a wider range or "All Time".</p>
         </div>
-    @else
+    @endif
+
+    @if($totalSessions > 0)
 
     {{-- Charts row: Trend + Round Type --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -241,6 +243,51 @@
         </div>
     </div>
 
+    {{-- Arrow Analysis --}}
+    @if($arrowAnalysis)
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0;">
+        <div class="px-5 py-4 flex items-center gap-3" style="background:#0f172a; border-bottom:3px solid #7c3aed;">
+            <svg class="h-5 w-5 flex-shrink-0" style="color:#a78bfa;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/>
+            </svg>
+            <h3 class="text-sm font-black text-white uppercase tracking-widest" style="font-family:'Barlow',sans-serif;">Arrow Analysis</h3>
+            <span class="ml-auto text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(124,58,237,0.25); color:#c4b5fd;">
+                {{ $arrowAnalysis['arrows_per_end'] }}-arrow ends
+            </span>
+        </div>
+        <div class="p-5">
+            @if(collect($arrowAnalysis['positions'])->every(fn($p) => $p['count'] === 0))
+                <p class="text-slate-500 text-sm">No arrow-level data available for this date range.</p>
+            @else
+            {{-- Callout badges --}}
+            <div class="flex flex-wrap gap-3 mb-5">
+                <div class="flex items-center gap-2 rounded-xl px-4 py-3"
+                     style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2);">
+                    <svg class="h-4 w-4 flex-shrink-0" style="color:#ef4444;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
+                    </svg>
+                    <span class="text-sm font-semibold text-slate-700">
+                        Weakest: <strong style="color:#dc2626;">Arrow {{ $arrowAnalysis['weakest'] }}</strong>
+                        <span class="text-slate-400 font-normal ml-1">avg {{ $arrowAnalysis['positions'][$arrowAnalysis['weakest']]['avg'] }}</span>
+                    </span>
+                </div>
+                <div class="flex items-center gap-2 rounded-xl px-4 py-3"
+                     style="background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2);">
+                    <svg class="h-4 w-4 flex-shrink-0 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6L9 12.75l4.286-4.286a11.948 11.948 0 014.306 6.43l.776 2.898m0 0l3.182-5.511m-3.182 5.51l-5.511-3.181"/>
+                    </svg>
+                    <span class="text-sm font-semibold text-slate-700">
+                        Strongest: <strong style="color:#059669;">Arrow {{ $arrowAnalysis['strongest'] }}</strong>
+                        <span class="text-slate-400 font-normal ml-1">avg {{ $arrowAnalysis['positions'][$arrowAnalysis['strongest']]['avg'] }}</span>
+                    </span>
+                </div>
+            </div>
+            <canvas id="arrowChart" height="{{ $arrowAnalysis['arrows_per_end'] <= 3 ? 80 : 120 }}"></canvas>
+            @endif
+        </div>
+    </div>
+    @endif
+
     @endif {{-- end if totalSessions > 0 --}}
 
 </div>
@@ -257,6 +304,76 @@ const compVsTrain  = @json($compVsTrainData);
 Chart.defaults.font.family = "'Inter', sans-serif";
 Chart.defaults.font.size   = 12;
 Chart.defaults.color       = '#64748b';
+
+@if($arrowAnalysis)
+const arrowAnalysis = @json($arrowAnalysis);
+const arrowLabels   = Object.keys(arrowAnalysis.positions).map(p => 'Arrow ' + p);
+const arrowAvgs     = Object.values(arrowAnalysis.positions).map(d => d.avg ?? null);
+
+const numericAvgs = arrowAvgs.filter(v => typeof v === 'number');
+const minX = numericAvgs.length ? Math.min(...numericAvgs) - 1 : 0;
+
+const arrowColors = Object.keys(arrowAnalysis.positions).map(p => {
+    const pos = parseInt(p);
+    if (pos === arrowAnalysis.weakest)   return 'rgba(239,68,68,0.80)';
+    if (pos === arrowAnalysis.strongest) return 'rgba(16,185,129,0.80)';
+    return 'rgba(124,58,237,0.65)';
+});
+
+const arrowBorders = Object.keys(arrowAnalysis.positions).map(p => {
+    const pos = parseInt(p);
+    if (pos === arrowAnalysis.weakest)   return '#dc2626';
+    if (pos === arrowAnalysis.strongest) return '#059669';
+    return '#7c3aed';
+});
+
+new Chart(document.getElementById('arrowChart'), {
+    type: 'bar',
+    data: {
+        labels: arrowLabels,
+        datasets: [{
+            label: 'Avg Score',
+            data: arrowAvgs,
+            backgroundColor: arrowColors,
+            borderColor: arrowBorders,
+            borderWidth: 1.5,
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        animation: {
+            duration: 800,
+            easing: 'easeOutQuart',
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: (item) => {
+                        const pos = item.dataIndex + 1;
+                        const d   = arrowAnalysis.positions[pos];
+                        const tag = pos === arrowAnalysis.weakest   ? ' ← weakest'
+                                  : pos === arrowAnalysis.strongest ? ' ← strongest'
+                                  : '';
+                        return [` Avg: ${item.raw}${tag}`, ` Scored: ${d.count} arrows`];
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                beginAtZero: false,
+                min: Math.max(0, minX),
+                grid: { color: '#f1f5f9' },
+                title: { display: true, text: 'Average Score', color: '#94a3b8' }
+            },
+            y: { grid: { display: false } }
+        }
+    }
+});
+@endif
 
 @if($totalSessions > 0)
 // Score Trend
