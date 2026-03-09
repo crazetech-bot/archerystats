@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\ClubScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -73,9 +74,9 @@ class Archer extends Model
         'passport_expiry_date'    => 'date',
     ];
 
-    protected static function boot(): void
+    protected static function booted(): void
     {
-        parent::boot();
+        static::addGlobalScope(new ClubScope());
 
         static::created(function (Archer $archer) {
             $archer->updateQuietly([

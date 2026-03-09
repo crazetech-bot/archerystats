@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\ClubScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -45,9 +46,9 @@ class Coach extends Model
         'national_team' => 'boolean',
     ];
 
-    protected static function boot(): void
+    protected static function booted(): void
     {
-        parent::boot();
+        static::addGlobalScope(new ClubScope());
 
         static::created(function (Coach $coach) {
             $coach->updateQuietly([

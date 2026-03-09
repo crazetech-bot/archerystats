@@ -4,14 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Club extends Model
 {
     protected $fillable = [
-        'name', 'description', 'location', 'contact_email', 'contact_phone',
+        'name', 'slug', 'description', 'tagline', 'location',
+        'contact_email', 'contact_phone',
         'website', 'address', 'state', 'founded_year', 'registration_number',
+        'facebook_url', 'instagram_url', 'whatsapp_number',
         'logo', 'active',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Club $club) {
+            if (empty($club->slug)) {
+                $club->slug = static::uniqueSlug($club->name);
+            }
+        });
+    }
+
+    public static function uniqueSlug(string $name, ?int $excludeId = null): string
+    {
+        $base = Str::slug($name);
+        $slug = $base;
+        $i    = 2;
+        while (static::where('slug', $slug)->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))->exists()) {
+            $slug = $base . '-' . $i++;
+        }
+        return $slug;
+    }
 
     protected $casts = [
         'active'       => 'boolean',
