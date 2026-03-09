@@ -15,13 +15,44 @@ use Illuminate\View\View;
 
 class ArcherController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $archers = Archer::with('user', 'club', 'stateTeam')
-            ->orderBy('ref_no')
-            ->paginate(20);
+        $clubs               = Club::where('active', true)->orderBy('name')->get();
+        $states              = Archer::MALAYSIAN_STATES;
+        $nationalTeamOptions = array_filter(Archer::NATIONAL_TEAM_OPTIONS, fn ($o) => $o !== 'No');
 
-        return view('archers.index', compact('archers'));
+        $auth  = auth()->user();
+        $query = Archer::with('user', 'club', 'stateTeam');
+
+        // Club admins only see archers from their own club
+        if ($auth->role === 'club_admin' && $auth->club_id) {
+            $query->where('club_id', $auth->club_id);
+        }
+
+        if ($search = trim($request->get('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('mareos_id', 'like', "%{$search}%")
+                  ->orWhere('ref_no', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($clubId = $request->get('club_id')) {
+            $query->where('club_id', $clubId);
+        }
+
+        if ($state = $request->get('state')) {
+            $query->where('state', $state);
+        }
+
+        if ($request->filled('national_team')) {
+            $query->where('national_team', $request->get('national_team'));
+        }
+
+        $archers      = $query->orderBy('ref_no')->paginate(20)->withQueryString();
+        $totalArchers = Archer::count();
+
+        return view('archers.index', compact('archers', 'totalArchers', 'clubs', 'states', 'nationalTeamOptions'));
     }
 
     public function create(): View

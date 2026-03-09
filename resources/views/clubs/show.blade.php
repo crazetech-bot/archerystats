@@ -50,6 +50,11 @@
             <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
         </div>
     @endif
+    @if(session('error'))
+        <div class="mb-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <p class="text-sm text-red-700 font-medium">{{ session('error') }}</p>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -83,6 +88,7 @@
                     @if($club->description)
                         <p class="text-sm text-slate-600 mt-3 leading-relaxed">{{ $club->description }}</p>
                     @endif
+
                 </div>
             </div>
 
@@ -161,14 +167,20 @@
         </div>
     </div>
 
-    {{-- List of Coaches --}}
+    {{-- ══════════════════════════════════════════════════════════════════════
+         Coaches section
+    ══════════════════════════════════════════════════════════════════════ --}}
     <div class="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;">
         <div class="flex items-center justify-between px-6 py-4" style="background:#0d9488; border-bottom:3px solid #14b8a6;">
-            <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">List of Coaches</h3>
-            <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
-                {{ $club->coaches_count }} coach{{ $club->coaches_count !== 1 ? 'es' : '' }}
-            </span>
+            <div class="flex items-center gap-3">
+                <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">List of Coaches</h3>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
+                    {{ $club->coaches_count }} coach{{ $club->coaches_count !== 1 ? 'es' : '' }}
+                </span>
+            </div>
         </div>
+
+        {{-- Coaches table --}}
         @if($club->coaches->isEmpty())
             <div class="px-6 py-10 text-center">
                 <p class="text-sm text-slate-400">No coaches registered to this club yet.</p>
@@ -179,9 +191,9 @@
                     <thead>
                         <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
                             <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Coach</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Ref No</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Coaching Level</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Email</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Ref No</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Coaching Level</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Email</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -202,17 +214,19 @@
                                     <span class="font-semibold text-slate-800">{{ $coach->user->name }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 hidden sm:table-cell">
                                 <span class="font-mono text-xs text-slate-500">{{ $coach->ref_no ?? '—' }}</span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $coach->coaching_level ?: '—' }}</td>
-                            <td class="px-4 py-3 text-slate-500 text-xs">{{ $coach->user->email }}</td>
+                            <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $coach->coaching_level ?: '—' }}</td>
+                            <td class="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">{{ $coach->user->email }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('coaches.show', $coach) }}"
-                                   class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
-                                   style="color:#0d9488; background:#f0fdfa; border:1px solid #99f6e4;">
-                                    View
-                                </a>
+                                <div class="flex items-center gap-2 justify-end">
+                                    <a href="{{ route('coaches.show', $coach) }}"
+                                       class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                                       style="color:#0d9488; background:#f0fdfa; border:1px solid #99f6e4;">
+                                        View
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -222,14 +236,20 @@
         @endif
     </div>
 
-    {{-- List of Archers --}}
+    {{-- ══════════════════════════════════════════════════════════════════════
+         Archers section
+    ══════════════════════════════════════════════════════════════════════ --}}
     <div class="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;">
         <div class="flex items-center justify-between px-6 py-4" style="background:#312e81; border-bottom:3px solid #6366f1;">
-            <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">List of Archers</h3>
-            <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
-                {{ $club->archers_count }} archer{{ $club->archers_count !== 1 ? 's' : '' }}
-            </span>
+            <div class="flex items-center gap-3">
+                <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">List of Archers</h3>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
+                    {{ $club->archers_count }} archer{{ $club->archers_count !== 1 ? 's' : '' }}
+                </span>
+            </div>
         </div>
+
+        {{-- Archers table --}}
         @if($club->archers->isEmpty())
             <div class="px-6 py-10 text-center">
                 <p class="text-sm text-slate-400">No archers registered to this club yet.</p>
@@ -240,10 +260,10 @@
                     <thead>
                         <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
                             <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Archer</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Ref No</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Division</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Classification</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Ref No</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Division</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Classification</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Status</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -264,12 +284,12 @@
                                     <span class="font-semibold text-slate-800">{{ $archer->user->name }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 hidden sm:table-cell">
                                 <span class="font-mono text-xs text-slate-500">{{ $archer->ref_no ?? '—' }}</span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $archer->division ?: '—' }}</td>
-                            <td class="px-4 py-3 text-slate-600">{{ $archer->classification ?: '—' }}</td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $archer->division ?: '—' }}</td>
+                            <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $archer->classification ?: '—' }}</td>
+                            <td class="px-4 py-3 hidden lg:table-cell">
                                 @php
                                     $stCfg = [
                                         'active'           => ['#d1fae5','#065f46','Active'],
@@ -284,11 +304,13 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('archers.show', $archer) }}"
-                                   class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
-                                   style="color:#4338ca; background:#eef2ff; border:1px solid #c7d2fe;">
-                                    View
-                                </a>
+                                <div class="flex items-center gap-2 justify-end">
+                                    <a href="{{ route('archers.show', $archer) }}"
+                                       class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                                       style="color:#4338ca; background:#eef2ff; border:1px solid #c7d2fe;">
+                                        View
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         @endforeach

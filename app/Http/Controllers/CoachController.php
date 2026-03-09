@@ -15,14 +15,43 @@ use Illuminate\View\View;
 
 class CoachController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $coaches = Coach::with('user', 'club', 'stateTeam')
-            ->withCount('archers')
-            ->orderBy('ref_no')
-            ->paginate(20);
+        $clubs  = Club::where('active', true)->orderBy('name')->get();
+        $states = Coach::MALAYSIAN_STATES;
 
-        return view('coaches.index', compact('coaches'));
+        $auth  = auth()->user();
+        $query = Coach::with('user', 'club', 'stateTeam')
+            ->withCount('archers');
+
+        // Club admins only see coaches from their own club
+        if ($auth->role === 'club_admin' && $auth->club_id) {
+            $query->where('club_id', $auth->club_id);
+        }
+
+        if ($search = trim($request->get('search', ''))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ref_no', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%")
+                                                     ->orWhere('email', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($clubId = $request->get('club_id')) {
+            $query->where('club_id', $clubId);
+        }
+
+        if ($state = $request->get('state')) {
+            $query->where('state', $state);
+        }
+
+        if ($request->filled('national_team')) {
+            $query->where('national_team', (bool) $request->get('national_team'));
+        }
+
+        $coaches = $query->orderBy('ref_no')->paginate(20)->withQueryString();
+
+        return view('coaches.index', compact('coaches', 'clubs', 'states'));
     }
 
     public function create(): View

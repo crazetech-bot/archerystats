@@ -151,4 +151,14 @@ class Archer extends Model
             ? asset('storage/' . $this->photo)
             : asset('images/default-archer.svg');
     }
+
+    public function isProfileComplete(): bool
+    {
+        return !empty($this->divisions)
+            && !empty($this->classification)
+            && $this->date_of_birth !== null
+            && !empty($this->nric)
+            && !empty($this->gender)
+            && !empty($this->phone);
+    }
 }

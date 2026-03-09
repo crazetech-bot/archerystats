@@ -128,8 +128,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
     });
 
-    // Edit/update: admins + the coach themselves (controller enforces own-only for coach role)
-    Route::middleware(['role:super_admin,club_admin,coach'])->group(function () {
+    // Edit/update: admins + the coach themselves + national_team (controller enforces own-only for coach role)
+    Route::middleware(['role:super_admin,club_admin,coach,national_team'])->group(function () {
         Route::get('/coaches/{coach}/edit', [CoachController::class, 'edit'])->name('coaches.edit');
         Route::put('/coaches/{coach}', [CoachController::class, 'update'])->name('coaches.update');
     });

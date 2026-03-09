@@ -102,4 +102,11 @@ class Coach extends Model
             ? asset('storage/' . $this->photo)
             : asset('images/default-coach.svg');
     }
+
+    public function isProfileComplete(): bool
+    {
+        return !empty($this->gender)
+            && !empty($this->phone)
+            && $this->date_of_birth !== null;
+    }
 }

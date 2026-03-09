@@ -11,17 +11,17 @@ class NationalTeamController extends Controller
 {
     public function index(): View
     {
-        $podium  = Archer::with('user', 'club', 'stateTeam')
+        $podium  = Archer::with('user', 'club', 'stateTeam', 'coaches.user')
                          ->where('national_team', 'Podium')
                          ->orderBy('ref_no')
                          ->get();
 
-        $pelapis = Archer::with('user', 'club', 'stateTeam')
+        $pelapis = Archer::with('user', 'club', 'stateTeam', 'coaches.user')
                          ->where('national_team', 'Pelapis Kebangsaan')
                          ->orderBy('ref_no')
                          ->get();
 
-        $para    = Archer::with('user', 'club', 'stateTeam')
+        $para    = Archer::with('user', 'club', 'stateTeam', 'coaches.user')
                          ->where('national_team', 'PARA')
                          ->orderBy('ref_no')
                          ->get();

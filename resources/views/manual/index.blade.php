@@ -186,12 +186,15 @@
 
         @include('manual._section', [
             'number' => '6',
-            'title'  => 'Performance',
+            'title'  => 'Performance & Arrow Analysis',
             'color'  => 'indigo',
             'steps'  => [
-                'Click <strong>Performance</strong> in the sidebar to view your progress charts.',
-                'The charts show score trends over time for each round type.',
-                'Use the filters to narrow by date range or round type.',
+                'Click the <strong>PERFORMANCE</strong> button on your archer profile page to view your progress charts.',
+                'Three charts are shown: score trend over time, bar chart of totals by round type, and competition vs training comparison.',
+                'Use the date range filter to narrow your analysis period.',
+                'The <strong>Arrow Analysis</strong> section at the bottom shows your average score per arrow position (Arrow 1, Arrow 2, Arrow 3, etc.).',
+                'Your <strong>weakest arrow</strong> (lowest average) is highlighted in red and your <strong>strongest arrow</strong> is highlighted in green.',
+                'Use this chart to identify which arrow position in your end needs the most attention in training.',
             ],
         ])
 
@@ -369,6 +372,21 @@
             ],
         ])
 
+        @include('manual._section', [
+            'number' => '8',
+            'title'  => 'Live Scoring',
+            'color'  => 'indigo',
+            'steps'  => [
+                'Click the purple <strong>LIVE SCORING</strong> button in the sidebar (above your profile panel) to open the live scoreboard.',
+                'The scoreboard shows all archers from your club who have active scoring sessions on the selected date.',
+                'Columns displayed: Position, Name, Club, State, Distance subtotals (Dist 1, Dist 2…), Total, 10+X count, X count, and Average per Arrow.',
+                'Distance columns are split into 36-arrow blocks — a 72-arrow round shows two distance columns, a 144-arrow round shows four, and so on.',
+                'Archers are ranked by total score, with X count and 10+X count used as tiebreakers.',
+                'The scoreboard auto-refreshes at the selected interval — choose between 15 seconds and 5 minutes using the <strong>Refresh</strong> dropdown.',
+                'Use the <strong>Date</strong> picker at the top to view a different day\'s scoreboard.',
+            ],
+        ])
+
     </div>
 
     {{-- ─────────────────── STATE ADMIN MANUAL ─────────────────── --}}
@@ -441,6 +459,20 @@
                 'Click a club name to view its profile, including member archers and coaches.',
                 'This is a read-only view — state admins cannot create or delete clubs.',
                 'Use this to check which club an archer or coach belongs to.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '6',
+            'title'  => 'Live Scoring',
+            'color'  => 'violet',
+            'steps'  => [
+                'Click the purple <strong>LIVE SCORING</strong> button in the sidebar to open the live scoreboard.',
+                'The scoreboard shows all archers assigned to your state team who have active sessions on the selected date.',
+                'Columns displayed: Position, Name, Club, State, Distance subtotals, Total, 10+X, X, and Average per Arrow.',
+                'Archers are ranked by total score, with X count and 10+X count used as tiebreakers.',
+                'The scoreboard auto-refreshes at the selected interval (15 seconds to 5 minutes).',
+                'Use the <strong>Date</strong> picker to view a different day\'s scoreboard.',
             ],
         ])
 
@@ -557,6 +589,22 @@
                 '<strong>Field (1–6)</strong> — Field archery face. X scores 6 pts. Values 1–6 accepted.',
                 '<strong>Complete (1–10 =X=11)</strong> — Full face with X counting as 11 pts (tiebreak rounds).',
                 '<strong>Reduced (6–10 +X=11)</strong> — 6-zone face with X counting as 11 pts.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '9',
+            'title'  => 'Live Scoring',
+            'color'  => 'rose',
+            'steps'  => [
+                'Click the purple <strong>LIVE SCORING</strong> button in the sidebar to open the live scoreboard.',
+                'Super admins see all archers system-wide. Use the filter bar to narrow the view.',
+                'Use the <strong>Filter by Club</strong> dropdown to view only archers from a specific club.',
+                'Use the <strong>Filter by State Team</strong> dropdown to narrow to a state team.',
+                'Use the <strong>Filter by National Team</strong> dropdown to view Podium, Pelapis Kebangsaan, or PARA archers.',
+                'Filters can be combined freely. Clear a filter by selecting the blank option.',
+                'The scoreboard auto-refreshes at the selected interval. Use the <strong>Date</strong> picker to view any day\'s scoreboard.',
+                'Distance columns are split into 36-arrow blocks — a 72-arrow round shows two columns, a 144-arrow round shows four.',
             ],
         ])
 

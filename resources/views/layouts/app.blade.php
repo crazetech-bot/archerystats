@@ -532,7 +532,7 @@
                         Elimination Matches
                     </a>
 
-                    {{-- Club admin: My Club link --}}
+                    {{-- Club admin: My Club + My Profile links --}}
                     @if(auth()->user()->role === 'club_admin' && auth()->user()->club)
                         <a href="{{ route('clubs.dashboard', auth()->user()->club) }}"
                            class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all

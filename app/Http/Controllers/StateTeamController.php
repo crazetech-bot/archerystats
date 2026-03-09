@@ -106,8 +106,9 @@ class StateTeamController extends Controller
             'coaches' => fn($q) => $q->with('user', 'club')->orderBy('id'),
         ]);
 
-        // Coaches eligible to be appointed (all users with is_coach flag or coach role)
+        // Coaches eligible to be appointed — only from this state team
         $coachUsers = User::where(fn($q) => $q->where('role', 'coach')->orWhere('is_coach', true))
+            ->whereHas('coach', fn($q) => $q->where('state_team_id', $stateTeam->id))
             ->with('coach')
             ->orderBy('name')
             ->get();
@@ -200,4 +201,5 @@ class StateTeamController extends Controller
         return redirect()->route('state-teams.index')
             ->with('success', 'State team deleted.');
     }
+
 }

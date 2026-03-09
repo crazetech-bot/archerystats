@@ -123,13 +123,25 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">National Team Coach</label>
-                    <label class="inline-flex items-center gap-3 cursor-pointer select-none">
-                        <input type="hidden" name="national_team" value="0">
-                        <input type="checkbox" name="national_team" value="1" id="national_team"
-                               class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                               {{ old('national_team', $coach?->national_team) ? 'checked' : '' }}>
-                        <span class="text-sm text-gray-700">This coach is part of the National Team</span>
-                    </label>
+                    @if(auth()->user()->isAdmin() || auth()->user()->role === 'national_team')
+                        <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                            <input type="hidden" name="national_team" value="0">
+                            <input type="checkbox" name="national_team" value="1" id="national_team"
+                                   class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                                   {{ old('national_team', $coach?->national_team) ? 'checked' : '' }}>
+                            <span class="text-sm text-gray-700">This coach is part of the National Team</span>
+                        </label>
+                    @else
+                        {{-- Read-only for all other roles; only National Team Admin / Super Admin may change this --}}
+                        <input type="hidden" name="national_team" value="{{ $coach?->national_team ? '1' : '0' }}">
+                        <div class="inline-flex items-center gap-3 select-none opacity-60 cursor-not-allowed">
+                            <input type="checkbox" disabled
+                                   class="h-4 w-4 rounded border-gray-300 text-teal-600"
+                                   {{ $coach?->national_team ? 'checked' : '' }}>
+                            <span class="text-sm text-gray-700">This coach is part of the National Team</span>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">This setting can only be changed by a National Team Admin.</p>
+                    @endif
                 </div>
 
                 <div>

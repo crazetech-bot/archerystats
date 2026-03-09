@@ -226,7 +226,7 @@
 
                 {{-- State Team --}}
                 <div>
-                    <label for="state_team_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State Team</label>
+                    <label for="state_team_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
                     <select id="state_team_id" name="state_team_id"
                             class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
                                    focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition">

@@ -2,44 +2,67 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\CoachArcherInvitationMail;
 use App\Models\Archer;
+use App\Models\Club;
 use App\Models\Coach;
-use App\Models\CoachArcherInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CoachArcherController extends Controller
 {
-    public function index(Coach $coach): View
+    public function index(Coach $coach, Request $request): View
     {
-        $coach->load(['archers.user', 'archers.club']);
+        $userRole = auth()->user()->role;
+        $isNationalTeamContext = $userRole === 'national_team'
+            || ($userRole === 'coach' && $coach->national_team);
 
-        // Available archers: not yet assigned to this coach
-        // Coaches may only assign archers from their own club;
-        // admins can assign from any club (cross-club uses invitation flow).
-        $assignedIds = $coach->archers->pluck('id');
-        $availableQuery = Archer::with('user', 'club')
-            ->whereNotIn('id', $assignedIds);
+        // ── Filterable assigned-archer query ──────────────────────────────
+        $assignedQuery = Archer::with('user', 'club')
+            ->whereHas('coaches', fn ($q) => $q->where('coaches.id', $coach->id));
 
-        if (auth()->user()->role === 'coach') {
-            $availableQuery->where('club_id', $coach->club_id);
+        if ($search = trim($request->get('search', ''))) {
+            $assignedQuery->where(function ($q) use ($search) {
+                $q->where('mareos_id', 'like', "%{$search}%")
+                  ->orWhere('ref_no', 'like', "%{$search}%")
+                  ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%{$search}%"));
+            });
+        }
+        if ($clubId = $request->get('club_id')) {
+            $assignedQuery->where('club_id', $clubId);
+        }
+        if ($state = $request->get('state')) {
+            $assignedQuery->where('state', $state);
+        }
+        if ($request->filled('national_team')) {
+            $assignedQuery->where('national_team', $request->get('national_team'));
         }
 
-        $available = $availableQuery->orderBy('ref_no')->get();
+        $assignedArchers = $assignedQuery->orderBy('ref_no')->get();
+        $totalAssigned   = $coach->archers()->count();
 
-        // Pending cross-club invitations
-        $pendingInvitations = CoachArcherInvitation::where('coach_id', $coach->id)
-            ->where('status', 'pending')
-            ->where('expires_at', '>', now())
-            ->with(['archer.user', 'archer.club'])
-            ->orderByDesc('created_at')
-            ->get();
+        // ── Available archers for assignment form ─────────────────────────
+        $assignedIds    = $coach->archers()->pluck('archers.id');
+        $availableQuery = Archer::with('user', 'club')->whereNotIn('id', $assignedIds);
 
-        return view('coaches.archers.index', compact('coach', 'available', 'pendingInvitations'));
+        if ($isNationalTeamContext) {
+            $availableQuery->where('national_team', '!=', 'No')->whereNotNull('national_team');
+        } elseif ($userRole === 'coach') {
+            $availableQuery->where('club_id', $coach->club_id);
+        } elseif ($userRole === 'club_admin') {
+            $availableQuery->where('club_id', auth()->user()->club_id);
+        }
+
+        $available           = $availableQuery->orderBy('ref_no')->get();
+        $clubs               = Club::where('active', true)->orderBy('name')->get();
+        $states              = Archer::MALAYSIAN_STATES;
+        $nationalTeamOptions = array_filter(Archer::NATIONAL_TEAM_OPTIONS, fn ($o) => $o !== 'No');
+
+        return view('coaches.archers.index', compact(
+            'coach', 'available', 'isNationalTeamContext',
+            'assignedArchers', 'totalAssigned',
+            'clubs', 'states', 'nationalTeamOptions'
+        ));
     }
 
     public function store(Coach $coach, Request $request): RedirectResponse
@@ -55,34 +78,18 @@ class CoachArcherController extends Controller
             return back()->withErrors(['archer_id' => 'This archer is already assigned to this coach.']);
         }
 
-        if ($archer->club_id === null || $archer->club_id === $coach->club_id) {
-            // No club or same club — assign directly, no confirmation needed
-            $coach->archers()->syncWithoutDetaching([$archer->id]);
-            return back()->with('success', "Archer {$archer->ref_no} assigned to coach.");
+        // National team context restriction (national_team role OR national team coach)
+        $userRole = auth()->user()->role;
+        $isNationalTeamContext = $userRole === 'national_team'
+            || ($userRole === 'coach' && $coach->national_team);
+
+        if ($isNationalTeamContext && (empty($archer->national_team) || $archer->national_team === 'No')) {
+            return back()->withErrors(['archer_id' => 'Only archers with a national team status (Podium, Pelapis Kebangsaan, or PARA) can be assigned here.']);
         }
 
-        // Different club — send a 72-hour confirmation invitation
-        $existing = CoachArcherInvitation::where('coach_id', $coach->id)
-            ->where('archer_id', $archer->id)
-            ->where('status', 'pending')
-            ->where('expires_at', '>', now())
-            ->first();
+        $coach->archers()->syncWithoutDetaching([$archer->id]);
 
-        if ($existing) {
-            return back()->withErrors(['archer_id' => 'A pending invitation already exists for this archer.']);
-        }
-
-        $invitation = CoachArcherInvitation::create([
-            'coach_id'   => $coach->id,
-            'archer_id'  => $archer->id,
-            'token'      => Str::random(64),
-            'status'     => 'pending',
-            'expires_at' => now()->addHours(72),
-        ]);
-
-        Mail::to($archer->user->email)->send(new CoachArcherInvitationMail($invitation));
-
-        return back()->with('success', "Invitation sent to {$archer->ref_no} ({$archer->user->email}). They have 72 hours to confirm.");
+        return back()->with('success', "Archer {$archer->ref_no} assigned to coach.");
     }
 
     public function destroy(Coach $coach, Archer $archer): RedirectResponse

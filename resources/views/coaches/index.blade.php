@@ -30,7 +30,7 @@
     <div class="bg-white rounded-2xl p-5 shadow-sm" style="border: 1px solid #e2e8f0; border-top: 4px solid #f59e0b;">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total</p>
         <p class="text-4xl font-black text-slate-900 mt-1" style="font-family:'Barlow',sans-serif;">{{ $total }}</p>
-        <p class="text-xs text-slate-500 mt-1">Registered coaches</p>
+        <p class="text-xs text-slate-500 mt-1">Matching coaches</p>
     </div>
     <div class="bg-white rounded-2xl p-5 shadow-sm" style="border: 1px solid #e2e8f0; border-top: 4px solid #3b82f6;">
         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Male</p>
@@ -49,8 +49,89 @@
     </div>
 </div>
 
+{{-- Filter bar --}}
+<form method="GET" action="{{ route('coaches.index') }}"
+      class="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-4 mb-5">
+    <div class="flex flex-wrap gap-3 items-end">
+
+        {{-- Search --}}
+        <div class="flex-1 min-w-[180px]">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Search</label>
+            <div class="relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                </svg>
+                <input type="text" name="search" value="{{ request('search') }}"
+                       placeholder="Name, email or ref no…"
+                       class="block w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-300 bg-gray-50 text-sm
+                              focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition">
+            </div>
+        </div>
+
+        {{-- Club --}}
+        <div class="w-44">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Club</label>
+            <select name="club_id"
+                    class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-3
+                           focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition">
+                <option value="">All Clubs</option>
+                @foreach($clubs as $club)
+                    <option value="{{ $club->id }}" {{ request('club_id') == $club->id ? 'selected' : '' }}>
+                        {{ $club->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- State --}}
+        <div class="w-44">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
+            <select name="state"
+                    class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-3
+                           focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition">
+                <option value="">All States</option>
+                @foreach($states as $state)
+                    <option value="{{ $state }}" {{ request('state') === $state ? 'selected' : '' }}>
+                        {{ $state }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        {{-- National Team --}}
+        <div class="w-44">
+            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">National Team</label>
+            <select name="national_team"
+                    class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-3
+                           focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:bg-white outline-none transition">
+                <option value="">All</option>
+                <option value="1" {{ request('national_team') === '1' ? 'selected' : '' }}>National Team Coach</option>
+                <option value="0" {{ request('national_team') === '0' ? 'selected' : '' }}>Non-National Team</option>
+            </select>
+        </div>
+
+        {{-- Buttons --}}
+        <div class="flex gap-2 flex-shrink-0">
+            <button type="submit"
+                    class="px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-sm transition-all hover:opacity-90"
+                    style="background: linear-gradient(135deg, #0d9488, #14b8a6);">
+                Filter
+            </button>
+            @if(request()->hasAny(['search','club_id','state','national_team']))
+            <a href="{{ route('coaches.index') }}"
+               class="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">
+                Reset
+            </a>
+            @endif
+        </div>
+
+    </div>
+</form>
+
 {{-- Table --}}
 <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0;">
+    <div class="overflow-x-auto">
     <table class="min-w-full">
         <thead>
             <tr style="background: #0f172a;">
@@ -58,11 +139,11 @@
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Ref No</th>
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Gender</th>
-                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">State / National Team</th>
-                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Coaching Level</th>
-                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Sports Science Course</th>
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Club</th>
-                <th class="px-4 py-3.5 text-center text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Archers</th>
+                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">State</th>
+                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">National Team</th>
+                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Coaching Level</th>
+                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Sports Science</th>
                 <th class="px-4 py-3.5 text-right pr-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
             </tr>
         </thead>
@@ -95,15 +176,41 @@
                             <span class="text-slate-400 text-sm">—</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden sm:table-cell">{{ $coach->stateTeam?->name ?? ($coach->team ?: '—') }}</td>
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden sm:table-cell">{{ $coach->coaching_level ?: '—' }}</td>
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden sm:table-cell">{{ $coach->sports_science_course ?: '—' }}</td>
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden sm:table-cell">{{ $coach->club?->name ?? '—' }}</td>
-                    <td class="px-4 py-3.5 text-center hidden sm:table-cell">
-                        <span class="inline-block text-xs font-bold px-2.5 py-1 rounded-lg"
-                              style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">
-                            {{ $coach->archers_count }}
-                        </span>
+                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden sm:table-cell">
+                        {{ $coach->club?->name ?? '—' }}
+                    </td>
+                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden md:table-cell">
+                        {{ $coach->state ?: '—' }}
+                    </td>
+                    <td class="px-4 py-3.5 hidden md:table-cell">
+                        @if($coach->national_team)
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
+                                  style="background:rgba(245,158,11,0.12); color:#92400e; border:1px solid rgba(245,158,11,0.3);">
+                                ★ National Team
+                            </span>
+                        @else
+                            <span class="text-slate-400 text-sm">—</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3.5 hidden lg:table-cell">
+                        @if($coach->coaching_level && $coach->coaching_level !== 'None')
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                                  style="background:rgba(13,148,136,0.10); color:#065f46; border:1px solid rgba(13,148,136,0.25);">
+                                {{ $coach->coaching_level }}
+                            </span>
+                        @else
+                            <span class="text-slate-400 text-sm">—</span>
+                        @endif
+                    </td>
+                    <td class="px-4 py-3.5 hidden lg:table-cell">
+                        @if($coach->sports_science_course)
+                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
+                                  style="background:rgba(99,102,241,0.10); color:#3730a3; border:1px solid rgba(99,102,241,0.25);">
+                                {{ $coach->sports_science_course }}
+                            </span>
+                        @else
+                            <span class="text-slate-400 text-sm">—</span>
+                        @endif
                     </td>
                     <td class="px-4 py-3.5 pr-5 text-right">
                         <div class="flex items-center justify-end gap-2">
@@ -112,7 +219,7 @@
                                style="background:#0f172a; color:#ffffff;">
                                 View
                             </a>
-                            @if(auth()->user()->isClubAdmin())
+                            @if(auth()->user()->isClubAdmin() || auth()->user()->role === 'national_team')
                                 <a href="{{ route('coaches.edit', $coach) }}"
                                    class="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
                                    style="background:#f59e0b; color:#0f172a;">
@@ -134,7 +241,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-20 text-center">
+                    <td colspan="10" class="px-6 py-20 text-center">
                         <div class="flex flex-col items-center gap-3">
                             <div class="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center">
                                 <svg class="h-8 w-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -142,7 +249,12 @@
                                 </svg>
                             </div>
                             <p class="text-sm font-bold text-slate-600">No coaches found</p>
-                            @if(auth()->user()->isClubAdmin())
+                            @if(request()->hasAny(['search','club_id','state','national_team']))
+                                <a href="{{ route('coaches.index') }}"
+                                   class="text-sm font-semibold text-teal-600 hover:text-teal-800">
+                                    Clear filters
+                                </a>
+                            @elseif(auth()->user()->isClubAdmin())
                                 <a href="{{ route('coaches.create') }}"
                                    class="text-sm font-bold px-4 py-2 rounded-xl"
                                    style="background:#f59e0b; color:#0f172a;">
@@ -155,6 +267,7 @@
             @endforelse
         </tbody>
     </table>
+    </div>
 </div>
 
 <div class="mt-5">{{ $coaches->links() }}</div>

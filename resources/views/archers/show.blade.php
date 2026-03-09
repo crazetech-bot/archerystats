@@ -185,7 +185,7 @@
                                 'WAREOS ID'   => $archer->wareos_id ?? '—',
                                 'Division'    => $archer->division ?? '—',
                                 'Club'        => $archer->club?->name ?? '—',
-                                'State Team'  => $archer->stateTeam?->name ?? ($archer->state_team ?? '—'),
+                                'State'       => $archer->stateTeam?->name ?? ($archer->state_team ?? '—'),
                             ];
                         @endphp
                         @foreach($piItems as $label => $value)

@@ -32,6 +32,11 @@
             <p class="text-sm text-green-700 font-medium">{{ session('success') }}</p>
         </div>
     @endif
+    @if(session('error'))
+        <div class="mb-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <p class="text-sm text-red-700 font-medium">{{ session('error') }}</p>
+        </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -68,16 +73,18 @@
 
                     {{-- Team Admin badge --}}
                     <div class="mt-4 pt-4 border-t border-slate-100">
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">Team Admin</p>
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Team Admin</p>
+                        </div>
                         @if($stateTeam->admin)
                             <div class="flex items-center gap-2">
                                 <div class="h-7 w-7 rounded-lg flex items-center justify-center text-white text-xs font-black flex-shrink-0"
                                      style="background:linear-gradient(135deg,#0d9488,#14b8a6);">
                                     {{ strtoupper(substr($stateTeam->admin->name, 0, 1)) }}
                                 </div>
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-800">{{ $stateTeam->admin->name }}</p>
-                                    <p class="text-xs text-slate-400">{{ $stateTeam->admin->email }}</p>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-slate-800 truncate">{{ $stateTeam->admin->name }}</p>
+                                    <p class="text-xs text-slate-400 truncate">{{ $stateTeam->admin->email }}</p>
                                 </div>
                             </div>
                         @else
@@ -144,21 +151,89 @@
                 </div>
             </div>
 
+            {{-- ══════════════════════════════════════════════════════════════════════
+                 Appoint Admin accordion
+            ══════════════════════════════════════════════════════════════════════ --}}
+            @if(auth()->user()->isAdmin() || auth()->user()->role === 'state_admin')
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;"
+                 x-data="{ open: false }">
+                <div class="flex items-center justify-between px-6 py-4 cursor-pointer"
+                     style="background:linear-gradient(135deg,#1e1b4b,#3730a3); border-bottom:3px solid #6366f1;"
+                     @click="open = !open">
+                    <div class="flex items-center gap-3">
+                        <svg class="h-4 w-4 text-indigo-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                        </svg>
+                        <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Appoint Team Admin (from existing coach)</h3>
+                    </div>
+                    <svg class="h-4 w-4 text-indigo-300 transition-transform" :class="open ? 'rotate-180' : ''"
+                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+                    </svg>
+                </div>
+
+                <div x-show="open" x-cloak class="px-6 py-5">
+                    @if($stateTeam->admin)
+                    <div class="flex items-center gap-3 mb-4 p-3 rounded-xl" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                        <svg class="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p class="text-sm text-emerald-700">
+                            Current admin: <strong>{{ $stateTeam->admin->name }}</strong>
+                            — appointing a new one will replace them.
+                        </p>
+                    </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('state-teams.appoint-admin', $stateTeam) }}">
+                        @csrf
+                        <div class="flex items-end gap-3 flex-wrap">
+                            <div class="flex-1 min-w-[200px]">
+                                <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Select Coach</label>
+                                <select name="user_id" required
+                                        class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none">
+                                    <option value="">— select a coach —</option>
+                                    @foreach($coachUsers as $cu)
+                                        <option value="{{ $cu->id }}" @selected($stateTeam->admin_user_id === $cu->id)>
+                                            {{ $cu->name }}
+                                            @if($cu->coach?->ref_no) ({{ $cu->coach->ref_no }}) @endif
+                                            @if($cu->role !== 'coach') · {{ str_replace('_', ' ', $cu->role) }} @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                    onclick="return confirm('Appoint this coach as state team admin? They will be granted State Admin privileges.')"
+                                    style="background:linear-gradient(135deg,#4338ca,#6366f1);"
+                                    class="px-5 py-2 rounded-xl text-white text-sm font-bold shadow-sm transition-opacity hover:opacity-90">
+                                Appoint Admin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            @endif
+
         </div>
     </div>
 
-    {{-- Coaches in this state team --}}
+    {{-- ══════════════════════════════════════════════════════════════════════
+         Coaches section
+    ══════════════════════════════════════════════════════════════════════ --}}
     <div class="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;">
         <div class="flex items-center justify-between px-6 py-4" style="background:#0d9488; border-bottom:3px solid #14b8a6;">
-            <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Assigned Coaches</h3>
-            <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
-                {{ $stateTeam->coaches_count }} coach{{ $stateTeam->coaches_count !== 1 ? 'es' : '' }}
-            </span>
+            <div class="flex items-center gap-3">
+                <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Assigned Coaches</h3>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
+                    {{ $stateTeam->coaches_count }} coach{{ $stateTeam->coaches_count !== 1 ? 'es' : '' }}
+                </span>
+            </div>
         </div>
+
+        {{-- Coaches table --}}
         @if($stateTeam->coaches->isEmpty())
             <div class="px-6 py-10 text-center">
                 <p class="text-sm text-slate-400">No coaches assigned to this state team yet.</p>
-                <p class="text-xs text-slate-400 mt-1">Assign coaches via their profile (State / National Team field).</p>
             </div>
         @else
             <div class="overflow-x-auto">
@@ -166,9 +241,9 @@
                     <thead>
                         <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
                             <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Coach</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Ref No</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Coaching Level</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Club</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Ref No</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Coaching Level</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Club</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -192,17 +267,19 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 hidden sm:table-cell">
                                 <span class="font-mono text-xs text-slate-500">{{ $coach->ref_no ?? '—' }}</span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $coach->coaching_level ?: '—' }}</td>
-                            <td class="px-4 py-3 text-slate-500 text-xs">{{ $coach->club?->name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $coach->coaching_level ?: '—' }}</td>
+                            <td class="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">{{ $coach->club?->name ?? '—' }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('coaches.show', $coach) }}"
-                                   class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
-                                   style="color:#0d9488; background:#f0fdfa; border:1px solid #99f6e4;">
-                                    View
-                                </a>
+                                <div class="flex items-center gap-2 justify-end">
+                                    <a href="{{ route('coaches.show', $coach) }}"
+                                       class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                                       style="color:#0d9488; background:#f0fdfa; border:1px solid #99f6e4;">
+                                        View
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         @endforeach
@@ -212,79 +289,23 @@
         @endif
     </div>
 
-    {{-- Appoint Admin — visible to super_admin / state_admin only --}}
-    @if(auth()->user()->isAdmin() || auth()->user()->role === 'state_admin')
-    <div class="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;"
-         x-data="{ open: false }">
-        <div class="flex items-center justify-between px-6 py-4 cursor-pointer"
-             style="background:linear-gradient(135deg,#1e1b4b,#3730a3); border-bottom:3px solid #6366f1;"
-             @click="open = !open">
-            <div class="flex items-center gap-3">
-                <svg class="h-4 w-4 text-indigo-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
-                </svg>
-                <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Appoint Team Admin</h3>
-            </div>
-            <svg class="h-4 w-4 text-indigo-300 transition-transform" :class="open ? 'rotate-180' : ''"
-                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-            </svg>
-        </div>
-
-        <div x-show="open" x-cloak class="px-6 py-5">
-            @if($stateTeam->admin)
-            <div class="flex items-center gap-3 mb-4 p-3 rounded-xl" style="background:#f0fdf4; border:1px solid #bbf7d0;">
-                <svg class="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p class="text-sm text-emerald-700">
-                    Current admin: <strong>{{ $stateTeam->admin->name }}</strong>
-                    — appointing a new one will replace them.
-                </p>
-            </div>
-            @endif
-
-            <form method="POST" action="{{ route('state-teams.appoint-admin', $stateTeam) }}">
-                @csrf
-                <div class="flex items-end gap-3 flex-wrap">
-                    <div class="flex-1 min-w-[200px]">
-                        <label class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1.5 block">Select Coach</label>
-                        <select name="user_id" required
-                                class="w-full text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white focus:border-indigo-400 focus:ring-1 focus:ring-indigo-200 outline-none">
-                            <option value="">— select a coach —</option>
-                            @foreach($coachUsers as $cu)
-                                <option value="{{ $cu->id }}" @selected($stateTeam->admin_user_id === $cu->id)>
-                                    {{ $cu->name }}
-                                    @if($cu->coach?->ref_no) ({{ $cu->coach->ref_no }}) @endif
-                                    @if($cu->role !== 'coach') · {{ str_replace('_', ' ', $cu->role) }} @endif
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <button type="submit"
-                            onclick="return confirm('Appoint this coach as state team admin? They will be granted State Admin privileges.')"
-                            style="background:linear-gradient(135deg,#4338ca,#6366f1);"
-                            class="px-5 py-2 rounded-xl text-white text-sm font-bold shadow-sm transition-opacity hover:opacity-90">
-                        Appoint Admin
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    @endif
-
-    {{-- Archers in this state team --}}
+    {{-- ══════════════════════════════════════════════════════════════════════
+         Archers section
+    ══════════════════════════════════════════════════════════════════════ --}}
     <div class="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden" style="border:1px solid #e2e8f0;">
         <div class="flex items-center justify-between px-6 py-4" style="background:#064e3b; border-bottom:3px solid #059669;">
-            <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Assigned Archers</h3>
-            <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
-                {{ $stateTeam->archers_count }} archer{{ $stateTeam->archers_count !== 1 ? 's' : '' }}
-            </span>
+            <div class="flex items-center gap-3">
+                <h3 class="text-sm font-black tracking-widest uppercase text-white" style="font-family:'Barlow',sans-serif;">Assigned Archers</h3>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(255,255,255,0.2); color:#fff;">
+                    {{ $stateTeam->archers_count }} archer{{ $stateTeam->archers_count !== 1 ? 's' : '' }}
+                </span>
+            </div>
         </div>
+
+        {{-- Archers table --}}
         @if($stateTeam->archers->isEmpty())
             <div class="px-6 py-10 text-center">
                 <p class="text-sm text-slate-400">No archers assigned to this state team yet.</p>
-                <p class="text-xs text-slate-400 mt-1">Assign archers via their profile (Personal Information → State Team).</p>
             </div>
         @else
             <div class="overflow-x-auto">
@@ -292,11 +313,11 @@
                     <thead>
                         <tr style="background:#f8fafc; border-bottom:1px solid #e2e8f0;">
                             <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Archer</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Ref No</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Division</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Classification</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Club</th>
-                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Status</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Ref No</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Division</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Classification</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Club</th>
+                            <th class="text-left px-4 py-3 text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Status</th>
                             <th class="px-4 py-3"></th>
                         </tr>
                     </thead>
@@ -317,13 +338,13 @@
                                     <span class="font-semibold text-slate-800">{{ $archer->user->name }}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 hidden sm:table-cell">
                                 <span class="font-mono text-xs text-slate-500">{{ $archer->ref_no ?? '—' }}</span>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $archer->division ?: '—' }}</td>
-                            <td class="px-4 py-3 text-slate-600">{{ $archer->classification ?: '—' }}</td>
-                            <td class="px-4 py-3 text-slate-500 text-xs">{{ $archer->club->name ?? '—' }}</td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $archer->division ?: '—' }}</td>
+                            <td class="px-4 py-3 text-slate-600 hidden md:table-cell">{{ $archer->classification ?: '—' }}</td>
+                            <td class="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">{{ $archer->club->name ?? '—' }}</td>
+                            <td class="px-4 py-3 hidden lg:table-cell">
                                 @php
                                     $stCfg = [
                                         'active'           => ['#d1fae5','#065f46','Active'],
@@ -338,11 +359,13 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('archers.show', $archer) }}"
-                                   class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
-                                   style="color:#059669; background:#ecfdf5; border:1px solid #6ee7b7;">
-                                    View
-                                </a>
+                                <div class="flex items-center gap-2 justify-end">
+                                    <a href="{{ route('archers.show', $archer) }}"
+                                       class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                                       style="color:#059669; background:#ecfdf5; border:1px solid #6ee7b7;">
+                                        View
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         @endforeach

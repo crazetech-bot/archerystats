@@ -4,6 +4,7 @@
 @section('header', 'National Team')
 @section('subheader', 'Archers representing Malaysia at national level')
 
+
 @section('content')
 
 @php
@@ -101,7 +102,8 @@
                     <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Gender</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Division</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">State Team</th>
-                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Club</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Coach</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Status</th>
                     <th class="px-4 py-3 pr-5 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
                 </tr>
             </thead>
@@ -151,8 +153,33 @@
                         <td class="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">
                             {{ $archer->stateTeam?->name ?? ($archer->state_team ?? '—') }}
                         </td>
-                        <td class="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">
-                            {{ $archer->club?->name ?? '—' }}
+                        <td class="px-4 py-3 hidden md:table-cell">
+                            @if($archer->coaches->isNotEmpty())
+                                <div class="flex flex-col gap-0.5">
+                                    @foreach($archer->coaches as $c)
+                                        <a href="{{ route('coaches.show', $c) }}"
+                                           class="text-xs font-semibold text-teal-700 hover:text-teal-900 transition-colors truncate max-w-[140px]">
+                                            {{ $c->full_name }}
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-slate-400 text-sm">—</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 hidden lg:table-cell">
+                            @php
+                                $statusMap = [
+                                    'active'           => ['label' => 'Active',           'bg' => 'rgba(16,185,129,0.10)', 'color' => '#065f46', 'border' => 'rgba(16,185,129,0.3)'],
+                                    'injury'           => ['label' => 'Injury',            'bg' => 'rgba(239,68,68,0.10)',  'color' => '#991b1b', 'border' => 'rgba(239,68,68,0.3)'],
+                                    'no_longer_active' => ['label' => 'No Longer Active',  'bg' => 'rgba(100,116,139,0.10)','color' => '#334155', 'border' => 'rgba(100,116,139,0.3)'],
+                                ];
+                                $s = $statusMap[$archer->status ?? 'active'] ?? $statusMap['active'];
+                            @endphp
+                            <span class="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap"
+                                  style="background:{{ $s['bg'] }}; color:{{ $s['color'] }}; border:1px solid {{ $s['border'] }};">
+                                {{ $s['label'] }}
+                            </span>
                         </td>
                         <td class="px-4 py-3 pr-5 text-right">
                             <a href="{{ route('archers.show', $archer) }}"
@@ -164,7 +191,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-10 text-center">
+                        <td colspan="9" class="px-6 py-10 text-center">
                             <p class="text-sm text-slate-400">No archers in {{ $section['label'] }}</p>
                         </td>
                     </tr>
@@ -188,17 +215,15 @@
         <span class="text-xs font-bold text-slate-400">{{ $coaches->count() }} {{ Str::plural('coach', $coaches->count()) }}</span>
     </div>
 
-    <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0; border-top: 3px solid #0d9488;">
+    <div class="bg-white rounded-2xl shadow-sm overflow-x-auto" style="border: 1px solid #e2e8f0; border-top: 3px solid #0d9488;">
         <table class="min-w-full">
             <thead>
                 <tr style="background:#0f172a;">
                     <th class="w-12 py-3 pl-5 pr-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest"></th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Ref No</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Gender</th>
                     <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Coaching Level</th>
-                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">State Team</th>
-                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Club</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Club</th>
                     <th class="px-4 py-3 pr-5 text-right text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
                 </tr>
             </thead>
@@ -222,34 +247,11 @@
                             </a>
                             <p class="text-xs text-slate-400">{{ $coach->user->email }}</p>
                         </td>
-                        <td class="px-4 py-3">
-                            @if($coach->gender === 'male')
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
-                                    ♂ Male
-                                </span>
-                            @elseif($coach->gender === 'female')
-                                <span class="inline-flex items-center gap-1 text-xs font-semibold text-pink-700 bg-pink-50 border border-pink-200 px-2.5 py-1 rounded-full">
-                                    ♀ Female
-                                </span>
-                            @else
-                                <span class="text-slate-400 text-sm">—</span>
-                            @endif
-                        </td>
                         <td class="px-4 py-3 hidden md:table-cell">
-                            @if($coach->coaching_level && $coach->coaching_level !== 'None')
-                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                                      style="background:rgba(13,148,136,0.10); color:#065f46; border:1px solid rgba(13,148,136,0.25);">
-                                    {{ $coach->coaching_level }}
-                                </span>
-                            @else
-                                <span class="text-slate-400 text-sm">—</span>
-                            @endif
+                            <span class="text-sm text-slate-600">{{ $coach->coaching_level ?: '—' }}</span>
                         </td>
-                        <td class="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">
-                            {{ $coach->stateTeam?->name ?? ($coach->state ?? '—') }}
-                        </td>
-                        <td class="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">
-                            {{ $coach->club?->name ?? '—' }}
+                        <td class="px-4 py-3 hidden lg:table-cell">
+                            <span class="text-sm text-slate-600">{{ $coach->club?->name ?? '—' }}</span>
                         </td>
                         <td class="px-4 py-3 pr-5 text-right">
                             <a href="{{ route('coaches.show', $coach) }}"
@@ -261,8 +263,8 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-10 text-center">
-                            <p class="text-sm text-slate-400">No coaches registered</p>
+                        <td colspan="6" class="px-6 py-10 text-center">
+                            <p class="text-sm text-slate-400">No national team coaches registered.</p>
                         </td>
                     </tr>
                 @endforelse
@@ -289,8 +291,8 @@
             <thead>
                 <tr style="background:#0f172a;">
                     <th class="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Name</th>
-                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest">Email</th>
-                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Club</th>
+                    <th class="px-4 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:table-cell">Email</th>
+                    <th class="px-4 py-3 pr-5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Club</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -298,11 +300,12 @@
                     <tr class="transition-colors hover:bg-slate-50">
                         <td class="px-5 py-3">
                             <p class="text-sm font-bold text-slate-900">{{ $admin->name }}</p>
+                            <p class="text-xs text-slate-400 sm:hidden">{{ $admin->email }}</p>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 hidden sm:table-cell">
                             <p class="text-sm text-slate-600">{{ $admin->email }}</p>
                         </td>
-                        <td class="px-4 py-3 text-sm text-slate-600 hidden md:table-cell">
+                        <td class="px-4 py-3 pr-5 text-sm text-slate-600 hidden md:table-cell">
                             {{ $admin->club?->name ?? '—' }}
                         </td>
                     </tr>

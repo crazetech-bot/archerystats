@@ -11,6 +11,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoundTypeSeeder::class,
             ArcherSeeder::class,
+            DummyDataSeeder::class,
         ]);
     }
 }
