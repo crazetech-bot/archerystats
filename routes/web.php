@@ -10,16 +10,12 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
-use App\Http\Controllers\ClubController;
-use App\Http\Controllers\ClubInvitationController;
 use App\Http\Controllers\CoachArcherController;
 use App\Http\Controllers\CoachArcherInvitationController;
 use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EliminationMatchController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\LiveScoringRealtimeController;
-use App\Http\Controllers\NationalTeamController;
-use App\Http\Controllers\StateTeamController;
 use App\Http\Controllers\TrainingSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -49,24 +45,8 @@ Route::get('/', function () {
     if (auth()->check() && auth()->user()->role === 'coach' && auth()->user()->coach) {
         return redirect()->route('coaches.show', auth()->user()->coach);
     }
-    if (auth()->check() && auth()->user()->role === 'club_admin' && auth()->user()->club) {
-        return redirect()->route('clubs.dashboard', auth()->user()->club);
-    }
-    if (auth()->check() && auth()->user()->role === 'state_admin') {
-        $team = auth()->user()->managedStateTeam;
-        return $team
-            ? redirect()->route('state-teams.show', $team)
-            : redirect()->route('state-teams.index');
-    }
-    if (auth()->check() && auth()->user()->role === 'national_team') {
-        return redirect()->route('national-team.index');
-    }
     return redirect()->route('archers.index');
 });
-
-// Club invitation responses (no auth required — token-based)
-Route::get('/club-invitations/{token}/accept',  [ClubInvitationController::class, 'accept'])->name('club-invitations.accept');
-Route::get('/club-invitations/{token}/decline', [ClubInvitationController::class, 'decline'])->name('club-invitations.decline');
 
 // Coach-archer invitation responses (no auth required — token-based)
 Route::get('/coach-archer-invitations/{token}/accept',  [CoachArcherInvitationController::class, 'accept'])->name('coach-archer-invitations.accept');
@@ -84,12 +64,6 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
 
-    // National Team module
-    Route::middleware(['role:super_admin,national_team'])->group(function () {
-        Route::get('/national-team', [NationalTeamController::class, 'index'])->name('national-team.index');
-        Route::patch('/archers/{archer}/national-team', [ArcherController::class, 'updateNationalTeam'])->name('archers.national-team.update');
-    });
-
     // create/import must come before {archer} to avoid route conflict
     Route::middleware(['role:super_admin,club_admin'])->group(function () {
         Route::get('/archers/create',          [ArcherController::class, 'create'])->name('archers.create');
@@ -105,13 +79,13 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/archers/{archer}', [ArcherController::class, 'update'])->name('archers.update');
     });
 
-    // Archers list: admins + state_admin + national_team (read-only)
-    Route::middleware(['role:super_admin,club_admin,state_admin,national_team'])->group(function () {
+    // Archers list: admins only
+    Route::middleware(['role:super_admin,club_admin'])->group(function () {
         Route::get('/archers', [ArcherController::class, 'index'])->name('archers.index');
     });
 
-    // Archer profile: admins, the archer themselves, state_admin, coach, and national_team (read-only)
-    Route::middleware(['role:super_admin,club_admin,archer,state_admin,coach,national_team'])->group(function () {
+    // Archer profile: admins, the archer themselves, coach
+    Route::middleware(['role:super_admin,club_admin,archer,coach'])->group(function () {
         Route::get('/archers/{archer}', [ArcherController::class, 'show'])->name('archers.show');
         Route::get('/archers/{archer}/performance', [ArcherPerformanceController::class, 'show'])->name('archers.performance');
     });
@@ -128,13 +102,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/coaches', [CoachController::class, 'store'])->name('coaches.store');
     });
 
-    // Edit/update: admins + the coach themselves + national_team (controller enforces own-only for coach role)
-    Route::middleware(['role:super_admin,club_admin,coach,national_team'])->group(function () {
+    // Edit/update: admins + the coach themselves
+    Route::middleware(['role:super_admin,club_admin,coach'])->group(function () {
         Route::get('/coaches/{coach}/edit', [CoachController::class, 'edit'])->name('coaches.edit');
         Route::put('/coaches/{coach}', [CoachController::class, 'update'])->name('coaches.update');
     });
 
-    Route::middleware(['role:super_admin,club_admin,coach,national_team'])->group(function () {
+    Route::middleware(['role:super_admin,club_admin,coach'])->group(function () {
         Route::get('/coaches', [CoachController::class, 'index'])->name('coaches.index');
         Route::get('/coaches/{coach}', [CoachController::class, 'show'])->name('coaches.show');
 
@@ -163,62 +137,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Live scoring — real-time scoreboard
-    Route::middleware(['role:super_admin,club_admin,state_admin,national_team'])->group(function () {
+    Route::middleware(['role:super_admin,club_admin'])->group(function () {
         Route::get('/live-scoring/realtime',       [LiveScoringRealtimeController::class, 'index'])->name('live-scoring.realtime');
         Route::get('/live-scoring/realtime/data',  [LiveScoringRealtimeController::class, 'data'])->name('live-scoring.realtime.data');
     });
 
-    // Clubs — list: super_admin + state_admin + national_team (read-only)
-    Route::middleware(['role:super_admin,state_admin,national_team'])->group(function () {
-        Route::get('/clubs', [ClubController::class, 'index'])->name('clubs.index');
-    });
-
-    // Clubs — create/delete/import: super_admin only
-    Route::middleware(['role:super_admin'])->group(function () {
-        Route::get('/clubs/create',             [ClubController::class, 'create'])->name('clubs.create');
-        Route::post('/clubs',                   [ClubController::class, 'store'])->name('clubs.store');
-        Route::get('/clubs/import',             [ClubController::class, 'importForm'])->name('clubs.import');
-        Route::post('/clubs/import',            [ClubController::class, 'import'])->name('clubs.import.store');
-        Route::get('/clubs/import/template',    [ClubController::class, 'importTemplate'])->name('clubs.import.template');
-        Route::delete('/clubs/{club}',          [ClubController::class, 'destroy'])->name('clubs.destroy');
-    });
-
-    // State Teams — read-only: add national_team
-    Route::middleware(['role:super_admin,state_admin,national_team'])->group(function () {
-        Route::get('/state-teams',             [StateTeamController::class, 'index'])->name('state-teams.index');
-        Route::get('/state-teams/{stateTeam}', [StateTeamController::class, 'show'])->name('state-teams.show');
-    });
-
-    // State Teams — write: super_admin + state_admin only (create must stay before {stateTeam})
-    Route::middleware(['role:super_admin,state_admin'])->group(function () {
-        Route::get('/state-teams/create',            [StateTeamController::class, 'create'])->name('state-teams.create');
-        Route::post('/state-teams',                  [StateTeamController::class, 'store'])->name('state-teams.store');
-        Route::get('/state-teams/{stateTeam}/edit',  [StateTeamController::class, 'edit'])->name('state-teams.edit');
-        Route::put('/state-teams/{stateTeam}',       [StateTeamController::class, 'update'])->name('state-teams.update');
-        Route::delete('/state-teams/{stateTeam}',    [StateTeamController::class, 'destroy'])->name('state-teams.destroy');
-        Route::post('/state-teams/{stateTeam}/appoint-admin', [StateTeamController::class, 'appointAdmin'])->name('state-teams.appoint-admin');
-    });
-
-    // Clubs — read-only views: add national_team
-    Route::middleware(['role:super_admin,club_admin,state_admin,national_team'])->group(function () {
-        Route::get('/clubs/{club}',           [ClubController::class, 'show'])->name('clubs.show');
-        Route::get('/clubs/{club}/dashboard', [ClubController::class, 'dashboard'])->name('clubs.dashboard');
-        Route::get('/clubs/{club}/members',   [ClubController::class, 'members'])->name('clubs.members');
-    });
-
-    // Clubs — edit/manage: super_admin + club_admin + state_admin only
-    Route::middleware(['role:super_admin,club_admin,state_admin'])->group(function () {
-        Route::get('/clubs/{club}/edit',                          [ClubController::class, 'edit'])->name('clubs.edit');
-        Route::put('/clubs/{club}',                               [ClubController::class, 'update'])->name('clubs.update');
-        Route::post('/clubs/{club}/archers/{archer}',             [ClubController::class, 'inviteArcher'])->name('clubs.archers.add');
-        Route::delete('/clubs/{club}/archers/{archer}',           [ClubController::class, 'removeArcher'])->name('clubs.archers.remove');
-        Route::post('/clubs/{club}/coaches/{coach}',              [ClubController::class, 'inviteCoach'])->name('clubs.coaches.add');
-        Route::delete('/clubs/{club}/coaches/{coach}',            [ClubController::class, 'removeCoach'])->name('clubs.coaches.remove');
-        Route::delete('/club-invitations/{invitation}/cancel',    [ClubInvitationController::class, 'cancel'])->name('club-invitations.cancel');
-    });
-
-    // Elimination Matches — read-only views: add national_team
-    Route::middleware(['role:super_admin,club_admin,coach,archer,national_team'])->group(function () {
+    // Elimination Matches — read-only views
+    Route::middleware(['role:super_admin,club_admin,coach,archer'])->group(function () {
         Route::get('/elimination-matches',                              [EliminationMatchController::class, 'index'])->name('elimination-matches.index');
         Route::get('/elimination-matches/{eliminationMatch}/scorecard', [EliminationMatchController::class, 'scorecard'])->name('elimination-matches.scorecard');
     });
@@ -231,8 +156,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/elimination-matches/{eliminationMatch}',     [EliminationMatchController::class, 'destroy'])->name('elimination-matches.destroy');
     });
 
-    // Sessions — read-only views: add national_team
-    Route::middleware(['role:super_admin,club_admin,coach,archer,national_team'])->group(function () {
+    // Sessions — read-only views
+    Route::middleware(['role:super_admin,club_admin,coach,archer'])->group(function () {
         Route::get('/archers/{archer}/sessions',    [SessionController::class, 'index'])->name('sessions.index');
         Route::get('/sessions/{session}/scorecard', [SessionController::class, 'scorecard'])->name('sessions.scorecard');
         Route::get('/sessions/{session}',           [SessionController::class, 'show'])->name('sessions.show');

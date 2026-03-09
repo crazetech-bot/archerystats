@@ -206,22 +206,6 @@
                             @else
                                 <dd class="text-sm font-semibold text-slate-800">{{ $nt }}</dd>
                             @endif
-                            @if(in_array(auth()->user()->role, ['super_admin', 'national_team']))
-                                <form method="POST" action="{{ route('archers.national-team.update', $archer) }}"
-                                      class="mt-2 flex gap-2">
-                                    @csrf @method('PATCH')
-                                    <select name="national_team"
-                                            class="flex-1 rounded-lg border border-gray-300 bg-white text-sm py-1.5 px-3
-                                                   focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition">
-                                        @foreach(\App\Models\Archer::NATIONAL_TEAM_OPTIONS as $opt)
-                                            <option value="{{ $opt }}" @selected($archer->national_team === $opt)>{{ $opt }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit"
-                                            class="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
-                                            style="background:linear-gradient(135deg,#4338ca,#6366f1)">Save</button>
-                                </form>
-                            @endif
                         </div>
                         {{-- Para-Archery --}}
                         <div class="rounded-xl px-4 py-3" style="background:#f8fafc; border:1px solid #e2e8f0;">
