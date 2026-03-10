@@ -281,6 +281,14 @@
                     </a>
 
                     @if(auth()->user()->role === 'super_admin')
+                        <a href="{{ route('admin.clubs.index') }}" @click="mobileOpen = false"
+                           class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                                  {{ request()->routeIs('admin.clubs*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Clubs
+                        </a>
                         <a href="{{ route('admin.settings') }}" @click="mobileOpen = false"
                            class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
                                   {{ request()->routeIs('admin.settings*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
@@ -489,6 +497,14 @@
                     </a>
 
                     @if(auth()->user()->role === 'super_admin')
+                        <a href="{{ route('admin.clubs.index') }}"
+                           class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                                  {{ request()->routeIs('admin.clubs*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                            Clubs
+                        </a>
                         <a href="{{ route('admin.settings') }}"
                            class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
                                   {{ request()->routeIs('admin.settings*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">

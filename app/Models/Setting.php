@@ -6,23 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class Setting extends Model
 {
-    protected $fillable = ['key', 'value'];
+    protected $fillable = ['key', 'value', 'club_id'];
 
-    public static function get(string $key, mixed $default = null): mixed
+    // ── Platform-scoped helpers (club_id = NULL) ──────────────────────────
+
+    public static function get(string $key, mixed $default = null, ?int $clubId = null): mixed
     {
-        return static::where('key', $key)->value('value') ?? $default;
+        return static::where('key', $key)->where('club_id', $clubId)->value('value') ?? $default;
     }
 
-    public static function set(string $key, mixed $value): void
+    public static function set(string $key, mixed $value, ?int $clubId = null): void
     {
-        static::updateOrCreate(['key' => $key], ['value' => $value]);
-        cache()->forget('site_settings');
+        static::updateOrCreate(
+            ['key' => $key, 'club_id' => $clubId],
+            ['value' => $value]
+        );
+        cache()->forget('site_settings_' . ($clubId ?? 'platform'));
     }
 
-    public static function getAllCached(): array
+    public static function getAllCached(?int $clubId = null): array
     {
-        return cache()->remember('site_settings', 3600, function () {
-            return static::pluck('value', 'key')->toArray();
+        $cacheKey = 'site_settings_' . ($clubId ?? 'platform');
+
+        return cache()->remember($cacheKey, 3600, function () use ($clubId) {
+            return static::where('club_id', $clubId)->pluck('value', 'key')->toArray();
         });
     }
 }

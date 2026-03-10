@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\ClubManagementController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ArcherController;
@@ -175,12 +176,19 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:super_admin'])->group(function () {
         Route::delete('/archers/{archer}', [ArcherController::class, 'destroy'])->name('archers.destroy');
 
+        // Platform settings
         Route::get('/admin/settings', [SettingController::class, 'index'])->name('admin.settings');
         Route::post('/admin/settings', [SettingController::class, 'update'])->name('admin.settings.update');
         Route::delete('/admin/settings/logo', [SettingController::class, 'removeLogo'])->name('admin.settings.logo.remove');
         Route::delete('/admin/settings/seo-image', [SettingController::class, 'removeSeoImage'])->name('admin.settings.seo.image.remove');
         Route::post('/admin/settings/registration', [SettingController::class, 'updateRegistration'])->name('admin.settings.registration');
         Route::post('/admin/settings/popups', [SettingController::class, 'updatePopups'])->name('admin.settings.popups');
+
+        // Club management (super admin platform dashboard)
+        Route::get('/admin/clubs', [ClubManagementController::class, 'index'])->name('admin.clubs.index');
+        Route::get('/admin/clubs/{club}', [ClubManagementController::class, 'show'])->name('admin.clubs.show');
+        Route::post('/admin/clubs/{club}/toggle', [ClubManagementController::class, 'toggle'])->name('admin.clubs.toggle');
+        Route::put('/admin/clubs/{club}', [ClubManagementController::class, 'update'])->name('admin.clubs.update');
 
         // Admin user management
         Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');

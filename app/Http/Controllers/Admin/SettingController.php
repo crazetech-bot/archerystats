@@ -30,7 +30,7 @@ class SettingController extends Controller
 
     public function index(): View
     {
-        $settings      = Setting::getAllCached();
+        $settings      = Setting::getAllCached(null);
         $recentArchers = Archer::with('user')->latest()->take(6)->get();
         $totalArchers  = Archer::count();
         $newThisMonth  = Archer::whereMonth('created_at', now()->month)
@@ -120,7 +120,7 @@ class SettingController extends Controller
             Setting::set($key, $request->input($key));
         }
 
-        cache()->forget('site_settings');
+        cache()->forget('site_settings_platform');
 
         return redirect()->back()->with('success', 'Settings saved successfully.');
     }
@@ -130,7 +130,7 @@ class SettingController extends Controller
         $img = Setting::get('seo_og_image');
         if ($img) Storage::disk('public')->delete($img);
         Setting::set('seo_og_image', null);
-        cache()->forget('site_settings');
+        cache()->forget('site_settings_platform');
 
         return redirect()->back()->with('success', 'SEO image removed.');
     }
@@ -140,7 +140,7 @@ class SettingController extends Controller
         $logo = Setting::get('logo');
         if ($logo) Storage::disk('public')->delete($logo);
         Setting::set('logo', null);
-        cache()->forget('site_settings');
+        cache()->forget('site_settings_platform');
 
         return redirect()->back()->with('success', 'Logo removed.');
     }
@@ -192,7 +192,7 @@ class SettingController extends Controller
             Setting::set($key, $request->input($key));
         }
 
-        cache()->forget('site_settings');
+        cache()->forget('site_settings_platform');
 
         return redirect()->back()->with('success', 'Popup settings saved.');
     }
