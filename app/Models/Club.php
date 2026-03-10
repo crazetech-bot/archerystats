@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
@@ -46,14 +47,28 @@ class Club extends Model
         return $this->hasMany(User::class);
     }
 
-    public function archers(): HasMany
+    public function archers(): BelongsToMany
     {
-        return $this->hasMany(Archer::class);
+        return $this->belongsToMany(Archer::class, 'archer_clubs')
+                    ->withPivot('primary_club', 'joined_at')
+                    ->withTimestamps();
     }
 
-    public function coaches(): HasMany
+    public function coaches(): BelongsToMany
     {
-        return $this->hasMany(Coach::class);
+        return $this->belongsToMany(Coach::class, 'coach_clubs')
+                    ->withPivot('primary_club', 'joined_at')
+                    ->withTimestamps();
+    }
+
+    public function primaryArchers(): BelongsToMany
+    {
+        return $this->archers()->wherePivot('primary_club', true);
+    }
+
+    public function primaryCoaches(): BelongsToMany
+    {
+        return $this->coaches()->wherePivot('primary_club', true);
     }
 
     public function invitations(): HasMany

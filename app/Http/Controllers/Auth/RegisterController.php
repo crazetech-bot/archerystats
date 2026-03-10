@@ -33,10 +33,17 @@ class RegisterController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
+        $currentClub = app()->has('currentClub') ? app('currentClub') : null;
+
+        // On a subdomain, allow existing emails so archers/coaches can join multiple clubs
+        $emailRule = $currentClub
+            ? ['required', 'email']
+            : ['required', 'email', 'unique:users,email'];
+
         $validated = $request->validate([
             'role'                  => ['required', 'in:archer,coach,club_admin'],
             'name'                  => ['required', 'string', 'max:255'],
-            'email'                 => ['required', 'email', 'unique:users,email'],
+            'email'                 => $emailRule,
             'password'              => ['required', 'string', 'min:8', 'confirmed'],
             'password_confirmation' => ['required'],
             'club_name'             => ['required_if:role,club_admin', 'nullable', 'string', 'max:255', 'unique:clubs,name'],
@@ -50,14 +57,56 @@ class RegisterController extends Controller
                 ->withInput();
         }
 
-        // Determine club context
-        $currentClub = app()->has('currentClub') ? app('currentClub') : null;
-
         // On a subdomain, club_admin registration is not allowed
         if ($currentClub && $validated['role'] === 'club_admin') {
             return back()
                 ->withErrors(['role' => 'Club registration is done at the main platform. Please choose Archer or Coach.'])
                 ->withInput();
+        }
+
+        // On a subdomain: if the email belongs to an existing user, add them to this club
+        if ($currentClub) {
+            $existingUser = User::where('email', $validated['email'])->first();
+
+            if ($existingUser) {
+                // Verify password matches
+                if (! Hash::check($validated['password'], $existingUser->password)) {
+                    return back()
+                        ->withErrors(['email' => 'An account with this email already exists. Please enter the correct password to join this club.'])
+                        ->withInput();
+                }
+
+                // Only archers and coaches can join additional clubs
+                if (! in_array($existingUser->role, ['archer', 'coach'])) {
+                    return back()
+                        ->withErrors(['email' => 'This account type cannot join additional clubs.'])
+                        ->withInput();
+                }
+
+                $joined = DB::transaction(function () use ($existingUser, $currentClub) {
+                    if ($existingUser->role === 'archer') {
+                        $archer = $existingUser->archer;
+                        if ($archer && ! $archer->clubs()->where('clubs.id', $currentClub->id)->exists()) {
+                            $archer->clubs()->attach($currentClub->id, ['primary_club' => false, 'joined_at' => now()]);
+                        }
+                    } elseif ($existingUser->role === 'coach') {
+                        $coach = $existingUser->coach;
+                        if ($coach && ! $coach->clubs()->where('clubs.id', $currentClub->id)->exists()) {
+                            $coach->clubs()->attach($currentClub->id, ['primary_club' => false, 'joined_at' => now()]);
+                        }
+                    }
+                    return $existingUser;
+                });
+
+                Auth::login($joined);
+
+                if ($joined->role === 'archer') {
+                    return redirect()->route('archers.show', $joined->archer)
+                        ->with('success', 'You have joined ' . $currentClub->name . '!');
+                }
+                return redirect()->route('coaches.show', $joined->coach)
+                    ->with('success', 'You have joined ' . $currentClub->name . '!');
+            }
         }
 
         $user = DB::transaction(function () use ($validated, $currentClub) {
@@ -72,10 +121,16 @@ class RegisterController extends Controller
             ]);
 
             if ($validated['role'] === 'archer') {
-                Archer::create(['user_id' => $user->id, 'club_id' => $clubId]);
+                $archer = Archer::create(['user_id' => $user->id, 'club_id' => $clubId]);
+                if ($currentClub) {
+                    $archer->clubs()->attach($currentClub->id, ['primary_club' => true, 'joined_at' => now()]);
+                }
             } elseif ($validated['role'] === 'coach') {
                 $user->update(['is_coach' => true]);
-                Coach::create(['user_id' => $user->id, 'club_id' => $clubId]);
+                $coach = Coach::create(['user_id' => $user->id, 'club_id' => $clubId]);
+                if ($currentClub) {
+                    $coach->clubs()->attach($currentClub->id, ['primary_club' => true, 'joined_at' => now()]);
+                }
             } elseif ($validated['role'] === 'club_admin') {
                 $club = Club::create([
                     'name'   => $validated['club_name'],

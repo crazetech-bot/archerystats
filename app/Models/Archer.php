@@ -120,6 +120,13 @@ class Archer extends Model
         return $this->hasMany(ArcherySession::class);
     }
 
+    public function clubs(): BelongsToMany
+    {
+        return $this->belongsToMany(Club::class, 'archer_clubs')
+                    ->withPivot('primary_club', 'joined_at')
+                    ->withTimestamps();
+    }
+
     public function coaches(): BelongsToMany
     {
         return $this->belongsToMany(Coach::class, 'coach_archers')->withTimestamps();

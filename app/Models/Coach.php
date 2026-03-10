@@ -72,6 +72,13 @@ class Coach extends Model
         return $this->belongsTo(StateTeam::class);
     }
 
+    public function clubs(): BelongsToMany
+    {
+        return $this->belongsToMany(Club::class, 'coach_clubs')
+                    ->withPivot('primary_club', 'joined_at')
+                    ->withTimestamps();
+    }
+
     public function archers(): BelongsToMany
     {
         return $this->belongsToMany(Archer::class, 'coach_archers')->withTimestamps();

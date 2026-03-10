@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Archer;
 use App\Models\Club;
-use App\Models\Coach;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,8 +20,9 @@ class ClubManagementController extends Controller
 
         $totalClubs   = $clubs->count();
         $activeClubs  = $clubs->where('active', true)->count();
-        $totalArchers = Archer::withoutGlobalScopes()->count();
-        $totalCoaches = Coach::withoutGlobalScopes()->count();
+        // Count distinct archers/coaches across all pivot memberships
+        $totalArchers = \DB::table('archer_clubs')->distinct('archer_id')->count('archer_id');
+        $totalCoaches = \DB::table('coach_clubs')->distinct('coach_id')->count('coach_id');
 
         return view('admin.clubs.index', compact(
             'clubs', 'totalClubs', 'activeClubs', 'totalArchers', 'totalCoaches'
@@ -33,11 +33,11 @@ class ClubManagementController extends Controller
     {
         $club->load(['users', 'archers.user', 'coaches.user']);
 
-        $archerCount  = Archer::withoutGlobalScopes()->where('club_id', $club->id)->count();
-        $coachCount   = Coach::withoutGlobalScopes()->where('club_id', $club->id)->count();
-        $adminUsers   = User::where('club_id', $club->id)
-                            ->whereIn('role', ['club_admin', 'super_admin'])
-                            ->get();
+        $archerCount = $club->archers()->count();
+        $coachCount  = $club->coaches()->count();
+        $adminUsers  = User::where('club_id', $club->id)
+                           ->whereIn('role', ['club_admin', 'super_admin'])
+                           ->get();
 
         return view('admin.clubs.show', compact('club', 'archerCount', 'coachCount', 'adminUsers'));
     }
