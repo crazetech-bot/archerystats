@@ -87,6 +87,27 @@ class DummyDataSeeder extends Seeder
             $clubs[] = Club::firstOrCreate(['name' => $data['name']], $data);
         }
 
+        // ─── Club admins (1 per club) ─────────────────────────────────────────
+        $adminEmails = [
+            'Selangor Archery Club'    => 'admin@selangorarchery.my',
+            'Kelab Memanah Kuala Lumpur' => 'admin@kmkl.my',
+            'Persatuan Memanah Johor'  => 'admin@pmjohor.my',
+            'Penang Archers Society'   => 'admin@penangarchers.my',
+            'Kelab Memanah Perak'      => 'admin@kmperak.my',
+        ];
+        foreach ($clubs as $club) {
+            $email = $adminEmails[$club->name] ?? null;
+            if ($email && ! User::where('email', $email)->exists()) {
+                User::create([
+                    'name'     => $club->name . ' Admin',
+                    'email'    => $email,
+                    'password' => Hash::make('password'),
+                    'role'     => 'club_admin',
+                    'club_id'  => $club->id,
+                ]);
+            }
+        }
+
         // ─── 5 Coaches (1 per club) ───────────────────────────────────────────
         $coachesData = [
             [
@@ -178,7 +199,7 @@ class DummyDataSeeder extends Seeder
                 'role'     => 'coach',
                 'club_id'  => $club->id,
             ]);
-            Coach::create([
+            $coach = Coach::create([
                 'user_id'        => $user->id,
                 'club_id'        => $club->id,
                 'date_of_birth'  => $data['dob'],
@@ -194,6 +215,7 @@ class DummyDataSeeder extends Seeder
                 'notes'          => $data['notes'],
                 'active'         => true,
             ]);
+            $coach->clubs()->attach($club->id, ['primary_club' => true, 'joined_at' => now()]);
         }
 
         // ─── 15 Archers (3 per club) ─────────────────────────────────────────
@@ -587,7 +609,7 @@ class DummyDataSeeder extends Seeder
                 'role'     => 'archer',
                 'club_id'  => $club->id,
             ]);
-            Archer::create([
+            $archer = Archer::create([
                 'user_id'                   => $user->id,
                 'club_id'                   => $club->id,
                 'date_of_birth'             => $data['dob'],
@@ -619,6 +641,7 @@ class DummyDataSeeder extends Seeder
                 'active'                    => true,
                 'status'                    => 'active',
             ]);
+            $archer->clubs()->attach($club->id, ['primary_club' => true, 'joined_at' => now()]);
         }
     }
 }
