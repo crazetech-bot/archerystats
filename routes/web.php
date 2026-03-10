@@ -18,6 +18,7 @@ use App\Http\Controllers\EliminationMatchController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\LiveScoringRealtimeController;
 use App\Http\Controllers\ClubLandingController;
+use App\Http\Controllers\ClubRegistrationController;
 use App\Http\Controllers\TrainingSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,12 @@ Route::middleware(['guest'])->group(function () {
 
 // User Manual — public (no login required)
 Route::get('/manual', fn() => view('manual.index'))->name('manual');
+
+// Club self-registration — public, root domain (no auth required)
+Route::get('/register-club',            [ClubRegistrationController::class, 'showForm'])->name('club-register.form');
+Route::post('/register-club',           [ClubRegistrationController::class, 'register'])->name('club-register');
+Route::get('/register-club/success',    [ClubRegistrationController::class, 'success'])->name('club-register.success');
+Route::get('/register-club/check-slug', [ClubRegistrationController::class, 'checkSlug'])->name('club-register.check-slug');
 
 // Root path — public landing page on subdomains, dashboard redirect otherwise
 Route::get('/', function () {

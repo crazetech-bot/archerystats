@@ -235,8 +235,12 @@
         </div>
 
         {{-- Footer --}}
-        <div class="px-6 py-4 border-t border-slate-100">
-            <p class="text-xs text-slate-400 text-center">{{ $footerText }}</p>
+        <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p class="text-xs text-slate-400">{{ $footerText }}</p>
+            <a href="{{ route('club-register.form') }}"
+               class="text-xs font-semibold text-amber-600 hover:text-amber-700 whitespace-nowrap">
+                Register your club →
+            </a>
         </div>
 
     </div>
