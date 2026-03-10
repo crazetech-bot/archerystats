@@ -21,13 +21,14 @@ class RegisterController extends Controller
 {
     public function showRegistrationForm(): View
     {
-        $clubs  = Club::orderBy('name')->pluck('name');
+        $clubs       = Club::orderBy('name')->pluck('name');
+        $currentClub = app()->has('currentClub') ? app('currentClub') : null;
         $regOpen = [
             'archer' => Setting::get('reg_archer_open', '1') === '1',
             'coach'  => Setting::get('reg_coach_open',  '1') === '1',
             'club'   => Setting::get('reg_club_open',   '1') === '1',
         ];
-        return view('auth.register', compact('clubs', 'regOpen'));
+        return view('auth.register', compact('clubs', 'regOpen', 'currentClub'));
     }
 
     public function register(Request $request): RedirectResponse
@@ -49,19 +50,32 @@ class RegisterController extends Controller
                 ->withInput();
         }
 
-        $user = DB::transaction(function () use ($validated) {
+        // Determine club context
+        $currentClub = app()->has('currentClub') ? app('currentClub') : null;
+
+        // On a subdomain, club_admin registration is not allowed
+        if ($currentClub && $validated['role'] === 'club_admin') {
+            return back()
+                ->withErrors(['role' => 'Club registration is done at the main platform. Please choose Archer or Coach.'])
+                ->withInput();
+        }
+
+        $user = DB::transaction(function () use ($validated, $currentClub) {
+            $clubId = $currentClub?->id;
+
             $user = User::create([
                 'name'     => $validated['name'],
                 'email'    => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role'     => $validated['role'],
+                'club_id'  => $clubId,
             ]);
 
             if ($validated['role'] === 'archer') {
-                Archer::create(['user_id' => $user->id]);
+                Archer::create(['user_id' => $user->id, 'club_id' => $clubId]);
             } elseif ($validated['role'] === 'coach') {
                 $user->update(['is_coach' => true]);
-                Coach::create(['user_id' => $user->id]);
+                Coach::create(['user_id' => $user->id, 'club_id' => $clubId]);
             } elseif ($validated['role'] === 'club_admin') {
                 $club = Club::create([
                     'name'   => $validated['club_name'],

@@ -1,7 +1,17 @@
 @php
-    try { $s = \App\Models\Setting::getAllCached(); } catch (\Throwable) { $s = []; }
+    $clubCtx = $currentClub ?? null;
+    $clubId  = $clubCtx?->id;
+    try {
+        $s = $clubId
+            ? array_merge(\App\Models\Setting::getAllCached(null), \App\Models\Setting::getAllCached($clubId))
+            : \App\Models\Setting::getAllCached(null);
+    } catch (\Throwable) { $s = []; }
     $footerText = $s['footer_text'] ?? ('© ' . date('Y') . ' Archery Stats Management System');
     $logoUrl    = !empty($s['logo']) ? asset('storage/' . $s['logo']) : null;
+    // Club-specific logo overrides platform logo when on subdomain
+    if ($clubCtx && $clubCtx->logo) {
+        $logoUrl = asset('storage/' . $clubCtx->logo);
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="en" class="h-full">
@@ -82,10 +92,20 @@
                     </svg>
                 @endif
             </div>
-            <p class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</p>
-            <p class="mt-4 text-sm font-medium max-w-xs leading-relaxed" style="color:#94a3b8;">
-                Create your account as an Archer, Coach or Club and start tracking your archery journey.
-            </p>
+            @if($clubCtx)
+                <p class="text-4xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">{{ strtoupper($clubCtx->name) }}</p>
+                @if($clubCtx->tagline)
+                    <p class="mt-2 text-sm font-medium max-w-xs leading-relaxed" style="color:#fbbf24;">{{ $clubCtx->tagline }}</p>
+                @endif
+                <p class="mt-3 text-sm font-medium max-w-xs leading-relaxed" style="color:#94a3b8;">
+                    Register as an Archer or Coach to join this club.
+                </p>
+            @else
+                <p class="text-5xl font-black text-white tracking-tight" style="font-family:'Barlow',sans-serif;">ARCHERY<br>STATS</p>
+                <p class="mt-4 text-sm font-medium max-w-xs leading-relaxed" style="color:#94a3b8;">
+                    Create your account as an Archer, Coach or Club and start tracking your archery journey.
+                </p>
+            @endif
             <div class="mt-8 space-y-3 text-left w-full max-w-xs">
                 <div class="flex items-center gap-3">
                     <div class="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
@@ -139,14 +159,40 @@
                             </svg>
                         @endif
                     </div>
-                    <p class="text-lg font-black text-slate-900" style="font-family:'Barlow',sans-serif;">ARCHERY STATS</p>
+                    <p class="text-lg font-black text-slate-900" style="font-family:'Barlow',sans-serif;">
+                        {{ $clubCtx ? strtoupper($clubCtx->name) : 'ARCHERY STATS' }}
+                    </p>
                 </div>
 
                 {{-- Heading --}}
                 <div class="mb-7 fade-1">
                     <h1 class="text-3xl font-black text-slate-900" style="font-family:'Barlow',sans-serif;">Create Your Free Account</h1>
-                    <p class="text-sm text-slate-500 mt-2">Join as an Archer, Coach or Club.</p>
+                    @if($clubCtx)
+                        <p class="text-sm text-slate-500 mt-2">
+                            You are joining
+                            <span class="font-semibold text-indigo-700">{{ $clubCtx->name }}</span>.
+                        </p>
+                    @else
+                        <p class="text-sm text-slate-500 mt-2">Join as an Archer, Coach or Club.</p>
+                    @endif
                 </div>
+
+                {{-- Club context banner --}}
+                @if($clubCtx)
+                <div class="mb-5 flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 fade-2">
+                    @if($logoUrl)
+                        <img src="{{ $logoUrl }}" alt="{{ $clubCtx->name }}" class="w-9 h-9 rounded-lg object-cover shrink-0">
+                    @else
+                        <div class="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 text-indigo-700 font-bold text-sm">
+                            {{ strtoupper(substr($clubCtx->name, 0, 2)) }}
+                        </div>
+                    @endif
+                    <div>
+                        <p class="text-sm font-semibold text-indigo-800">{{ $clubCtx->name }}</p>
+                        @if($clubCtx->state)<p class="text-xs text-indigo-500">{{ $clubCtx->state }}</p>@endif
+                    </div>
+                </div>
+                @endif
 
                 {{-- Errors --}}
                 @if($errors->any())
@@ -173,7 +219,7 @@
                     {{-- Role selector --}}
                     <div class="fade-2">
                         <label class="block text-sm font-bold text-slate-700 mb-2">I am registering as <span class="text-red-500">*</span></label>
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="{{ $clubCtx ? 'grid grid-cols-2' : 'grid grid-cols-3' }} gap-3">
 
                             {{-- Archer --}}
                             @if($regOpen['archer'])
@@ -239,8 +285,8 @@
                             </div>
                             @endif
 
-                            {{-- Club --}}
-                            @if($regOpen['club'])
+                            {{-- Club — hidden on subdomains (clubs register at root domain) --}}
+                            @if(!$clubCtx && $regOpen['club'])
                             <button type="button" @click="role = 'club_admin'"
                                     :style="role === 'club_admin'
                                         ? 'border-color:#6366f1;background:rgba(99,102,241,0.07);'
@@ -260,7 +306,7 @@
                                     </svg>
                                 </div>
                             </button>
-                            @else
+                            @elseif(!$clubCtx)
                             <div class="relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 opacity-50 cursor-not-allowed select-none"
                                  style="border-color:#fca5a5;background:#fef2f2;">
                                 <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="#ef4444">
@@ -278,7 +324,8 @@
                         @enderror
                     </div>
 
-                    {{-- Club Name (only when Club is selected) --}}
+                    {{-- Club Name (only when Club is selected, and only on root domain) --}}
+                    @if(!$clubCtx)
                     <div x-show="role === 'club_admin'" x-cloak class="fade-3">
                         <label class="block text-sm font-bold text-slate-700 mb-1.5">Club Name <span class="text-red-500">*</span></label>
                         <input type="text" name="club_name" x-model="clubName"
@@ -305,6 +352,7 @@
                             <p class="mt-1 text-xs text-red-600 font-medium">{{ $message }}</p>
                         @enderror
                     </div>
+                    @endif
 
                     {{-- Name --}}
                     <div class="fade-3">
