@@ -40,11 +40,13 @@ Route::middleware(['guest'])->group(function () {
 // User Manual — public (no login required)
 Route::get('/manual', fn() => view('manual.index'))->name('manual');
 
-// Club self-registration — public, root domain (no auth required)
-Route::get('/register-club',            [ClubRegistrationController::class, 'showForm'])->name('club-register.form');
-Route::post('/register-club',           [ClubRegistrationController::class, 'register'])->name('club-register');
-Route::get('/register-club/success',    [ClubRegistrationController::class, 'success'])->name('club-register.success');
-Route::get('/register-club/check-slug', [ClubRegistrationController::class, 'checkSlug'])->name('club-register.check-slug');
+// Club self-registration — public, root domain only (no auth required)
+Route::middleware(['root.domain'])->group(function () {
+    Route::get('/register-club',            [ClubRegistrationController::class, 'showForm'])->name('club-register.form');
+    Route::post('/register-club',           [ClubRegistrationController::class, 'register'])->name('club-register');
+    Route::get('/register-club/success',    [ClubRegistrationController::class, 'success'])->name('club-register.success');
+    Route::get('/register-club/check-slug', [ClubRegistrationController::class, 'checkSlug'])->name('club-register.check-slug');
+});
 
 // Root path — public landing page on subdomains, dashboard redirect otherwise
 Route::get('/', function () {
@@ -191,8 +193,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/club-page', [SettingController::class, 'updateClubPage'])->name('settings.club-page.update');
     });
 
-    // Super admin only
-    Route::middleware(['role:super_admin'])->group(function () {
+    // Super admin only — root domain access enforced by root.domain middleware
+    Route::middleware(['root.domain', 'role:super_admin'])->group(function () {
         Route::delete('/archers/{archer}', [ArcherController::class, 'destroy'])->name('archers.destroy');
 
         // Platform settings
