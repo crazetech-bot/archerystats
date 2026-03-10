@@ -17,6 +17,7 @@ use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EliminationMatchController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\LiveScoringRealtimeController;
+use App\Http\Controllers\ClubLandingController;
 use App\Http\Controllers\TrainingSessionController;
 use Illuminate\Support\Facades\Route;
 
@@ -38,8 +39,13 @@ Route::middleware(['guest'])->group(function () {
 // User Manual — public (no login required)
 Route::get('/manual', fn() => view('manual.index'))->name('manual');
 
-// Default redirect
+// Root path — public landing page on subdomains, dashboard redirect otherwise
 Route::get('/', function () {
+    // On a club subdomain: show public landing page for guests
+    if (app()->has('currentClub') && !auth()->check()) {
+        return app(ClubLandingController::class)->show();
+    }
+    // Logged-in role redirects
     if (auth()->check() && auth()->user()->role === 'archer' && auth()->user()->archer) {
         return redirect()->route('archers.show', auth()->user()->archer);
     }
@@ -47,7 +53,7 @@ Route::get('/', function () {
         return redirect()->route('coaches.show', auth()->user()->coach);
     }
     return redirect()->route('archers.index');
-});
+})->name('club.landing');
 
 // Coach-archer invitation responses (no auth required — token-based)
 Route::get('/coach-archer-invitations/{token}/accept',  [CoachArcherInvitationController::class, 'accept'])->name('coach-archer-invitations.accept');
@@ -170,6 +176,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/archers/{archer}/sessions',       [SessionController::class, 'store'])->name('sessions.store');
         Route::put('/sessions/{session}/scores',        [SessionController::class, 'saveScores'])->name('sessions.saveScores');
         Route::delete('/sessions/{session}',            [SessionController::class, 'destroy'])->name('sessions.destroy');
+    });
+
+    // Club admin — club public page settings
+    Route::middleware(['role:super_admin,club_admin'])->group(function () {
+        Route::get('/settings/club-page',  [SettingController::class, 'clubPage'])->name('settings.club-page');
+        Route::post('/settings/club-page', [SettingController::class, 'updateClubPage'])->name('settings.club-page.update');
     });
 
     // Super admin only

@@ -145,6 +145,66 @@ class SettingController extends Controller
         return redirect()->back()->with('success', 'Logo removed.');
     }
 
+    public function clubPage(): View
+    {
+        $club     = app('currentClub');
+        $clubId   = $club->id;
+        $settings = Setting::getAllCached($clubId);
+
+        $clubLogo = !empty($settings['logo'])
+            ? asset('storage/' . $settings['logo'])
+            : ($club->logo ? asset('storage/' . $club->logo) : null);
+
+        return view('settings.club-page', compact('club', 'settings', 'clubLogo'));
+    }
+
+    public function updateClubPage(Request $request): RedirectResponse
+    {
+        $club   = app('currentClub');
+        $clubId = $club->id;
+
+        $request->validate([
+            'logo'            => ['nullable', 'file', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'tagline'         => ['nullable', 'string', 'max:200'],
+            'description'     => ['nullable', 'string', 'max:2000'],
+            'contact_email'   => ['nullable', 'email', 'max:255'],
+            'contact_phone'   => ['nullable', 'string', 'max:50'],
+            'address'         => ['nullable', 'string', 'max:500'],
+            'state'           => ['nullable', 'string', 'max:100'],
+            'website'         => ['nullable', 'url', 'max:255'],
+            'facebook_url'    => ['nullable', 'url', 'max:255'],
+            'instagram_url'   => ['nullable', 'url', 'max:255'],
+            'whatsapp_number' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        // Update club fields directly
+        $club->update($request->only([
+            'tagline', 'description',
+            'contact_email', 'contact_phone',
+            'address', 'state', 'website',
+            'facebook_url', 'instagram_url', 'whatsapp_number',
+        ]));
+
+        // Club logo — stored per-club in settings
+        if ($request->hasFile('logo')) {
+            $old = Setting::get('logo', null, $clubId);
+            if ($old) Storage::disk('public')->delete($old);
+            $path = $request->file('logo')->store('clubs/' . $clubId, 'public');
+            Setting::set('logo', $path, $clubId);
+        }
+
+        // Section toggles — stored per-club in settings
+        // Checkbox is absent when unchecked, but we send hidden input value=0 so it's always present
+        foreach (['page_hero_enabled', 'page_about_enabled', 'page_contact_enabled',
+                  'page_social_enabled', 'page_cta_enabled'] as $key) {
+            Setting::set($key, $request->input($key, '0') ? '1' : '0', $clubId);
+        }
+
+        cache()->forget('site_settings_' . $clubId);
+
+        return redirect()->back()->with('success', 'Club page settings saved.');
+    }
+
     public function updatePopups(Request $request): RedirectResponse
     {
         $request->validate([
