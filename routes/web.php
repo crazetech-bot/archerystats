@@ -37,9 +37,6 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->name('password.update');
 });
 
-// User Manual — public (no login required)
-Route::get('/manual', fn() => view('manual.index'))->name('manual');
-
 // Club self-registration — public, root domain only (no auth required)
 Route::middleware(['root.domain'])->group(function () {
     Route::get('/register-club',            [ClubRegistrationController::class, 'showForm'])->name('club-register.form');

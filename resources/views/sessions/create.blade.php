@@ -60,6 +60,19 @@
     ];
 @endphp
 
+@include('partials.help-panel', [
+    'title' => 'How to record a session',
+    'color' => 'indigo',
+    'items' => [
+        'Select the <strong>session date</strong> at the top.',
+        'Choose a <strong>predefined round</strong> from the tabs (Indoor, Outdoor, Field, 3D, etc.), or switch to the <strong>Custom</strong> tab to build your own.',
+        'For a <strong>custom round</strong>: pick your <strong>discipline/division</strong> first (Recurve, Compound, etc.), then click <strong>+ Add Segment</strong> for each distance. Set distance (m), target face size (cm), number of ends, and arrows per end. The scoring system is auto-suggested — you can change it manually.',
+        'Optionally toggle <strong>Competition</strong> to mark this as a competition round.',
+        'Click <strong>Create Session &amp; Start Scoring</strong> to open the scorecard.',
+        '<strong>Scoring systems:</strong> Complete (1–10+X) — standard recurve/barebow; Reduced (5–10+X) — WA compound; Field (1–6) — field archery; 3D (20/17/10) — 3D archery.',
+    ],
+])
+
 <div class="max-w-2xl mx-auto"
      x-data="{
          activeTab:        '{{ $firstCat }}',

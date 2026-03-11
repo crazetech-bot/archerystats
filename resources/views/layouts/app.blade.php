@@ -192,14 +192,6 @@
                         </svg>
                         Performance
                     </a>
-                    <a href="{{ route('manual') }}" @click="mobileOpen = false"
-                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
-                              {{ request()->routeIs('manual') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
-                        </svg>
-                        User Manual
-                    </a>
                 @elseif(auth()->user()->role === 'coach' && auth()->user()->coach)
                     {{-- Coach: full coach module nav --}}
                     <a href="{{ route('coaches.show', auth()->user()->coach) }}" @click="mobileOpen = false"
@@ -241,14 +233,6 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"/>
                         </svg>
                         Elimination Matches
-                    </a>
-                    <a href="{{ route('manual') }}" @click="mobileOpen = false"
-                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
-                              {{ request()->routeIs('manual') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
-                        </svg>
-                        User Manual
                     </a>
                 @else
                     <a href="{{ route('archers.index') }}" @click="mobileOpen = false"
@@ -309,14 +293,6 @@
                             Club Page
                         </a>
                     @endif
-                    <a href="{{ route('manual') }}" @click="mobileOpen = false"
-                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
-                              {{ request()->routeIs('manual') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
-                        </svg>
-                        User Manual
-                    </a>
                 @endif
             @endauth
         </nav>
@@ -417,14 +393,6 @@
                         </svg>
                         Performance
                     </a>
-                    <a href="{{ route('manual') }}"
-                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
-                              {{ request()->routeIs('manual') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
-                        </svg>
-                        User Manual
-                    </a>
                 @elseif(auth()->user()->role === 'coach' && auth()->user()->coach)
                     {{-- Coach: full coach module nav --}}
                     <a href="{{ route('coaches.show', auth()->user()->coach) }}"
@@ -466,14 +434,6 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0"/>
                         </svg>
                         Elimination Matches
-                    </a>
-                    <a href="{{ route('manual') }}"
-                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
-                              {{ request()->routeIs('manual') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
-                        </svg>
-                        User Manual
                     </a>
                 @else
                     {{-- Admin / club_admin / state_admin: full menu --}}
@@ -535,14 +495,6 @@
                             Club Page
                         </a>
                     @endif
-                    <a href="{{ route('manual') }}"
-                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
-                              {{ request()->routeIs('manual') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
-                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.966 8.966 0 00-6 2.292m0-14.25v14.25"/>
-                        </svg>
-                        User Manual
-                    </a>
                 @endif
             @endauth
         </nav>

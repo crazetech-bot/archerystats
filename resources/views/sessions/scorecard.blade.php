@@ -89,6 +89,21 @@
     $maxScore = $rt->num_ends * $ape * $rt->max_score_per_arrow;
 @endphp
 
+@include('partials.help-panel', [
+    'title' => 'How to use the scorecard',
+    'color' => 'indigo',
+    'items' => [
+        'Click a cell and type your arrow value. Valid values are shown in the hint bar above each segment.',
+        '<strong>Standard (recurve/barebow):</strong> X, 10–1, or M (miss). X counts as 10 pts.',
+        '<strong>Compound (reduced):</strong> X, 10–5, or M. X counts as 10 pts.',
+        '<strong>Field:</strong> X (=6), 6–1, or M. <strong>3D:</strong> 20, 17, 10, or M.',
+        'The <strong>end total</strong> and <strong>running total</strong> update automatically as you type.',
+        'Use <strong>Next Set / Previous Set</strong> to move between groups of 6 ends.',
+        'Scores are <strong>saved automatically</strong> when you move between sets — you can close the page and return later.',
+        'The <strong>summary bar</strong> at the top shows your Total, X count, 10+X count, Hits, and Misses.',
+    ],
+])
+
 <div class="max-w-5xl mx-auto space-y-5"
      x-data="{
          ends:           {{ Js::from($initialEnds) }},
