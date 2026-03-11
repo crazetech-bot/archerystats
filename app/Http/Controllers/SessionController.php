@@ -374,7 +374,9 @@ class SessionController extends Controller
 
     public function destroy(ArcherySession $session): RedirectResponse
     {
-        if (!auth()->user()->isClubAdmin()) {
+        $user = auth()->user();
+        $isOwner = $user->role === 'archer' && $user->archer?->id === $session->archer_id;
+        if (!$user->isClubAdmin() && !$isOwner) {
             abort(403);
         }
 

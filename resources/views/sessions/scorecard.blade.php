@@ -502,6 +502,11 @@
     </div>
 
     {{-- Delete --}}
+    @php
+        $canDelete = auth()->user()->isClubAdmin()
+            || (auth()->user()->role === 'archer' && auth()->user()->archer?->id === $session->archer_id);
+    @endphp
+    @if($canDelete)
     <div class="flex justify-end pb-4">
         <form method="POST" action="{{ route('sessions.destroy', $session) }}"
               x-data @submit.prevent="if(confirm('Delete this session and all scores?')) $el.submit()">
@@ -511,6 +516,7 @@
             </button>
         </form>
     </div>
+    @endif
 
 </div>
 @endsection
