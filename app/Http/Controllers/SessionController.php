@@ -84,6 +84,7 @@ class SessionController extends Controller
             // ── Custom Round Path ────────────────────────────────────────────
             $request->validate([
                 'custom_name'                      => ['nullable', 'string', 'max:100'],
+                'custom_discipline'                => ['nullable', 'in:recurve,compound,barebow,field,3d,clout,longbow'],
                 'custom_segments'                  => ['required', 'array', 'min:1', 'max:10'],
                 'custom_segments.*.distance'       => ['required', 'integer', 'min:1', 'max:300'],
                 'custom_segments.*.face'           => ['required', 'integer', 'min:1'],
@@ -99,6 +100,7 @@ class SessionController extends Controller
             $roundType = RoundType::create([
                 'name'                => $request->input('custom_name') ?: 'Custom Round',
                 'category'            => 'custom',
+                'discipline'          => $request->input('custom_discipline') ?: null,
                 'is_custom'           => true,
                 'num_ends'            => $totalEnds,
                 'arrows_per_end'      => $ape,

@@ -97,9 +97,10 @@
          },
 
          scoringForFace(face, discipline) {
+             if (discipline === 'field') return 'field';
+             if (discipline === '3d') return '3d';
              face = parseInt(face);
              if (!face) return 'standard';
-             // Compound discipline: 80cm face uses 5-ring scoring (X·10–5·M)
              if (discipline === 'compound') return 'reduced';
              if (face === 80) return 'reduced';
              return 'standard';
@@ -134,6 +135,7 @@
         <template x-if="isCustom">
             <div>
                 <input type="hidden" name="is_custom" value="1">
+                <input type="hidden" name="custom_discipline" :value="archerDiscipline">
                 <template x-for="(seg, i) in customSegments" :key="i">
                     <div>
                         <input type="hidden" :name="`custom_segments[${i}][distance]`"        :value="seg.distance">
@@ -269,6 +271,25 @@
                                    placeholder="e.g. Training Round — Mixed Distance"
                                    class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
                                           focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:bg-white outline-none transition">
+                        </div>
+
+                        {{-- Discipline picker --}}
+                        <div class="mb-5">
+                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                                Discipline
+                            </label>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="disc in ['recurve','compound','barebow','field','3d']" :key="disc">
+                                    <button type="button"
+                                            @click="archerDiscipline = disc; customSegments.forEach((s,i) => { if (s.face) onFaceChange(i); })"
+                                            :class="archerDiscipline === disc
+                                                ? 'ring-2 ring-violet-400 bg-violet-50 text-violet-700 font-semibold'
+                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                            class="px-3 py-1.5 rounded-lg text-xs capitalize transition-all"
+                                            x-text="disc === '3d' ? '3D' : (disc.charAt(0).toUpperCase() + disc.slice(1))">
+                                    </button>
+                                </template>
+                            </div>
                         </div>
 
                         {{-- Column headings --}}
