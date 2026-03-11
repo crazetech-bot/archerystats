@@ -218,10 +218,13 @@
                      valid = v === 'M' || (!isNaN(n) && n >= 1 && n <= 5);
                  } else if (sys === 'compound') {
                      const n = parseInt(v);
-                     valid = v === 'X' || v === 'M' || (!isNaN(n) && n >= 6 && n <= 10);
+                     valid = v === 'X' || v === 'M' || v === '1' || (!isNaN(n) && n >= 6 && n <= 10);
                  } else if (sys === 'reduced') {
                      const n = parseInt(v);
-                     valid = v === 'X' || v === 'M' || (!isNaN(n) && n >= 5 && n <= 10);
+                     valid = v === 'X' || v === 'M' || v === '1' || (!isNaN(n) && n >= 5 && n <= 10);
+                 } else if (sys === 'six_ring' || sys === 'six_ring_x11') {
+                     const n = parseInt(v);
+                     valid = v === 'X' || v === 'M' || v === '1' || (!isNaN(n) && n >= 6 && n <= 10);
                  } else {
                      const n = parseInt(v);
                      valid = v === 'X' || v === 'M' || (!isNaN(n) && n >= 1 && n <= 10);
