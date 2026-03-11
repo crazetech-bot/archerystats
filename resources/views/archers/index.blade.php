@@ -30,8 +30,8 @@
 @section('content')
 
 @php
-    $hasFilters = request()->hasAny(['search','club_id','state','national_team'])
-                 && collect(request()->only(['search','club_id','state','national_team']))->filter()->isNotEmpty();
+    $hasFilters = request()->hasAny(['search','club_id','state'])
+                 && collect(request()->only(['search','club_id','state']))->filter()->isNotEmpty();
 @endphp
 
 {{-- Stats bar --}}
@@ -99,18 +99,6 @@
         </select>
     </div>
 
-    {{-- National Team --}}
-    <div class="min-w-[160px]">
-        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">National Team</label>
-        <select name="national_team"
-                class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
-            <option value="">All</option>
-            @foreach($nationalTeamOptions as $opt)
-                <option value="{{ $opt }}" @selected(request('national_team') === $opt)>{{ $opt }}</option>
-            @endforeach
-        </select>
-    </div>
-
     {{-- Buttons --}}
     <div class="flex gap-2">
         <button type="submit"
@@ -152,7 +140,6 @@
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Division</th>
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Club</th>
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">State</th>
-                <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">National Team</th>
                 <th class="px-4 py-3.5 text-left text-xs font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Para-Archery</th>
                 <th class="px-4 py-3.5 text-right pr-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Actions</th>
             </tr>
@@ -242,18 +229,6 @@
                     {{-- State --}}
                     <td class="px-4 py-3.5 text-sm text-slate-600 hidden lg:table-cell">
                         {{ $archer->state ?? '—' }}
-                    </td>
-
-                    {{-- National Team --}}
-                    <td class="px-4 py-3.5 hidden lg:table-cell">
-                        @if($archer->national_team && $archer->national_team !== 'No')
-                            <span class="inline-block text-xs font-bold px-2.5 py-1 rounded-full"
-                                  style="background:#ede9fe; color:#5b21b6; border:1px solid #ddd6fe;">
-                                {{ $archer->national_team }}
-                            </span>
-                        @else
-                            <span class="text-slate-400 text-sm">—</span>
-                        @endif
                     </td>
 
                     {{-- Para-Archery --}}

@@ -194,19 +194,6 @@
                                 <dd class="text-sm font-semibold text-slate-800 mt-1">{{ $value }}</dd>
                             </div>
                         @endforeach
-                        {{-- National Team --}}
-                        <div class="rounded-xl px-4 py-3" style="background:#f8fafc; border:1px solid #e2e8f0;">
-                            <dt class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">National Team</dt>
-                            @php $nt = $archer->national_team ?? 'No'; @endphp
-                            @if($nt && $nt !== 'No')
-                                <span class="inline-block text-xs font-bold px-2 py-0.5 rounded-lg"
-                                      style="background:rgba(99,102,241,0.12); color:#3730a3; border:1px solid rgba(99,102,241,0.25);">
-                                    {{ $nt }}
-                                </span>
-                            @else
-                                <dd class="text-sm font-semibold text-slate-800">{{ $nt }}</dd>
-                            @endif
-                        </div>
                         {{-- Para-Archery --}}
                         <div class="rounded-xl px-4 py-3" style="background:#f8fafc; border:1px solid #e2e8f0;">
                             <dt class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Para-Archery</dt>

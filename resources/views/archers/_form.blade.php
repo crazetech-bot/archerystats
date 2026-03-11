@@ -238,29 +238,6 @@
                     @error('state_team_id')<p class="text-xs text-red-500 mt-1">{{ $message }}</p>@enderror
                 </div>
 
-                {{-- National Team --}}
-                <div>
-                    <label for="national_team" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">National Team</label>
-                    @if(auth()->user()?->role === 'super_admin')
-                        <select id="national_team" name="national_team"
-                                class="block w-full rounded-xl border bg-gray-50 text-sm py-2.5 px-4
-                                       focus:ring-2 focus:bg-white outline-none transition
-                                       @error('national_team') border-red-400 focus:border-red-500 focus:ring-red-500/20
-                                       @else border-gray-300 focus:border-indigo-500 focus:ring-indigo-500/20 @enderror">
-                            @foreach(\App\Models\Archer::NATIONAL_TEAM_OPTIONS as $opt)
-                                <option value="{{ $opt }}" @selected(old('national_team', $archer?->national_team ?? 'No') === $opt)>{{ $opt }}</option>
-                            @endforeach
-                        </select>
-                        @error('national_team')<p class="mt-2 text-xs text-red-600">{{ $message }}</p>@enderror
-                    @else
-                        <div class="block w-full rounded-xl border border-gray-200 bg-gray-100 text-sm py-2.5 px-4 text-gray-500 cursor-not-allowed select-none">
-                            {{ old('national_team', $archer?->national_team ?? 'No') }}
-                        </div>
-                        <input type="hidden" name="national_team" value="{{ old('national_team', $archer?->national_team ?? 'No') }}">
-                        <p class="mt-1.5 text-xs text-gray-400">Managed by super admin only.</p>
-                    @endif
-                </div>
-
                 {{-- RH / LH --}}
                 <div>
                     <label for="hand" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">RH / LH <span class="text-red-500 normal-case font-normal">*</span></label>
