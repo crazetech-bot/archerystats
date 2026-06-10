@@ -745,6 +745,7 @@
          x-data="{
              tab: 'archer',
              search: '',
+             selected: [],
              archerList: {{ Js::from($archerList) }},
              coachList:  {{ Js::from($coachList) }},
              clubList:   {{ Js::from($clubList) }},
@@ -754,6 +755,21 @@
                             : this.clubList;
                  const q = this.search.toLowerCase();
                  return q ? list.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)) : list;
+             },
+             get selectableIds() {
+                 return this.filtered.filter(u => !u.isMe).map(u => u.id);
+             },
+             get allSelected() {
+                 const ids = this.selectableIds;
+                 return ids.length > 0 && ids.every(id => this.selected.includes(id));
+             },
+             toggleAll(e) {
+                 const ids = this.selectableIds;
+                 if (e.target.checked) {
+                     this.selected = [...new Set([...this.selected, ...ids])];
+                 } else {
+                     this.selected = this.selected.filter(id => !ids.includes(id));
+                 }
              }
          }">
 
@@ -775,7 +791,7 @@
         {{-- Tabs + Search --}}
         <div class="px-6 pt-4 pb-2 flex flex-wrap items-center gap-3 border-b border-gray-100">
             <div class="flex gap-1">
-                <button type="button" @click="tab='archer'; search=''"
+                <button type="button" @click="tab='archer'; search=''; selected=[]"
                         :class="tab==='archer' ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
                         class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all">
                     Archers
@@ -784,7 +800,7 @@
                         {{ count($archerList) }}
                     </span>
                 </button>
-                <button type="button" @click="tab='coach'; search=''"
+                <button type="button" @click="tab='coach'; search=''; selected=[]"
                         :class="tab==='coach' ? 'bg-teal-100 text-teal-800 border-teal-300' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
                         class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all">
                     Coaches
@@ -793,7 +809,7 @@
                         {{ count($coachList) }}
                     </span>
                 </button>
-                <button type="button" @click="tab='club'; search=''"
+                <button type="button" @click="tab='club'; search=''; selected=[]"
                         :class="tab==='club' ? 'bg-indigo-100 text-indigo-800 border-indigo-300' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'"
                         class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all">
                     Club Admins
@@ -812,11 +828,46 @@
             </div>
         </div>
 
+        {{-- Selection / bulk-action bar --}}
+        <div x-show="filtered.length > 0"
+             class="px-6 py-2.5 flex items-center gap-3 border-b border-gray-100 bg-gray-50/70">
+            <label class="flex items-center gap-2 text-xs font-semibold text-gray-600 cursor-pointer select-none">
+                <input type="checkbox" @change="toggleAll($event)" :checked="allSelected"
+                       class="rounded border-gray-300 text-violet-600 focus:ring-violet-400">
+                Select all
+            </label>
+            <template x-if="selected.length > 0">
+                <div class="flex items-center gap-3 ml-auto">
+                    <span class="text-xs font-bold text-red-700"><span x-text="selected.length"></span> selected</span>
+                    <button type="button" @click="selected = []"
+                            class="text-xs font-semibold text-gray-500 hover:text-gray-700 transition-colors">
+                        Clear
+                    </button>
+                    <form method="POST" action="{{ route('admin.users.bulkDestroy') }}">
+                        @csrf
+                        <template x-for="id in selected" :key="id">
+                            <input type="hidden" name="ids[]" :value="id">
+                        </template>
+                        <button type="submit"
+                                @click="if (!confirm('Permanently delete ' + selected.length + ' account(s)? This cannot be undone.')) $event.preventDefault()"
+                                class="px-3 py-1.5 rounded-lg border border-red-200 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition-colors">
+                            Delete selected
+                        </button>
+                    </form>
+                </div>
+            </template>
+        </div>
+
         {{-- User rows --}}
         <div class="divide-y divide-gray-50 min-h-[60px]">
             <template x-for="u in filtered" :key="u.id">
                 <div x-data="{ promoting: false, promoteRole: '' }">
                 <div class="px-6 py-3 flex items-center gap-4 hover:bg-gray-50 transition-colors">
+
+                    {{-- Bulk-select checkbox --}}
+                    <input x-show="!u.isMe" type="checkbox" :value="u.id" x-model="selected"
+                           class="rounded border-gray-300 text-red-600 focus:ring-red-400 flex-shrink-0">
+                    <span x-show="u.isMe" class="w-4 flex-shrink-0"></span>
 
                     {{-- Avatar --}}
                     <div class="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"

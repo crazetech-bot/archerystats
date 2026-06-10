@@ -210,6 +210,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Admin user management
         Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+        Route::post('/admin/users/bulk-destroy', [AdminUserController::class, 'bulkDestroy'])->name('admin.users.bulkDestroy');
         Route::put('/admin/users/{user}/password', [AdminUserController::class, 'updatePassword'])->name('admin.users.password');
         Route::delete('/admin/users/{user}', [AdminUserController::class, 'destroy'])->name('admin.users.destroy');
         Route::post('/admin/accounts/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('admin.accounts.toggleStatus');

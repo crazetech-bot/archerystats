@@ -115,21 +115,53 @@ class AdminUserController extends Controller
             return redirect()->route('admin.settings')->with('error', 'You cannot delete your own account.');
         }
 
-        DB::transaction(function () use ($user) {
-            if ($user->role === 'archer' && $user->archer) {
-                if ($user->archer->photo) {
-                    Storage::disk('public')->delete($user->archer->photo);
-                }
-                $user->archer->delete();
-            } elseif ($user->role === 'coach' && $user->coach) {
-                if ($user->coach->photo) {
-                    Storage::disk('public')->delete($user->coach->photo);
-                }
-                $user->coach->delete();
-            }
-            $user->delete();
-        });
+        DB::transaction(fn () => $this->purgeUser($user));
 
         return redirect()->route('admin.settings')->with('success', 'Account deleted successfully.');
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:users,id'],
+        ]);
+
+        // Never allow deleting your own account in a bulk operation.
+        $ids = array_values(array_diff($validated['ids'], [auth()->id()]));
+
+        if (empty($ids)) {
+            return redirect()->route('admin.settings')->with('error', 'No deletable accounts selected (you cannot delete your own account).');
+        }
+
+        $users = User::whereIn('id', $ids)->get();
+
+        DB::transaction(function () use ($users) {
+            foreach ($users as $user) {
+                $this->purgeUser($user);
+            }
+        });
+
+        return redirect()->route('admin.settings')->with('success', $users->count() . ' account(s) deleted successfully.');
+    }
+
+    /**
+     * Delete a single user along with its linked archer/coach profile and photo.
+     * Must be called inside a DB transaction.
+     */
+    private function purgeUser(User $user): void
+    {
+        if ($user->role === 'archer' && $user->archer) {
+            if ($user->archer->photo) {
+                Storage::disk('public')->delete($user->archer->photo);
+            }
+            $user->archer->delete();
+        } elseif ($user->role === 'coach' && $user->coach) {
+            if ($user->coach->photo) {
+                Storage::disk('public')->delete($user->coach->photo);
+            }
+            $user->coach->delete();
+        }
+        $user->delete();
     }
 }
