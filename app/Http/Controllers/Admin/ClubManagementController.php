@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Club;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -65,5 +66,77 @@ class ClubManagementController extends Controller
         $club->update($validated);
 
         return redirect()->route('admin.clubs.show', $club)->with('success', 'Club updated.');
+    }
+
+    public function destroy(Club $club): RedirectResponse
+    {
+        $name = $club->name;
+        $slug = $club->slug;
+
+        DB::transaction(fn () => $this->purgeClub($club));
+
+        return redirect()->route('admin.clubs.index')
+            ->with('success', "Club \"{$name}\" and its subdomain ({$slug}.sportdns.com) have been removed.");
+    }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:clubs,id'],
+        ]);
+
+        $clubs = Club::whereIn('id', $validated['ids'])->get();
+
+        DB::transaction(function () use ($clubs) {
+            foreach ($clubs as $club) {
+                $this->purgeClub($club);
+            }
+        });
+
+        return redirect()->route('admin.clubs.index')
+            ->with('success', $clubs->count() . ' club(s) and their subdomains have been removed.');
+    }
+
+    /**
+     * Delete a club and its dependents.
+     *
+     * Club-admin accounts belonging to the club are deleted (super admins are
+     * platform-level and kept; the current user is never deleted). Removing the
+     * club row cascades its invitations, transfer requests and archer/coach
+     * membership pivots, and nulls club_id on remaining archers/coaches (detach).
+     * Dropping the row also frees the slug, so the subdomain stops resolving
+     * (IdentifyTenant returns 503 for it).
+     *
+     * Must be called inside a DB transaction.
+     */
+    private function purgeClub(Club $club): void
+    {
+        $admins = User::where('club_id', $club->id)
+            ->where('role', 'club_admin')
+            ->where('id', '!=', auth()->id())
+            ->get();
+
+        foreach ($admins as $admin) {
+            if ($admin->archer) {
+                if ($admin->archer->photo) {
+                    Storage::disk('public')->delete($admin->archer->photo);
+                }
+                $admin->archer->delete();
+            }
+            if ($admin->coach) {
+                if ($admin->coach->photo) {
+                    Storage::disk('public')->delete($admin->coach->photo);
+                }
+                $admin->coach->delete();
+            }
+            $admin->delete();
+        }
+
+        if ($club->logo) {
+            Storage::disk('public')->delete($club->logo);
+        }
+
+        $club->delete();
     }
 }

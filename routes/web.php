@@ -204,9 +204,11 @@ Route::middleware(['auth'])->group(function () {
 
         // Club management (super admin platform dashboard)
         Route::get('/admin/clubs', [ClubManagementController::class, 'index'])->name('admin.clubs.index');
+        Route::post('/admin/clubs/bulk-destroy', [ClubManagementController::class, 'bulkDestroy'])->name('admin.clubs.bulkDestroy');
         Route::get('/admin/clubs/{club}', [ClubManagementController::class, 'show'])->name('admin.clubs.show');
         Route::post('/admin/clubs/{club}/toggle', [ClubManagementController::class, 'toggle'])->name('admin.clubs.toggle');
         Route::put('/admin/clubs/{club}', [ClubManagementController::class, 'update'])->name('admin.clubs.update');
+        Route::delete('/admin/clubs/{club}', [ClubManagementController::class, 'destroy'])->name('admin.clubs.destroy');
 
         // Admin user management
         Route::post('/admin/users', [AdminUserController::class, 'store'])->name('admin.users.store');
