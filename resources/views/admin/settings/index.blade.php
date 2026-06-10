@@ -849,7 +849,7 @@
                             <input type="hidden" name="ids[]" :value="id">
                         </template>
                         <button type="submit"
-                                @click="if (!confirm('Permanently delete ' + selected.length + ' account(s)? This cannot be undone.')) $event.preventDefault()"
+                                @click="if (!confirm('Delete ' + selected.length + ' account(s)? This cannot be undone.') || !confirm('Final confirmation — permanently delete ' + selected.length + ' selected account(s)?')) $event.preventDefault()"
                                 class="px-3 py-1.5 rounded-lg border border-red-200 bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold transition-colors">
                             Delete selected
                         </button>
@@ -928,7 +928,7 @@
                             @csrf
                             @method('DELETE')
                             <button type="submit"
-                                    :onclick="`return confirm('Permanently delete ${u.name}? This cannot be undone.')`"
+                                    :onclick="`return confirm('Delete ${u.name}? This cannot be undone.') && confirm('Final confirmation — permanently delete ${u.name}?')`"
                                     class="px-2.5 py-1 rounded-lg border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition-colors">
                                 Delete
                             </button>
@@ -1041,7 +1041,7 @@
                         </button>
                         @if($admin->id !== auth()->id())
                             <form method="POST" action="{{ route('admin.users.destroy', $admin) }}"
-                                  onsubmit="return confirm('Remove {{ addslashes($admin->name) }}?')">
+                                  onsubmit="return confirm('Remove {{ addslashes($admin->name) }}?') && confirm('Final confirmation — permanently remove {{ addslashes($admin->name) }}? This cannot be undone.')">
                                 @csrf @method('DELETE')
                                 <button type="submit"
                                         class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition flex-shrink-0">

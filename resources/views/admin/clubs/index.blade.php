@@ -70,7 +70,7 @@
                         <input type="hidden" name="ids[]" :value="id">
                     </template>
                     <button type="submit"
-                            @click="if (!confirm('Permanently delete ' + selected.length + ' club(s) and their subdomains? Club admins will be deleted; archers and coaches will be detached. This cannot be undone.')) $event.preventDefault()"
+                            @click="if (!confirm('Permanently delete ' + selected.length + ' club(s) and their subdomains?\n\nClub admins will be deleted; archers and coaches will be detached. This cannot be undone.')) { $event.preventDefault(); } else { const t = prompt('This action is permanent. Type DELETE to confirm removing ' + selected.length + ' club(s):'); if (t === null || t.trim().toUpperCase() !== 'DELETE') $event.preventDefault(); }"
                             class="text-xs px-3 py-1.5 rounded-lg border border-red-200 bg-red-100 hover:bg-red-200 text-red-700 font-bold transition-colors">
                         Delete selected
                     </button>
@@ -151,7 +151,7 @@
                                     </button>
                                 </form>
                                 <form method="POST" action="{{ route('admin.clubs.destroy', $club) }}" class="inline"
-                                      onsubmit="return confirm('Permanently delete &quot;{{ addslashes($club->name) }}&quot; and its subdomain {{ $club->slug }}.sportdns.com?\n\nClub admins will be deleted; archers and coaches will be detached. This cannot be undone.')">
+                                      onsubmit="return confirmClubDelete({{ Js::from($club->name) }}, {{ Js::from($club->slug.'.sportdns.com') }})">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit"
@@ -170,3 +170,23 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // Type-to-confirm gate for deleting a single club (double confirmation).
+    function confirmClubDelete(name, subdomain) {
+        if (!confirm('Delete club "' + name + '" and its subdomain ' + subdomain + '?\n\n'
+                   + 'Club admins will be deleted; archers and coaches will be detached. This cannot be undone.')) {
+            return false;
+        }
+        var typed = prompt('This action is permanent. Type the club name exactly to confirm:\n\n' + name);
+        if (typed !== null && typed.trim() === name) {
+            return true;
+        }
+        if (typed !== null) {
+            alert('The name you entered did not match. Deletion cancelled.');
+        }
+        return false;
+    }
+</script>
+@endpush
