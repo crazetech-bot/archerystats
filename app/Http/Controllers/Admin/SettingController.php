@@ -76,6 +76,10 @@ class SettingController extends Controller
                 'coach'  => Setting::get('reg_coach_open',  '1'),
                 'club'   => Setting::get('reg_club_open',   '1'),
             ],
+            'regPolicy'      => [
+                'expiry_days'  => Setting::get('reg_unverified_expiry_days', '7'),
+                'club_mode'    => Setting::get('club_activation_mode', 'manual'),
+            ],
         ]);
     }
 
@@ -92,6 +96,19 @@ class SettingController extends Controller
         $status = $validated['value'] === '1' ? 'registration opened' : 'registration suspended';
 
         return redirect()->back()->with('success', "{$label} {$status} successfully.");
+    }
+
+    public function updateRegistrationPolicy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'expiry_days' => ['required', 'integer', 'min:1', 'max:365'],
+            'club_mode'   => ['required', 'in:manual,auto'],
+        ]);
+
+        Setting::set('reg_unverified_expiry_days', (string) $validated['expiry_days']);
+        Setting::set('club_activation_mode', $validated['club_mode']);
+
+        return redirect()->back()->with('success', 'Registration policy updated successfully.');
     }
 
     public function update(Request $request): RedirectResponse

@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Club;
 use App\Models\Setting;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class ClubRegistrationController extends Controller
@@ -34,15 +37,17 @@ class ClubRegistrationController extends Controller
             'password_confirmation' => ['required'],
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $user = DB::transaction(function () use ($validated) {
+            // Club starts inactive (pending) — its subdomain stays offline until the
+            // admin verifies their email and the club is approved.
             $club = Club::create([
                 'name'   => $validated['club_name'],
                 'slug'   => $validated['slug'],
                 'state'  => $validated['state'] ?? null,
-                'active' => true,
+                'active' => false,
             ]);
 
-            User::create([
+            return User::create([
                 'name'     => $validated['admin_name'],
                 'email'    => $validated['admin_email'],
                 'password' => Hash::make($validated['password']),
@@ -51,10 +56,17 @@ class ClubRegistrationController extends Controller
             ]);
         });
 
-        $slug = $validated['slug'];
-        $rootDomain = config('app.root_domain', 'sportdns.com');
+        // Log them in (unverified) so the verification link they click resolves to
+        // their own account, then send the link.
+        Auth::login($user);
 
-        return redirect()->route('club-register.success', ['slug' => $slug]);
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send verification email on club registration: ' . $e->getMessage());
+        }
+
+        return redirect()->route('club-register.success', ['slug' => $validated['slug']]);
     }
 
     public function success(Request $request): View

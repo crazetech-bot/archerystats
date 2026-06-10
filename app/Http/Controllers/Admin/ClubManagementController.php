@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ClubActivatedMail;
 use App\Models\Club;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,7 +48,22 @@ class ClubManagementController extends Controller
 
     public function toggle(Club $club): RedirectResponse
     {
+        $wasActive = $club->active;
         $club->update(['active' => !$club->active]);
+
+        // Approving a pending club (off -> on): notify its admins it's now live.
+        if (! $wasActive && $club->active) {
+            $admins = User::where('club_id', $club->id)
+                ->where('role', 'club_admin')
+                ->get();
+            foreach ($admins as $admin) {
+                try {
+                    Mail::to($admin->email)->send(new ClubActivatedMail($club, $admin));
+                } catch (\Throwable $e) {
+                    Log::error('Failed to send club-activated email: ' . $e->getMessage());
+                }
+            }
+        }
 
         $status = $club->active ? 'activated' : 'deactivated';
 

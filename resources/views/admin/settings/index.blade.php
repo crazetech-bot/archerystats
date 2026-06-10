@@ -84,6 +84,64 @@
         </div>
     </div>
 
+    {{-- ============================================================== --}}
+    {{-- Registration Policy (verification + approval)                  --}}
+    {{-- ============================================================== --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+             style="background: linear-gradient(135deg, #eff6ff, #eef2ff);">
+            <span class="h-8 w-8 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </span>
+            <div>
+                <h2 class="text-sm font-bold text-gray-900">Registration Policy</h2>
+                <p class="text-xs text-gray-500">Email verification cleanup &amp; club approval mode</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('admin.settings.registrationPolicy') }}" class="p-6 space-y-5">
+            @csrf
+
+            {{-- Unverified expiry --}}
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-800">Auto-delete unverified accounts</p>
+                    <p class="text-xs text-gray-400">Accounts that never confirm their email are removed after this many days.</p>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <input type="number" name="expiry_days" min="1" max="365" required
+                           value="{{ $regPolicy['expiry_days'] ?? '7' }}"
+                           class="w-24 rounded-xl border border-gray-300 bg-gray-50 text-sm px-3 py-2 focus:border-indigo-500 focus:bg-white outline-none transition">
+                    <span class="text-sm text-gray-500">days</span>
+                </div>
+            </div>
+
+            {{-- Club activation mode --}}
+            <div class="flex flex-wrap items-center gap-4 border-t border-gray-50 pt-5">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-800">Club activation</p>
+                    <p class="text-xs text-gray-400">After a club admin verifies their email, how should the club go live?</p>
+                </div>
+                @php $clubMode = $regPolicy['club_mode'] ?? 'manual'; @endphp
+                <select name="club_mode"
+                        class="rounded-xl border border-gray-300 bg-gray-50 text-sm px-3 py-2 focus:border-indigo-500 focus:bg-white outline-none transition flex-shrink-0">
+                    <option value="manual" {{ $clubMode === 'manual' ? 'selected' : '' }}>Manual — super admin approves</option>
+                    <option value="auto"   {{ $clubMode === 'auto'   ? 'selected' : '' }}>Automatic — go live on verification</option>
+                </select>
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <button type="submit"
+                        class="px-4 py-2 rounded-xl text-sm font-semibold text-white transition hover:opacity-90"
+                        style="background:linear-gradient(135deg,#4338ca,#6366f1);">
+                    Save Policy
+                </button>
+            </div>
+        </form>
+    </div>
+
     <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data">
         @csrf
 

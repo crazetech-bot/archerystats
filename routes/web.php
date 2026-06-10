@@ -77,6 +77,9 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
 
+    // Everything below requires a verified (activated) account.
+    Route::middleware(['verified'])->group(function () {
+
     // create/import must come before {archer} to avoid route conflict
     Route::middleware(['role:super_admin,club_admin'])->group(function () {
         Route::get('/archers/create',          [ArcherController::class, 'create'])->name('archers.create');
@@ -200,6 +203,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/admin/settings/logo', [SettingController::class, 'removeLogo'])->name('admin.settings.logo.remove');
         Route::delete('/admin/settings/seo-image', [SettingController::class, 'removeSeoImage'])->name('admin.settings.seo.image.remove');
         Route::post('/admin/settings/registration', [SettingController::class, 'updateRegistration'])->name('admin.settings.registration');
+        Route::post('/admin/settings/registration-policy', [SettingController::class, 'updateRegistrationPolicy'])->name('admin.settings.registrationPolicy');
         Route::post('/admin/settings/popups', [SettingController::class, 'updatePopups'])->name('admin.settings.popups');
 
         // Club management (super admin platform dashboard)
@@ -218,5 +222,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/accounts/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('admin.accounts.toggleStatus');
         Route::post('/admin/users/{user}/promote', [AdminUserController::class, 'promote'])->name('admin.users.promote');
     });
+
+    }); // end verified group
 
 });

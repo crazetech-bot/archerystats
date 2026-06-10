@@ -36,6 +36,21 @@ class LoginController extends Controller
                 ])->onlyInput('email');
             }
 
+            // Account not activated until the email is verified.
+            if (! $user->hasVerifiedEmail()) {
+                return redirect()->route('verification.notice');
+            }
+
+            // A verified club admin whose club hasn't been approved yet can't enter.
+            if ($user->role === 'club_admin' && $user->club && ! $user->club->active) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withErrors([
+                    'email' => 'Your club is awaiting administrator approval. You will be emailed once it is activated.',
+                ])->onlyInput('email');
+            }
+
             if ($user->role === 'archer' && $user->archer) {
                 return redirect()->route('archers.show', $user->archer);
             }

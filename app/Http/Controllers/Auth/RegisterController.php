@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Mail\NewUserRegisteredMail;
 use App\Models\Archer;
 use App\Models\Club;
 use App\Models\Coach;
 use App\Models\Setting;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class RegisterController extends Controller
@@ -132,9 +132,11 @@ class RegisterController extends Controller
                     $coach->clubs()->attach($currentClub->id, ['primary_club' => true, 'joined_at' => now()]);
                 }
             } elseif ($validated['role'] === 'club_admin') {
+                // Club starts inactive (pending) — its subdomain stays offline until the
+                // admin verifies their email and a super admin approves the club.
                 $club = Club::create([
                     'name'   => $validated['club_name'],
-                    'active' => true,
+                    'active' => false,
                 ]);
                 $user->update(['club_id' => $club->id]);
             }
@@ -142,23 +144,17 @@ class RegisterController extends Controller
             return $user;
         });
 
+        // Log them in so they can see the "verify your email" notice and resend it,
+        // but the account is unverified — the `verified` middleware blocks app access
+        // until they click the link.
         Auth::login($user);
 
-        // Notify all super_admins by email
-        $user->load('club');
-        User::where('role', 'super_admin')->each(function (User $admin) use ($user) {
-            Mail::to($admin->email)->send(new NewUserRegisteredMail($user));
-        });
+        try {
+            event(new Registered($user));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send verification email on registration: ' . $e->getMessage());
+        }
 
-        if ($user->role === 'archer') {
-            return redirect()->route('archers.show', $user->archer)
-                ->with('success', 'Registration successful! Please complete your profile.');
-        }
-        if ($user->role === 'coach') {
-            return redirect()->route('coaches.show', $user->coach)
-                ->with('success', 'Registration successful! Please complete your profile.');
-        }
-        return redirect()->route('archers.index')
-            ->with('success', 'Registration successful!');
+        return redirect()->route('verification.notice');
     }
 }
