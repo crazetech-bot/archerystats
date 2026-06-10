@@ -8,6 +8,12 @@
     $headingFont  = $siteSettings['heading_font'] ?? $bodyFont;
     $headingSize  = $siteSettings['heading_size'] ?? '20';
     $logoPath     = !empty($siteSettings['logo'])  ? asset('storage/' . $siteSettings['logo']) : null;
+    // Theme colors
+    $thPrimary      = $siteSettings['theme_primary']       ?? '#f59e0b';
+    $thPrimaryHover = $siteSettings['theme_primary_hover'] ?? '#fbbf24';
+    $thSidebar      = $siteSettings['theme_sidebar']       ?? '#0f172a';
+    $thSidebarHover = $siteSettings['theme_sidebar_hover'] ?? '#1e293b';
+    $thAccent       = $siteSettings['theme_accent']        ?? '#fbbf24';
     $fontsToLoad  = array_unique([$bodyFont, $headingFont, 'Barlow']);
     $fontsParam   = collect($fontsToLoad)
                         ->map(fn($f) => str_replace(' ', '+', $f) . ':wght@400;500;600;700;800;900')
@@ -58,33 +64,40 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family={{ $fontsParam }}&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --th-primary: {{ $thPrimary }};
+            --th-primary-hover: {{ $thPrimaryHover }};
+            --th-sidebar: {{ $thSidebar }};
+            --th-sidebar-hover: {{ $thSidebarHover }};
+            --th-accent: {{ $thAccent }};
+        }
         [x-cloak] { display: none !important; }
         body { font-family: '{{ $bodyFont }}', sans-serif; background: #f1f5f9; }
         .page-heading { font-family: '{{ $headingFont }}', sans-serif; font-size: {{ $headingSize }}px; }
         .nav-active {
-            background: rgba(245, 158, 11, 0.12);
-            border-left: 3px solid #f59e0b;
-            color: #fbbf24;
+            background: {{ $thPrimary }}1f;
+            border-left: 3px solid var(--th-primary);
+            color: var(--th-accent);
         }
-        .nav-active svg { color: #fbbf24; }
+        .nav-active svg { color: var(--th-accent); }
         .nav-item {
             border-left: 3px solid transparent;
         }
-        .stat-card { border-top: 4px solid #f59e0b; }
+        .stat-card { border-top: 4px solid var(--th-primary); }
         .btn-primary {
-            background: #f59e0b;
-            color: #0f172a;
+            background: var(--th-primary);
+            color: var(--th-sidebar);
             font-weight: 700;
             transition: background 0.15s;
         }
-        .btn-primary:hover { background: #fbbf24; }
+        .btn-primary:hover { background: var(--th-primary-hover); }
         .btn-navy {
-            background: #0f172a;
+            background: var(--th-sidebar);
             color: #fff;
             font-weight: 600;
             transition: background 0.15s;
         }
-        .btn-navy:hover { background: #1e293b; }
+        .btn-navy:hover { background: var(--th-sidebar-hover); }
         .section-header {
             font-family: 'Barlow', sans-serif;
             font-weight: 800;
@@ -92,6 +105,8 @@
             text-transform: uppercase;
         }
     </style>
+    {{-- Preline UI --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/preline@2/dist/preline.min.css">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="{{ asset('css/popup.css') }}">
     @stack('head')
@@ -129,28 +144,28 @@
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="-translate-x-full"
          class="fixed inset-y-0 left-0 z-50 w-72 flex flex-col lg:hidden"
-         style="background: #0f172a; transform: translateX(0);">
+         style="background: var(--th-sidebar); transform: translateX(0);">
 
         {{-- Mobile sidebar header --}}
         <div class="flex items-center justify-between px-5 py-5" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
             <div class="flex items-center gap-3">
                 @if($logoPath)
                     <div class="h-10 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
-                         style="background: rgba(245,158,11,0.15); padding: 4px;">
+                         style="background: {{ $thPrimary }}26; padding: 4px;">
                         <img src="{{ $logoPath }}" alt="Logo" class="h-full max-w-[120px] object-contain">
                     </div>
                 @else
                     <div class="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                         style="background: rgba(245,158,11,0.2);">
-                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8">
+                         style="background: {{ $thPrimary }}33;">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="var(--th-primary)" stroke-width="1.8">
                             <circle cx="12" cy="12" r="10"/>
                             <circle cx="12" cy="12" r="6"/>
-                            <circle cx="12" cy="12" r="2" fill="#f59e0b" stroke="none"/>
+                            <circle cx="12" cy="12" r="2" fill="var(--th-primary)" stroke="none"/>
                         </svg>
                     </div>
                     <div>
                         <p class="text-white font-black text-sm leading-tight tracking-wide" style="font-family:'Barlow',sans-serif;">ARCHERY STATS</p>
-                        <p class="text-xs font-medium" style="color:#f59e0b;">Management System</p>
+                        <p class="text-xs font-medium" style="color:var(--th-primary);">Management System</p>
                     </div>
                 @endif
             </div>
@@ -305,15 +320,15 @@
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-black mb-2 transition-all"
                style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff;">
                 <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background:#f59e0b;"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2" style="background:#f59e0b;"></span>
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background:var(--th-primary);"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2" style="background:var(--th-primary);"></span>
                 </span>
                 LIVE SCORING
             </a>
             @endif
-            <div class="flex items-center gap-3 px-3 py-3 rounded-xl" style="background: #1e293b;">
+            <div class="flex items-center gap-3 px-3 py-3 rounded-xl" style="background: var(--th-sidebar-hover);">
                 <div class="h-9 w-9 rounded-full flex items-center justify-center text-slate-900 text-sm font-black flex-shrink-0"
-                     style="background: #f59e0b;">
+                     style="background: var(--th-primary);">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
@@ -338,27 +353,27 @@
 
     {{-- Desktop Sidebar --}}
     <aside class="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 z-30"
-           style="background: #0f172a;">
+           style="background: var(--th-sidebar);">
 
         {{-- Brand --}}
         <div class="flex items-center gap-3 px-5 py-5" style="border-bottom: 1px solid rgba(255,255,255,0.07);">
             @if($logoPath)
                 <div class="h-10 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
-                     style="background: rgba(245,158,11,0.15); padding: 4px;">
+                     style="background: {{ $thPrimary }}26; padding: 4px;">
                     <img src="{{ $logoPath }}" alt="Logo" class="h-full max-w-[120px] object-contain">
                 </div>
             @else
                 <div class="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style="background: rgba(245,158,11,0.2);">
-                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8">
+                     style="background: {{ $thPrimary }}33;">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="var(--th-primary)" stroke-width="1.8">
                         <circle cx="12" cy="12" r="10"/>
                         <circle cx="12" cy="12" r="6"/>
-                        <circle cx="12" cy="12" r="2" fill="#f59e0b" stroke="none"/>
+                        <circle cx="12" cy="12" r="2" fill="var(--th-primary)" stroke="none"/>
                     </svg>
                 </div>
                 <div>
                     <p class="text-white font-black text-base leading-tight tracking-wide" style="font-family:'Barlow',sans-serif;">ARCHERY STATS</p>
-                    <p class="text-xs font-medium" style="color:#f59e0b;">Management System</p>
+                    <p class="text-xs font-medium" style="color:var(--th-primary);">Management System</p>
                 </div>
             @endif
         </div>
@@ -507,15 +522,15 @@
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-black mb-2 transition-all"
                style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #fff;">
                 <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background:#f59e0b;"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2" style="background:#f59e0b;"></span>
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style="background:var(--th-primary);"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2" style="background:var(--th-primary);"></span>
                 </span>
                 LIVE SCORING
             </a>
             @endif
-            <div class="flex items-center gap-3 px-3 py-3 rounded-xl" style="background: #1e293b;">
+            <div class="flex items-center gap-3 px-3 py-3 rounded-xl" style="background: var(--th-sidebar-hover);">
                 <div class="h-9 w-9 rounded-full flex items-center justify-center text-slate-900 text-sm font-black flex-shrink-0"
-                     style="background: #f59e0b;">
+                     style="background: var(--th-primary);">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
@@ -594,6 +609,7 @@
     </div>
 </div>
 @stack('scripts')
+<script src="https://cdn.jsdelivr.net/npm/preline@2/dist/preline.min.js"></script>
 <script src="{{ asset('js/popup-engine.js') }}"></script>
 @include('partials.popups')
 </body>

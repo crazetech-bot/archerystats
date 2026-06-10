@@ -145,6 +145,202 @@
             </div>
         </div>
 
+        {{-- Theme & Colors --}}
+        @php
+            $currentPreset = $settings['theme_preset'] ?? 'amber-navy';
+            $presets = $themePresets;
+        @endphp
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+                 style="background: linear-gradient(135deg, #faf5ff, #f3e8ff);">
+                <span class="h-8 w-8 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="h-4 w-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/>
+                    </svg>
+                </span>
+                <div>
+                    <h2 class="text-sm font-bold text-gray-900">Theme & Colors</h2>
+                    <p class="text-xs text-gray-500">Customize the look and feel of your site</p>
+                </div>
+            </div>
+            <div class="p-6" x-data="{
+                preset: '{{ $currentPreset }}',
+                primary: '{{ $settings['theme_primary'] ?? '#f59e0b' }}',
+                primaryHover: '{{ $settings['theme_primary_hover'] ?? '#fbbf24' }}',
+                sidebar: '{{ $settings['theme_sidebar'] ?? '#0f172a' }}',
+                sidebarHover: '{{ $settings['theme_sidebar_hover'] ?? '#1e293b' }}',
+                accent: '{{ $settings['theme_accent'] ?? '#fbbf24' }}',
+                presets: {{ Js::from($presets) }},
+                applyPreset(name) {
+                    this.preset = name;
+                    if (name !== 'custom' && this.presets[name]) {
+                        let p = this.presets[name];
+                        this.primary = p.primary;
+                        this.primaryHover = p.primary_hover;
+                        this.sidebar = p.sidebar;
+                        this.sidebarHover = p.sidebar_hover;
+                        this.accent = p.accent;
+                    }
+                }
+            }">
+
+                {{-- Preset selector --}}
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Theme Preset</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                    @foreach($presets as $key => $preset)
+                        @if($key !== 'custom')
+                        <button type="button"
+                                @click="applyPreset('{{ $key }}')"
+                                :class="preset === '{{ $key }}' ? 'ring-2 ring-offset-2 ring-purple-500' : 'hover:shadow-md'"
+                                class="relative rounded-xl border border-gray-200 p-3 text-left transition-all cursor-pointer">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="h-5 w-5 rounded-full border border-gray-200 flex-shrink-0" style="background: {{ $preset['primary'] }};"></span>
+                                <span class="h-5 w-5 rounded-full border border-gray-200 flex-shrink-0" style="background: {{ $preset['sidebar'] }};"></span>
+                            </div>
+                            <p class="text-xs font-semibold text-gray-700">{{ $preset['label'] }}</p>
+                        </button>
+                        @endif
+                    @endforeach
+                </div>
+
+                {{-- Custom toggle --}}
+                <button type="button" @click="applyPreset('custom')"
+                        :class="preset === 'custom' ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-semibold mb-5 transition-all">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Use Custom Colors
+                </button>
+
+                {{-- Color pickers (visible when custom or any preset selected) --}}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Primary Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" x-model="primary" :disabled="preset !== 'custom'"
+                                   class="h-10 w-14 rounded-lg border border-gray-300 cursor-pointer p-0.5">
+                            <input type="text" x-model="primary" :disabled="preset !== 'custom'" maxlength="7"
+                                   class="flex-1 rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4 font-mono
+                                          focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none transition
+                                          disabled:opacity-50">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">Buttons, active states, accents</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Primary Hover</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" x-model="primaryHover" :disabled="preset !== 'custom'"
+                                   class="h-10 w-14 rounded-lg border border-gray-300 cursor-pointer p-0.5">
+                            <input type="text" x-model="primaryHover" :disabled="preset !== 'custom'" maxlength="7"
+                                   class="flex-1 rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4 font-mono
+                                          focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none transition
+                                          disabled:opacity-50">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">Button hover state</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Accent Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" x-model="accent" :disabled="preset !== 'custom'"
+                                   class="h-10 w-14 rounded-lg border border-gray-300 cursor-pointer p-0.5">
+                            <input type="text" x-model="accent" :disabled="preset !== 'custom'" maxlength="7"
+                                   class="flex-1 rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4 font-mono
+                                          focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none transition
+                                          disabled:opacity-50">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">Nav highlights, badges</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Sidebar Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" x-model="sidebar" :disabled="preset !== 'custom'"
+                                   class="h-10 w-14 rounded-lg border border-gray-300 cursor-pointer p-0.5">
+                            <input type="text" x-model="sidebar" :disabled="preset !== 'custom'" maxlength="7"
+                                   class="flex-1 rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4 font-mono
+                                          focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none transition
+                                          disabled:opacity-50">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">Sidebar background</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Sidebar Hover</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" x-model="sidebarHover" :disabled="preset !== 'custom'"
+                                   class="h-10 w-14 rounded-lg border border-gray-300 cursor-pointer p-0.5">
+                            <input type="text" x-model="sidebarHover" :disabled="preset !== 'custom'" maxlength="7"
+                                   class="flex-1 rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4 font-mono
+                                          focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 focus:bg-white outline-none transition
+                                          disabled:opacity-50">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-400">Sidebar item hover</p>
+                    </div>
+                </div>
+
+                {{-- Live preview --}}
+                <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Preview</label>
+                <div class="rounded-xl border border-gray-200 overflow-hidden flex h-44">
+                    {{-- Mini sidebar --}}
+                    <div class="w-48 flex flex-col p-3 space-y-1" :style="`background: ${sidebar}`">
+                        <div class="flex items-center gap-2 mb-3 px-2">
+                            <div class="h-6 w-6 rounded-lg flex items-center justify-center" :style="`background: ${primary}33`">
+                                <svg class="h-3.5 w-3.5" :style="`color: ${primary}`" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+                                </svg>
+                            </div>
+                            <span class="text-white text-xs font-bold tracking-wide" style="font-family:'Barlow',sans-serif;">ARCHERY STATS</span>
+                        </div>
+                        <div class="px-2 py-1.5 rounded-lg text-xs font-medium" :style="`background: ${primary}20; border-left: 3px solid ${accent}; color: ${accent}`">
+                            Dashboard
+                        </div>
+                        <div class="px-2 py-1.5 rounded-lg text-xs font-medium text-gray-400 border-l-[3px] border-transparent" @mouseenter="$el.style.background=sidebarHover" @mouseleave="$el.style.background=''">
+                            Archers
+                        </div>
+                        <div class="px-2 py-1.5 rounded-lg text-xs font-medium text-gray-400 border-l-[3px] border-transparent" @mouseenter="$el.style.background=sidebarHover" @mouseleave="$el.style.background=''">
+                            Sessions
+                        </div>
+                        <div class="px-2 py-1.5 rounded-lg text-xs font-medium text-gray-400 border-l-[3px] border-transparent" @mouseenter="$el.style.background=sidebarHover" @mouseleave="$el.style.background=''">
+                            Settings
+                        </div>
+                    </div>
+                    {{-- Mini content --}}
+                    <div class="flex-1 bg-slate-100 p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-sm font-bold text-gray-800">Dashboard</div>
+                            <button type="button" class="px-3 py-1 rounded-lg text-xs font-bold transition"
+                                    :style="`background: ${primary}; color: ${sidebar}`"
+                                    @mouseenter="$el.style.background=primaryHover" @mouseleave="$el.style.background=primary">
+                                + Add New
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="bg-white rounded-lg p-2 border border-gray-100" :style="`border-top: 3px solid ${primary}`">
+                                <p class="text-xs text-gray-400">Archers</p>
+                                <p class="text-sm font-bold text-gray-800">124</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-2 border border-gray-100" :style="`border-top: 3px solid ${primary}`">
+                                <p class="text-xs text-gray-400">Sessions</p>
+                                <p class="text-sm font-bold text-gray-800">56</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-2 border border-gray-100" :style="`border-top: 3px solid ${primary}`">
+                                <p class="text-xs text-gray-400">Clubs</p>
+                                <p class="text-sm font-bold text-gray-800">8</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Hidden inputs to submit values --}}
+                <input type="hidden" name="theme_preset" x-model="preset">
+                <input type="hidden" name="theme_primary" x-model="primary">
+                <input type="hidden" name="theme_primary_hover" x-model="primaryHover">
+                <input type="hidden" name="theme_sidebar" x-model="sidebar">
+                <input type="hidden" name="theme_sidebar_hover" x-model="sidebarHover">
+                <input type="hidden" name="theme_accent" x-model="accent">
+            </div>
+        </div>
+
         {{-- Typography --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"

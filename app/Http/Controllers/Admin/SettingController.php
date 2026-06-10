@@ -13,6 +13,18 @@ use Illuminate\View\View;
 
 class SettingController extends Controller
 {
+    const THEME_PRESETS = [
+        'amber-navy'   => ['label' => 'Amber & Navy (Default)',   'primary' => '#f59e0b', 'primary_hover' => '#fbbf24', 'primary_light' => 'rgba(245,158,11,0.12)', 'sidebar' => '#0f172a', 'sidebar_hover' => '#1e293b', 'accent' => '#fbbf24'],
+        'indigo-slate'  => ['label' => 'Indigo & Slate',           'primary' => '#6366f1', 'primary_hover' => '#818cf8', 'primary_light' => 'rgba(99,102,241,0.12)',  'sidebar' => '#1e293b', 'sidebar_hover' => '#334155', 'accent' => '#818cf8'],
+        'emerald-gray'  => ['label' => 'Emerald & Charcoal',       'primary' => '#10b981', 'primary_hover' => '#34d399', 'primary_light' => 'rgba(16,185,129,0.12)', 'sidebar' => '#1f2937', 'sidebar_hover' => '#374151', 'accent' => '#34d399'],
+        'rose-dark'     => ['label' => 'Rose & Dark',               'primary' => '#f43f5e', 'primary_hover' => '#fb7185', 'primary_light' => 'rgba(244,63,94,0.12)',  'sidebar' => '#18181b', 'sidebar_hover' => '#27272a', 'accent' => '#fb7185'],
+        'sky-navy'      => ['label' => 'Sky Blue & Navy',           'primary' => '#0ea5e9', 'primary_hover' => '#38bdf8', 'primary_light' => 'rgba(14,165,233,0.12)', 'sidebar' => '#0f172a', 'sidebar_hover' => '#1e293b', 'accent' => '#38bdf8'],
+        'violet-zinc'   => ['label' => 'Violet & Zinc',             'primary' => '#8b5cf6', 'primary_hover' => '#a78bfa', 'primary_light' => 'rgba(139,92,246,0.12)', 'sidebar' => '#27272a', 'sidebar_hover' => '#3f3f46', 'accent' => '#a78bfa'],
+        'orange-brown'  => ['label' => 'Orange & Brown',            'primary' => '#f97316', 'primary_hover' => '#fb923c', 'primary_light' => 'rgba(249,115,22,0.12)', 'sidebar' => '#292524', 'sidebar_hover' => '#44403c', 'accent' => '#fb923c'],
+        'teal-slate'    => ['label' => 'Teal & Slate',              'primary' => '#14b8a6', 'primary_hover' => '#2dd4bf', 'primary_light' => 'rgba(20,184,166,0.12)', 'sidebar' => '#1e293b', 'sidebar_hover' => '#334155', 'accent' => '#2dd4bf'],
+        'custom'        => ['label' => 'Custom Colors',             'primary' => '',        'primary_hover' => '',        'primary_light' => '',                      'sidebar' => '',        'sidebar_hover' => '',        'accent' => ''],
+    ];
+
     const GOOGLE_FONTS = [
         'Inter', 'Roboto', 'Open Sans', 'Lato', 'Poppins',
         'Nunito', 'Montserrat', 'Raleway', 'Ubuntu',
@@ -50,6 +62,7 @@ class SettingController extends Controller
             'settings'       => $settings,
             'googleFonts'    => self::GOOGLE_FONTS,
             'headingSizes'   => self::HEADING_SIZES,
+            'themePresets'   => self::THEME_PRESETS,
             'recentArchers'  => $recentArchers,
             'totalArchers'   => $totalArchers,
             'newThisMonth'   => $newThisMonth,
@@ -98,6 +111,13 @@ class SettingController extends Controller
             'seo_og_image'       => ['nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'seo_ga_id'          => ['nullable', 'string', 'max:50'],
             'seo_gsc_token'      => ['nullable', 'string', 'max:200'],
+            // Theme
+            'theme_preset'       => ['nullable', 'string', 'max:30'],
+            'theme_primary'      => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_primary_hover'=> ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_sidebar'      => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_sidebar_hover'=> ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_accent'       => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
         if ($request->hasFile('logo')) {
@@ -116,7 +136,9 @@ class SettingController extends Controller
         foreach (['body_font', 'heading_font', 'heading_size',
                   'login_body_font', 'login_heading_font', 'login_heading_size',
                   'footer_text',
-                  'seo_site_name', 'seo_description', 'seo_ga_id', 'seo_gsc_token'] as $key) {
+                  'seo_site_name', 'seo_description', 'seo_ga_id', 'seo_gsc_token',
+                  'theme_preset', 'theme_primary', 'theme_primary_hover',
+                  'theme_sidebar', 'theme_sidebar_hover', 'theme_accent'] as $key) {
             Setting::set($key, $request->input($key));
         }
 
