@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PruneUnverifiedRegistrations extends Command
 {
-    protected $signature = 'registrations:prune-unverified';
+    protected $signature = 'registrations:prune-unverified {--dry-run : List what would be deleted without deleting anything}';
 
     protected $description = 'Delete self-registered accounts that never verified their email within the configured window';
 
@@ -20,13 +20,31 @@ class PruneUnverifiedRegistrations extends Command
         $days   = max(1, $days);
         $cutoff = now()->subDays($days);
 
-        $users = User::whereNull('email_verified_at')
+        $query = User::whereNull('email_verified_at')
             ->where('created_at', '<', $cutoff)
-            ->whereIn('role', ['archer', 'coach', 'club_admin'])
-            ->get();
+            ->whereIn('role', ['archer', 'coach', 'club_admin']);
+
+        // Safety guard: never delete accounts that predate email-verification
+        // enforcement. Legacy users (old no-verification flow) have no
+        // email_verified_at but are legitimate active accounts. Only accounts
+        // created at/after this timestamp are subject to pruning.
+        $since = Setting::get('reg_verification_since');
+        if ($since) {
+            $query->where('created_at', '>=', $since);
+        }
+
+        $users = $query->get();
 
         if ($users->isEmpty()) {
-            $this->info("No unverified registrations older than {$days} day(s).");
+            $this->info("No prunable unverified registrations older than {$days} day(s).");
+            return self::SUCCESS;
+        }
+
+        if ($this->option('dry-run')) {
+            $this->warn("[dry-run] {$users->count()} account(s) would be pruned (older than {$days} day(s)):");
+            foreach ($users as $u) {
+                $this->line("  - {$u->email} ({$u->role}, created {$u->created_at->toDateString()})");
+            }
             return self::SUCCESS;
         }
 
