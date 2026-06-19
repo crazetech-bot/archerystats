@@ -288,6 +288,109 @@
     </div>
     @endif
 
+    {{-- Group / Impact Analysis (per-arrow coordinates) --}}
+    @if($groupAnalysis)
+    @php
+        $ga = $groupAnalysis;
+        $V  = max(1, $ga['view_radius']);
+        $dotR = max(6, $V * 0.022);
+        $zoneColor = function ($p) {
+            if ($p['is_miss']) return ['#f43f5e', '#be123c'];
+            $s = $p['score'];
+            if ($s >= 9)  return ['#f6c945', '#caa01f'];
+            if ($s >= 7)  return ['#e23b3b', '#b91c1c'];
+            if ($s >= 5)  return ['#1e63c2', '#1e40af'];
+            if ($s >= 3)  return ['#374151', '#111827'];
+            return ['#f8fafc', '#94a3b8'];
+        };
+    @endphp
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0;">
+        <div class="px-5 py-4 flex items-center gap-3" style="background:#0f172a; border-bottom:3px solid #0891b2;">
+            <svg class="h-5 w-5 flex-shrink-0" style="color:#22d3ee;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6zM12 12h.01"/>
+            </svg>
+            <h3 class="text-sm font-black text-white uppercase tracking-widest" style="font-family:'Barlow',sans-serif;">Group &amp; Impact Analysis</h3>
+            <span class="ml-auto text-xs font-bold px-2.5 py-1 rounded-lg" style="background:rgba(8,145,178,0.25); color:#67e8f9;">
+                {{ $ga['n'] }} arrows plotted
+            </span>
+        </div>
+        <div class="p-5 grid md:grid-cols-[minmax(0,1fr)_280px] gap-6 items-start">
+
+            {{-- Scatter plot over reference rings --}}
+            <div class="flex justify-center">
+                <svg viewBox="{{ -$V }} {{ -$V }} {{ 2*$V }} {{ 2*$V }}"
+                     class="w-full max-w-[420px] aspect-square rounded-xl bg-slate-50 border border-slate-200">
+                    {{-- reference rings + axes --}}
+                    @foreach([1.0, 0.75, 0.5, 0.25] as $frac)
+                        <circle cx="0" cy="0" r="{{ round($V * $frac, 1) }}" fill="none" stroke="#e2e8f0" stroke-width="{{ round($V*0.004,2) }}"></circle>
+                    @endforeach
+                    <line x1="{{ -$V }}" y1="0" x2="{{ $V }}" y2="0" stroke="#cbd5e1" stroke-width="{{ round($V*0.003,2) }}"></line>
+                    <line x1="0" y1="{{ -$V }}" x2="0" y2="{{ $V }}" stroke="#cbd5e1" stroke-width="{{ round($V*0.003,2) }}"></line>
+
+                    {{-- arrows --}}
+                    @foreach($ga['points'] as $p)
+                        @php [$fill, $stroke] = $zoneColor($p); @endphp
+                        <circle cx="{{ $p['x'] }}" cy="{{ -$p['y'] }}" r="{{ round($dotR,1) }}"
+                                fill="{{ $fill }}" stroke="{{ $stroke }}" stroke-width="{{ round($dotR*0.18,2) }}"
+                                fill-opacity="0.85"></circle>
+                    @endforeach
+
+                    {{-- barycentre marker --}}
+                    <g>
+                        <circle cx="{{ $ga['centre']['x'] }}" cy="{{ -$ga['centre']['y'] }}" r="{{ round($dotR*1.5,1) }}"
+                                fill="none" stroke="#0f172a" stroke-width="{{ round($dotR*0.35,2) }}"></circle>
+                        <line x1="{{ $ga['centre']['x'] - $dotR*2 }}" y1="{{ -$ga['centre']['y'] }}"
+                              x2="{{ $ga['centre']['x'] + $dotR*2 }}" y2="{{ -$ga['centre']['y'] }}" stroke="#0f172a" stroke-width="{{ round($dotR*0.25,2) }}"></line>
+                        <line x1="{{ $ga['centre']['x'] }}" y1="{{ -$ga['centre']['y'] - $dotR*2 }}"
+                              x2="{{ $ga['centre']['x'] }}" y2="{{ -$ga['centre']['y'] + $dotR*2 }}" stroke="#0f172a" stroke-width="{{ round($dotR*0.25,2) }}"></line>
+                    </g>
+                </svg>
+            </div>
+
+            {{-- Stats --}}
+            <div class="space-y-3">
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Impact points in mm from dead centre (+x right, +y up). The black crosshair is your
+                    <strong>group centre</strong> — its offset from the middle is your aim bias.
+                </p>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Group centre</p>
+                        <p class="text-sm font-black text-slate-800">{{ $ga['centre']['x'] }}, {{ $ga['centre']['y'] }} <span class="text-xs font-normal text-slate-400">mm</span></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mean radius</p>
+                        <p class="text-sm font-black text-slate-800">{{ $ga['mean_radius'] }} <span class="text-xs font-normal text-slate-400">mm</span></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Horizontal SD</p>
+                        <p class="text-sm font-black text-slate-800">{{ $ga['sd_x'] }} <span class="text-xs font-normal text-slate-400">mm</span></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vertical SD</p>
+                        <p class="text-sm font-black text-slate-800">{{ $ga['sd_y'] }} <span class="text-xs font-normal text-slate-400">mm</span></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">RMS spread</p>
+                        <p class="text-sm font-black text-slate-800">{{ $ga['rms'] }} <span class="text-xs font-normal text-slate-400">mm</span></p>
+                    </div>
+                    <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Extreme spread</p>
+                        <p class="text-sm font-black text-slate-800">{{ $ga['extreme_spread'] !== null ? $ga['extreme_spread'].' ' : '—' }}<span class="text-xs font-normal text-slate-400">{{ $ga['extreme_spread'] !== null ? 'mm' : '' }}</span></p>
+                    </div>
+                </div>
+                @if($ga['hits'] < $ga['n'])
+                <p class="text-[11px] text-slate-400">{{ $ga['n'] - $ga['hits'] }} miss(es) shown but excluded from group stats.</p>
+                @endif
+                <p class="text-[11px] text-slate-400">
+                    SD split tells stringing direction: higher <strong>vertical</strong> SD ⇒ elevation/release inconsistency; higher <strong>horizontal</strong> SD ⇒ alignment/wind.
+                </p>
+            </div>
+        </div>
+    </div>
+    @endif
+
     @endif {{-- end if totalSessions > 0 --}}
 
 </div>

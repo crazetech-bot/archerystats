@@ -31,7 +31,7 @@ class ArcherPerformanceController extends Controller
 
         // Load sessions in range that have a recorded score
         $sessions = $archer->sessions()
-            ->with(['roundType', 'score.ends'])
+            ->with(['roundType', 'score.ends.arrows'])
             ->whereHas('score')
             ->whereBetween('date', [$from, $to])
             ->orderBy('date')
@@ -104,6 +104,9 @@ class ArcherPerformanceController extends Controller
 
         $arrowAnalysis = app(\App\Services\ArrowAnalysisService::class)->analyse($allEnds, $arrowsPerEnd);
 
+        // Coordinate group analysis from the per-arrow impact layer (null if nothing plotted)
+        $groupAnalysis = app(\App\Services\ArrowAnalysisService::class)->coordinateGroup($allEnds);
+
         return view('archers.performance', compact(
             'archer',
             'range', 'from', 'to',
@@ -113,6 +116,7 @@ class ArcherPerformanceController extends Controller
             'compVsTrainData',
             'sessionsTable',
             'arrowAnalysis',
+            'groupAnalysis',
         ));
     }
 

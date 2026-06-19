@@ -69,6 +69,37 @@
         $initialEnds[] = ['arrows' => $arrows];
     }
 
+    // ── Per-end target layout (face / scoring system / distance) for coordinate plotting ──
+    $endLayout = $session->endLayout();
+    $endMeta   = [];
+    for ($e = 1; $e <= $rt->num_ends; $e++) {
+        $l = $endLayout[$e] ?? ['face' => $session->effective_face ?? 122, 'system' => $scoringSystem, 'distance' => null];
+        $endMeta[] = [
+            'end'       => $e,
+            'face'      => (int) $l['face'],
+            'system'    => $l['system'],
+            'distance'  => $l['distance'],
+            'plottable' => \App\Support\TargetScoring::isPlottable($l['system']),
+        ];
+    }
+    $anyPlottable = collect($endMeta)->contains('plottable', true);
+
+    // Prefill coordinates from any previously-plotted arrows so re-edits keep their dots.
+    $initialCoords = [];
+    for ($e = 1; $e <= $rt->num_ends; $e++) {
+        $end = $ends->get($e);
+        $row = array_fill(0, $ape, null);
+        if ($end && $end->relationLoaded('arrows')) {
+            foreach ($end->arrows as $arrow) {
+                $idx = $arrow->arrow_number - 1;
+                if ($idx >= 0 && $idx < $ape && $arrow->x_mm !== null && $arrow->y_mm !== null) {
+                    $row[$idx] = ((float) $arrow->x_mm) . ',' . ((float) $arrow->y_mm);
+                }
+            }
+        }
+        $initialCoords[] = $row;
+    }
+
     $validHint = match($scoringSystem) {
         'compound',
         'reduced'       => 'X &nbsp;·&nbsp; 10–5 &nbsp;·&nbsp; M (miss)',
@@ -111,6 +142,122 @@
          currentSet:     1,
          scoringSystem:  '{{ $scoringSystem }}',
          segmentScoring: {{ Js::from($segmentScoring) }},
+
+         // ── Coordinate plotting ──
+         mode:      'type',                       // 'type' | 'plot'
+         focused:   0,                            // 0-based end index being plotted
+         endMeta:   {{ Js::from($endMeta) }},
+         coords:    {{ Js::from($initialCoords) }}, // coords[ei][ai] = "x,y" mm, or null
+
+         focusedMeta() { return this.endMeta[this.focused] || null; },
+
+         geom(system, face) {
+             const plottable = ['standard','standard_x11','six_ring','six_ring_x11','compound','reduced','field'].includes(system);
+             if (!plottable) return { plottable:false, rings:[], bandMm:0, scoringRadiusMm:0, xRadiusMm:0, viewRadiusMm:0, top:0, minRing:1 };
+             const faceRadius = face * 5;
+             let kind, top, minRing, band, xValue;
+             if (system === 'field') { kind='field'; top=6; minRing=1; band=faceRadius/6; xValue=6; }
+             else {
+                 kind='metric'; top=10; band=faceRadius/10;
+                 minRing = (system==='six_ring'||system==='six_ring_x11') ? 6
+                         : (system==='compound'||system==='reduced') ? 5 : 1;
+                 xValue = (system==='standard_x11'||system==='six_ring_x11') ? 11 : 10;
+             }
+             const metric = {10:['#f6c945','#caa01f'],9:['#f6c945','#caa01f'],8:['#e23b3b','#b91c1c'],7:['#e23b3b','#b91c1c'],6:['#1e63c2','#1e40af'],5:['#1e63c2','#1e40af'],4:['#111111','#000000'],3:['#111111','#000000'],2:['#ffffff','#9ca3af'],1:['#ffffff','#9ca3af']};
+             const field  = {6:['#f6c945','#caa01f'],5:['#f6c945','#caa01f'],4:['#111111','#000000'],3:['#111111','#000000'],2:['#ffffff','#9ca3af'],1:['#ffffff','#9ca3af']};
+             const colors = kind==='field' ? field : metric;
+             const rings = [];
+             for (let v=minRing; v<=top; v++) {
+                 const c = colors[v] || ['#ffffff','#9ca3af'];
+                 rings.push({ value:v, outerMm:(top+1-v)*band, fill:c[0], stroke:c[1] });
+             }
+             const scoringRadiusMm = (top+1-minRing)*band;
+             return { plottable:true, kind, rings, bandMm:band, scoringRadiusMm, xRadiusMm:band/2, viewRadiusMm:scoringRadiusMm*1.18, top, minRing, xValue };
+         },
+
+         resolveScore(system, x, y, face) {
+             const g = this.geom(system, face);
+             if (!g.plottable) return { display:'M', miss:true, isX:false };
+             const r = Math.sqrt(x*x + y*y);
+             let value = g.top - Math.floor(r / g.bandMm);
+             if (value < g.minRing) return { display:'M', miss:true, isX:false };
+             value = Math.max(g.minRing, Math.min(g.top, value));
+             const isX = r <= g.xRadiusMm;
+             return { display: isX ? 'X' : String(value), miss:false, isX };
+         },
+
+         nextSlot(ei) {
+             const arr = this.ends[ei].arrows;
+             for (let i=0; i<arr.length; i++) { if (arr[i]===null || String(arr[i]).trim()==='') return i; }
+             return -1;
+         },
+
+         setFocus(ei) {
+             this.focused = ei;
+             this.currentSet = Math.floor(ei / this.endsPerSet) + 1;
+         },
+
+         focusPrev() { if (this.focused > 0) this.setFocus(this.focused - 1); },
+         focusNext() { if (this.focused < this.ends.length - 1) this.setFocus(this.focused + 1); },
+
+         plot(event) {
+             const meta = this.focusedMeta();
+             if (!meta || !meta.plottable) return;
+             const ei = this.focused;
+             const slot = this.nextSlot(ei);
+             if (slot === -1) return; // end already full
+             const svg = event.currentTarget;
+             const pt = svg.createSVGPoint();
+             pt.x = event.clientX; pt.y = event.clientY;
+             const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+             const xMm = Math.round(loc.x * 100) / 100;
+             const yMm = Math.round(-loc.y * 100) / 100; // SVG y is down; archery y is up
+             const res = this.resolveScore(meta.system, xMm, yMm, meta.face);
+             this.ends[ei].arrows[slot] = res.display;
+             if (!this.coords[ei]) this.coords[ei] = Array(this.ends[ei].arrows.length).fill(null);
+             this.coords[ei][slot] = xMm + ',' + yMm;
+             // Auto-advance to the next end once this one is full
+             if (this.nextSlot(ei) === -1 && ei < this.ends.length - 1) this.setFocus(ei + 1);
+         },
+
+         plottedDots(ei) {
+             const row = this.coords[ei] || [];
+             const meta = this.endMeta[ei];
+             const out = [];
+             row.forEach((c, ai) => {
+                 if (!c) return;
+                 const [x, y] = c.split(',').map(Number);
+                 const res = meta ? this.resolveScore(meta.system, x, y, meta.face) : { isX:false, miss:false };
+                 out.push({ ai, cx:x, cy:-y, fill: res.miss ? '#f43f5e' : (res.isX ? '#10b981' : '#0ea5e9') });
+             });
+             return out;
+         },
+
+         undoLast(ei) {
+             const row = this.coords[ei] || [];
+             for (let i = row.length - 1; i >= 0; i--) {
+                 if (row[i]) { this.coords[ei][i] = null; this.ends[ei].arrows[i] = ''; return; }
+             }
+         },
+
+         clearEnd(ei) {
+             for (let i = 0; i < this.ends[ei].arrows.length; i++) {
+                 this.ends[ei].arrows[i] = '';
+                 if (this.coords[ei]) this.coords[ei][i] = null;
+             }
+         },
+
+         coordStr(ei, ai) { return (this.coords[ei] && this.coords[ei][ai]) ? this.coords[ei][ai] : ''; },
+
+         curGeom() {
+             const m = this.focusedMeta();
+             return m ? this.geom(m.system, m.face) : this.geom('standard', 122);
+         },
+
+         viewBox() {
+             const v = this.curGeom().viewRadiusMm || 1;
+             return `${-v} ${-v} ${2*v} ${2*v}`;
+         },
 
          get totalSets() {
              return Math.ceil(this.ends.length / this.endsPerSet);
@@ -235,6 +382,8 @@
 
              event.target.value = v;
              this.ends[endIdx].arrows[arrowIdx] = v;
+             // A manually typed value is no longer a plotted coordinate
+             if (this.coords[endIdx]) this.coords[endIdx][arrowIdx] = null;
          }
      }">
 
@@ -319,6 +468,16 @@
                     @endif
                 </div>
             </div>
+            @if($anyPlottable)
+            <div class="flex items-center rounded-xl border border-amber-200 bg-white/70 p-0.5 shadow-sm">
+                <button type="button" @click="mode='type'"
+                        :class="mode==='type' ? 'bg-amber-500 text-white shadow' : 'text-amber-700 hover:bg-amber-100'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">⌨&nbsp; Type</button>
+                <button type="button" @click="mode='plot'"
+                        :class="mode==='plot' ? 'bg-amber-500 text-white shadow' : 'text-amber-700 hover:bg-amber-100'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">🎯&nbsp; Plot</button>
+            </div>
+            @endif
             @if($totalSets > 1)
             <div class="flex items-center gap-1.5" title="Jump to sheet">
                 @for($s = 1; $s <= $totalSets; $s++)
@@ -374,6 +533,84 @@
         </div>
         @endif
 
+        {{-- ── Plot-on-target panel ─────────────────────────────────────────── --}}
+        @if($anyPlottable)
+        <div x-show="mode==='plot'" style="display:none"
+             class="border-b border-gray-100 px-4 py-5"
+             :style="'background: linear-gradient(to bottom, rgba(254,243,199,0.35), #fff)'">
+
+            <template x-if="focusedMeta() && focusedMeta().plottable">
+                <div class="grid md:grid-cols-[minmax(0,1fr)_260px] gap-5 items-start max-w-3xl mx-auto">
+
+                    {{-- Interactive target --}}
+                    <div class="flex flex-col items-center">
+                        <div class="flex items-center justify-between w-full max-w-[400px] mb-2">
+                            <button type="button" @click="focusPrev()" :disabled="focused===0"
+                                    :class="focused===0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 active:scale-95'"
+                                    class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 font-bold transition">‹</button>
+                            <div class="text-center">
+                                <p class="text-sm font-black text-gray-800">End <span x-text="focused + 1"></span></p>
+                                <p class="text-xs text-gray-500">
+                                    <span x-text="focusedMeta().face"></span>cm face<template x-if="focusedMeta().distance"><span> · <span x-text="focusedMeta().distance"></span>m</span></template>
+                                </p>
+                            </div>
+                            <button type="button" @click="focusNext()" :disabled="focused===ends.length-1"
+                                    :class="focused===ends.length-1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-100 active:scale-95'"
+                                    class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 font-bold transition">›</button>
+                        </div>
+
+                        <svg @click="plot($event)" :viewBox="viewBox()"
+                             class="w-full max-w-[400px] aspect-square rounded-xl cursor-crosshair select-none bg-gray-100 border border-gray-200 shadow-inner"
+                             style="touch-action:none">
+                            <template x-for="ring in curGeom().rings" :key="ring.value">
+                                <circle cx="0" cy="0" :r="ring.outerMm" :fill="ring.fill" :stroke="ring.stroke" stroke-width="2"></circle>
+                            </template>
+                            <circle cx="0" cy="0" :r="curGeom().xRadiusMm" fill="none" stroke="#caa01f" stroke-width="2" stroke-dasharray="9 9"></circle>
+                            <template x-for="dot in plottedDots(focused)" :key="dot.ai">
+                                <circle :cx="dot.cx" :cy="dot.cy" :r="Math.max(9, curGeom().bandMm * 0.3)"
+                                        :fill="dot.fill" stroke="#ffffff" stroke-width="2.5"></circle>
+                            </template>
+                        </svg>
+                    </div>
+
+                    {{-- This end's arrows + actions --}}
+                    <div class="space-y-3">
+                        <div class="rounded-xl border border-gray-200 bg-white p-3">
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">End <span x-text="focused + 1"></span> arrows</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <template x-for="(a, ai) in ends[focused].arrows" :key="ai">
+                                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-black"
+                                          :class="String(a).trim()==='' ? 'border-dashed border-gray-300 text-gray-300' : 'border-gray-200 bg-gray-50 text-gray-800'"
+                                          x-text="String(a).trim()==='' ? '–' : a"></span>
+                                </template>
+                            </div>
+                            <div class="mt-3 flex items-center justify-between">
+                                <span class="text-xs text-gray-500">Sum <strong class="text-amber-700 text-sm" x-text="endSum(focused)"></strong></span>
+                                <div class="flex gap-2">
+                                    <button type="button" @click="undoLast(focused)"
+                                            class="text-xs font-semibold text-gray-600 hover:text-gray-800 px-2.5 py-1 rounded-lg border border-gray-200 bg-white">Undo</button>
+                                    <button type="button" @click="clearEnd(focused)"
+                                            class="text-xs font-semibold text-rose-600 hover:text-rose-700 px-2.5 py-1 rounded-lg border border-rose-200 bg-white">Clear end</button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            Tap the target to place each arrow — the score is read from where it lands. Shots outside the rings count as <strong>M</strong>.
+                            Coordinates are saved for group &amp; heatmap analysis. You can still switch to <strong>Type</strong> at any time.
+                        </p>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="focusedMeta() && !focusedMeta().plottable">
+                <div class="text-center text-sm text-gray-500 py-8 max-w-md mx-auto">
+                    Target plotting isn’t available for this round type (<span x-text="focusedMeta().system"></span>).
+                    Switch to <strong>Type</strong> mode to enter scores for this end.
+                </div>
+            </template>
+        </div>
+        @endif
+
         <form method="POST" action="{{ route('sessions.saveScores', $session) }}">
             @csrf @method('PUT')
 
@@ -383,6 +620,9 @@
                     <input type="hidden"
                            name="arrows[{{ $e }}][{{ $a }}]"
                            x-bind:value="ends[{{ $e - 1 }}].arrows[{{ $a }}]">
+                    <input type="hidden"
+                           name="coords[{{ $e }}][{{ $a }}]"
+                           x-bind:value="coordStr({{ $e - 1 }}, {{ $a }})">
                 @endfor
             @endfor
 
@@ -433,7 +673,10 @@
                                 <tr :class="endComplete({{ $ei }}) ? 'bg-emerald-50/50' : 'bg-white'"
                                     class="transition-colors">
                                     <td class="px-3 py-2">
-                                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600">{{ $e }}</span>
+                                        <button type="button" @click="setFocus({{ $ei }})"
+                                                :class="mode==='plot' && focused==={{ $ei }} ? 'ring-2 ring-amber-500 bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                                                :title="mode==='plot' ? 'Plot this end on the target' : ''"
+                                                class="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all">{{ $e }}</button>
                                     </td>
                                     @for($a = 0; $a < $ape; $a++)
                                         <td class="px-2 py-2 text-center">

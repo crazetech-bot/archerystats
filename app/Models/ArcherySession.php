@@ -54,4 +54,44 @@ class ArcherySession extends Model
     {
         return $this->target_face_cm ?? $this->roundType?->target_face_cm;
     }
+
+    /**
+     * Per-end layout: the face size, scoring system and distance that apply to each
+     * end (1-based). Multi-distance rounds vary these by `distance_segments`; single
+     * rounds fall back to the effective face / round-type defaults. Reused by score
+     * entry and coordinate scoring so the on-screen target always matches the end.
+     *
+     * @return array<int,array{face:int,system:string,distance:?int}>
+     */
+    public function endLayout(): array
+    {
+        $rt       = $this->roundType;
+        $defFace  = (int) ($this->effective_face ?? $rt?->target_face_cm ?? 122);
+        $defSys   = $rt?->scoring_system ?? 'standard';
+        $defDist  = $this->effective_distance ?? $rt?->distance_meters;
+
+        $layout = [];
+        if ($rt && ($segments = $rt->distance_segments)) {
+            $endNum = 1;
+            foreach ($segments as $seg) {
+                $n = (int) ($seg['num_ends'] ?? 6);
+                for ($i = 0; $i < $n; $i++) {
+                    $layout[$endNum++] = [
+                        'face'     => (int) ($seg['face'] ?? $defFace),
+                        'system'   => $seg['scoring'] ?? $defSys,
+                        'distance' => isset($seg['distance']) ? (int) $seg['distance'] : $defDist,
+                    ];
+                }
+            }
+        }
+
+        $totalEnds = (int) ($rt?->num_ends ?? 0);
+        for ($e = 1; $e <= $totalEnds; $e++) {
+            $layout[$e] ??= ['face' => $defFace, 'system' => $defSys, 'distance' => $defDist];
+        }
+
+        ksort($layout);
+
+        return $layout;
+    }
 }

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Archer;
 use App\Models\ArcherySession;
+use App\Models\Arrow;
 use App\Models\Coach;
 use App\Models\End;
 use App\Models\RoundType;
 use App\Models\Score;
+use App\Support\TargetScoring;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -200,7 +202,7 @@ class SessionController extends Controller
             }
         }
 
-        $session->load(['archer.user', 'archer.club', 'roundType', 'score.ends']);
+        $session->load(['archer.user', 'archer.club', 'roundType', 'score.ends.arrows']);
         $scoringSystem = $session->roundType->scoring_system ?? 'standard';
 
         return view('sessions.scorecard', compact('session', 'scoringSystem'));
@@ -220,6 +222,9 @@ class SessionController extends Controller
             'arrows'     => ['nullable', 'array'],
             'arrows.*'   => ['nullable', 'array'],
             'arrows.*.*' => ['nullable', 'string', 'max:2'],
+            'coords'     => ['nullable', 'array'],
+            'coords.*'   => ['nullable', 'array'],
+            'coords.*.*' => ['nullable', 'string', 'max:32'],
         ]);
 
         $scoringSystem = $session->roundType->scoring_system ?? 'standard';
@@ -227,25 +232,42 @@ class SessionController extends Controller
         $endsMap = $score->ends->keyBy('end_number');
         $ape     = $session->roundType->arrows_per_end;
         $input   = $request->input('arrows', []);
+        $coords  = $request->input('coords', []);
+        $layout  = $session->endLayout();
 
         foreach ($endsMap as $endNumber => $end) {
             $endSys    = $end->scoring_system ?? $scoringSystem;
+            $faceCm    = (int) ($layout[$endNumber]['face'] ?? $session->effective_face ?? 122);
             $rawArrows = $input[$endNumber] ?? [];
+            $endCoords = $coords[$endNumber] ?? [];
             $arrows    = [];
+            $plotted   = []; // arrow_number => [x_mm, y_mm]
 
-            foreach ($rawArrows as $val) {
-                $v = strtoupper(trim((string) $val));
-                $arrows[] = $this->normalizeArrow($v, $endSys);
-            }
+            for ($i = 0; $i < $ape; $i++) {
+                $coord = $this->parseCoord($endCoords[$i] ?? null);
 
-            // Pad to arrows_per_end length
-            while (count($arrows) < $ape) {
-                $arrows[] = null;
+                if ($coord !== null) {
+                    // Plotted: the impact coordinate is the source of truth — derive the value from it.
+                    $res          = TargetScoring::resolve($endSys, $coord[0], $coord[1], $faceCm);
+                    $arrows[$i]   = $this->normalizeArrow($res['display'], $endSys);
+                    $plotted[$i + 1] = $coord;
+                } else {
+                    $v          = strtoupper(trim((string) ($rawArrows[$i] ?? '')));
+                    $arrows[$i] = $this->normalizeArrow($v, $endSys);
+                }
             }
 
             $end->arrow_values = $arrows;
             $end->end_total    = $end->calculateTotal($endSys);
             $end->save();
+
+            // Resync the per-arrow coordinate layer for this end (additive analytics moat).
+            $end->arrows()->delete();
+            foreach ($plotted as $arrowNumber => [$x, $y]) {
+                (new Arrow(['end_id' => $end->id, 'arrow_number' => $arrowNumber]))
+                    ->setImpactFor($x, $y, $faceCm, $endSys)
+                    ->save();
+            }
         }
 
         $score->load('ends');
@@ -308,10 +330,28 @@ class SessionController extends Controller
 
     public function show(ArcherySession $session): View
     {
-        $session->load(['archer.user', 'archer.club', 'roundType', 'score.ends']);
+        $session->load(['archer.user', 'archer.club', 'roundType', 'score.ends.arrows']);
         $scoringSystem = $session->roundType->scoring_system ?? 'standard';
 
         return view('sessions.scorecard', compact('session', 'scoringSystem'));
+    }
+
+    /** Parse a posted "x,y" mm coordinate string into [float, float], or null. */
+    private function parseCoord(?string $raw): ?array
+    {
+        if ($raw === null) {
+            return null;
+        }
+        $raw = trim($raw);
+        if ($raw === '') {
+            return null;
+        }
+        $parts = explode(',', $raw);
+        if (count($parts) !== 2 || ! is_numeric($parts[0]) || ! is_numeric($parts[1])) {
+            return null;
+        }
+
+        return [(float) $parts[0], (float) $parts[1]];
     }
 
     private function normalizeArrow(string $v, string $scoringSystem): int|string|null

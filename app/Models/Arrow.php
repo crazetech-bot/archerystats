@@ -54,6 +54,32 @@ class Arrow extends Model
         return $this;
     }
 
+    /**
+     * Like setImpact() but scores against any plottable system (compound 6-ring,
+     * field, six_ring, x11 …) rather than only the 10-zone face. Coordinates are
+     * stored even for a plotted miss so wayward shots still appear in heatmaps.
+     */
+    public function setImpactFor(?float $xMm, ?float $yMm, int $faceCm, string $system): static
+    {
+        if ($xMm === null || $yMm === null) {
+            $this->forceFill(['x_mm' => null, 'y_mm' => null, 'score' => 0, 'is_x' => false, 'is_miss' => true]);
+
+            return $this;
+        }
+
+        $result = TargetScoring::resolve($system, $xMm, $yMm, $faceCm);
+
+        $this->forceFill([
+            'x_mm'    => $xMm,
+            'y_mm'    => $yMm,
+            'score'   => $result['score'],
+            'is_x'    => $result['is_x'],
+            'is_miss' => $result['is_miss'],
+        ]);
+
+        return $this;
+    }
+
     /** Radial distance from centre in mm — the per-arrow input to group-size stats. */
     public function radiusMm(): ?float
     {
