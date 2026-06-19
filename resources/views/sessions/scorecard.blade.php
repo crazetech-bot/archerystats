@@ -151,9 +151,12 @@
 
          focusedMeta() { return this.endMeta[this.focused] || null; },
 
+         // The SVG uses a fixed viewBox of -110..110 (see markup). DRAW is the scoring
+         // edge in those units; `scale` (px per mm) maps real-mm geometry into it, so any
+         // face fills the box while scoring & stored coordinates stay in true millimetres.
          geom(system, face) {
              const plottable = ['standard','standard_x11','six_ring','six_ring_x11','compound','reduced','field'].includes(system);
-             if (!plottable) return { plottable:false, rings:[], bandMm:0, scoringRadiusMm:0, xRadiusMm:0, viewRadiusMm:0, top:0, minRing:1 };
+             if (!plottable) return { plottable:false, ringsPx:[], bandMm:0, scoringRadiusMm:0, xRadiusMm:0, xRadiusPx:0, scale:1, top:0, minRing:1 };
              const faceRadius = face * 5;
              let kind, top, minRing, band, xValue;
              if (system === 'field') { kind='field'; top=6; minRing=1; band=faceRadius/6; xValue=6; }
@@ -166,13 +169,16 @@
              const metric = {10:['#f6c945','#caa01f'],9:['#f6c945','#caa01f'],8:['#e23b3b','#b91c1c'],7:['#e23b3b','#b91c1c'],6:['#1e63c2','#1e40af'],5:['#1e63c2','#1e40af'],4:['#111111','#000000'],3:['#111111','#000000'],2:['#ffffff','#9ca3af'],1:['#ffffff','#9ca3af']};
              const field  = {6:['#f6c945','#caa01f'],5:['#f6c945','#caa01f'],4:['#111111','#000000'],3:['#111111','#000000'],2:['#ffffff','#9ca3af'],1:['#ffffff','#9ca3af']};
              const colors = kind==='field' ? field : metric;
-             const rings = [];
+             const scoringRadiusMm = (top+1-minRing)*band;
+             const DRAW = 88;
+             const scale = scoringRadiusMm > 0 ? DRAW / scoringRadiusMm : 1;
+             const ringsPx = [];
              for (let v=minRing; v<=top; v++) {
                  const c = colors[v] || ['#ffffff','#9ca3af'];
-                 rings.push({ value:v, outerMm:(top+1-v)*band, fill:c[0], stroke:c[1] });
+                 ringsPx.push({ value:v, r:(top+1-v)*band*scale, fill:c[0], stroke:c[1] });
              }
-             const scoringRadiusMm = (top+1-minRing)*band;
-             return { plottable:true, kind, rings, bandMm:band, scoringRadiusMm, xRadiusMm:band/2, viewRadiusMm:scoringRadiusMm*1.18, top, minRing, xValue };
+             return { plottable:true, kind, bandMm:band, scoringRadiusMm, xRadiusMm:band/2,
+                      xRadiusPx:(band/2)*scale, scale, ringsPx, top, minRing, xValue };
          },
 
          resolveScore(system, x, y, face) {
@@ -209,9 +215,10 @@
              const svg = event.currentTarget;
              const pt = svg.createSVGPoint();
              pt.x = event.clientX; pt.y = event.clientY;
-             const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
-             const xMm = Math.round(loc.x * 100) / 100;
-             const yMm = Math.round(-loc.y * 100) / 100; // SVG y is down; archery y is up
+             const loc = pt.matrixTransform(svg.getScreenCTM().inverse()); // viewBox units
+             const scale = this.geom(meta.system, meta.face).scale || 1;
+             const xMm = Math.round((loc.x / scale) * 100) / 100;
+             const yMm = Math.round((-loc.y / scale) * 100) / 100; // SVG y down; archery y up
              const res = this.resolveScore(meta.system, xMm, yMm, meta.face);
              this.ends[ei].arrows[slot] = res.display;
              if (!this.coords[ei]) this.coords[ei] = Array(this.ends[ei].arrows.length).fill(null);
@@ -223,12 +230,14 @@
          plottedDots(ei) {
              const row = this.coords[ei] || [];
              const meta = this.endMeta[ei];
+             const g = meta ? this.geom(meta.system, meta.face) : null;
+             const scale = g ? g.scale : 1;
              const out = [];
              row.forEach((c, ai) => {
                  if (!c) return;
                  const [x, y] = c.split(',').map(Number);
-                 const res = meta ? this.resolveScore(meta.system, x, y, meta.face) : { isX:false, miss:false };
-                 out.push({ ai, cx:x, cy:-y, fill: res.miss ? '#f43f5e' : (res.isX ? '#10b981' : '#0ea5e9') });
+                 const res = g ? this.resolveScore(meta.system, x, y, meta.face) : { isX:false, miss:false };
+                 out.push({ ai, cx:x*scale, cy:-y*scale, fill: res.miss ? '#f43f5e' : (res.isX ? '#10b981' : '#0ea5e9') });
              });
              return out;
          },
@@ -254,9 +263,18 @@
              return m ? this.geom(m.system, m.face) : this.geom('standard', 122);
          },
 
-         viewBox() {
-             const v = this.curGeom().viewRadiusMm || 1;
-             return `${-v} ${-v} ${2*v} ${2*v}`;
+         // Build the target's inner SVG as a string for x-html. Alpine's <template x-for>
+         // creates HTML-namespaced nodes that don't render inside <svg>; setting innerHTML
+         // on the <svg> parses them in the SVG namespace. Single-quoted attrs only — a
+         // literal double quote here would close the x-data attribute.
+         targetSvg() {
+             const g = this.curGeom();
+             if (!g.plottable) return '';
+             let s = '';
+             g.ringsPx.forEach(r => { s += `<circle cx='0' cy='0' r='${r.r}' fill='${r.fill}' stroke='${r.stroke}' stroke-width='0.6'/>`; });
+             s += `<circle cx='0' cy='0' r='${g.xRadiusPx}' fill='none' stroke='#caa01f' stroke-width='0.7' stroke-dasharray='3 3'/>`;
+             this.plottedDots(this.focused).forEach(d => { s += `<circle cx='${d.cx}' cy='${d.cy}' r='3.4' fill='${d.fill}' stroke='#ffffff' stroke-width='1'/>`; });
+             return s;
          },
 
          get totalSets() {
@@ -559,18 +577,9 @@
                                     class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 font-bold transition">›</button>
                         </div>
 
-                        <svg @click="plot($event)" :viewBox="viewBox()"
+                        <svg @click="plot($event)" x-html="targetSvg()" viewBox="-110 -110 220 220"
                              class="w-full max-w-[400px] aspect-square rounded-xl cursor-crosshair select-none bg-gray-100 border border-gray-200 shadow-inner"
-                             style="touch-action:none">
-                            <template x-for="ring in curGeom().rings" :key="ring.value">
-                                <circle cx="0" cy="0" :r="ring.outerMm" :fill="ring.fill" :stroke="ring.stroke" stroke-width="2"></circle>
-                            </template>
-                            <circle cx="0" cy="0" :r="curGeom().xRadiusMm" fill="none" stroke="#caa01f" stroke-width="2" stroke-dasharray="9 9"></circle>
-                            <template x-for="dot in plottedDots(focused)" :key="dot.ai">
-                                <circle :cx="dot.cx" :cy="dot.cy" :r="Math.max(9, curGeom().bandMm * 0.3)"
-                                        :fill="dot.fill" stroke="#ffffff" stroke-width="2.5"></circle>
-                            </template>
-                        </svg>
+                             style="touch-action:none"></svg>
                     </div>
 
                     {{-- This end's arrows + actions --}}
