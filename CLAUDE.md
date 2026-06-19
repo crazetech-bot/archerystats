@@ -4,8 +4,8 @@ Web application for tracking archer performance, scoring, and equipment.
 Coaches use a dashboard to review data. Mobile-accessible via PWA.
 
 ## Stack
-- **Backend**: Laravel 11.48.0 (PHP 8.3.30)
-- **Frontend**: Alpine.js 3.x + Tailwind CSS (CDN) + Blade templates
+- **Backend**: Laravel 11.50.0 (PHP 8.3.30)
+- **Frontend**: Alpine.js 3.x + Tailwind CSS (CDN) + Preline UI (CDN) + Blade templates
 - **Database**: MySQL — `DB_HOST=127.0.0.1` (not localhost)
 - **Charts**: Chart.js (future)
 - **Mobile**: PWA (future)
@@ -20,12 +20,16 @@ Coaches use a dashboard to review data. Mobile-accessible via PWA.
 - **Always declare static routes (e.g. `/archers/create`) before parameterised routes (`/archers/{archer}`)**
 
 ## Design System
-- Layout: fixed sidebar (indigo gradient) + main content area
+- Layout: fixed sidebar + main content area — colors driven by theme settings (CSS variables)
+- Theme: configurable via admin panel (`/admin/settings`) — 8 presets + custom color picker
+- CSS variables: `--th-primary`, `--th-primary-hover`, `--th-sidebar`, `--th-sidebar-hover`, `--th-accent`
+- Default palette: amber primary (`#f59e0b`), navy sidebar (`#0f172a`)
 - Cards: `rounded-2xl shadow-sm border border-gray-100`
 - Section headers: coloured gradient strip with icon
-- Buttons: gradient `style="background: linear-gradient(135deg, #4338ca, #6366f1)"`
+- Buttons: `.btn-primary` (theme primary) or `.btn-navy` (theme sidebar)
 - Inputs: `rounded-xl border border-gray-300 bg-gray-50` with focus ring
-- No build step — Tailwind CDN + Alpine.js CDN
+- UI library: Preline UI (CDN) for advanced components
+- No build step — Tailwind CDN + Alpine.js CDN + Preline UI CDN
 
 ## User Roles (hierarchy)
 `super_admin` > `club_admin` > `coach` > `archer` > `guest`
@@ -42,9 +46,11 @@ Seed demo data: `php artisan db:seed`
 ## Deployment (cPanel — sportdns.com)
 - Installed via Softaculous — Laravel already set up on server
 - Remote path: `/home/mfazil/public_html/laravel`
-- Upload files: `scp -i "C:/Users/craze/.ssh/claudecode" <file> mfazil@sportdns.com:<remote_path>`
-- SSH port: 22 (key is passphrase protected)
-- After upload: `php artisan view:clear && php artisan cache:clear`
+- Upload files: `scp -i "D:/claude project/.ssh/claudecode" -P 22 <file> mfazil@sportdns.com:<remote_path>`
+- SSH key: `D:/claude project/.ssh/claudecode` (no passphrase, ed25519)
+- MCP SSH: `ssh-mcp` configured in `~/.claude.json` for remote commands
+- Composer on server: `php composer.phar` (not in PATH)
+- After upload: `php artisan view:clear && php artisan cache:clear && php artisan config:clear && php artisan route:clear`
 - `DB_HOST` must be `127.0.0.1` in `.env`
 - Photos stored in `storage/app/public/archers/` — served via `storage:link`
 
