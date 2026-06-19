@@ -147,7 +147,7 @@
          mode:      'type',                       // 'type' | 'plot'
          focused:   0,                            // 0-based end index being plotted
          endMeta:   {{ Js::from($endMeta) }},
-         coords:    {{ Js::from($initialCoords) }}, // coords[ei][ai] = "x,y" mm, or null
+         coords:    {{ Js::from($initialCoords) }}, // coords[ei][ai] = 'x,y' mm string, or null
 
          focusedMeta() { return this.endMeta[this.focused] || null; },
 
