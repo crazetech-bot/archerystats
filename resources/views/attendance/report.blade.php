@@ -81,7 +81,7 @@
             </div>
         @else
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm rtable">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
                         <th class="px-5 py-3 text-left">Archer</th>
@@ -96,7 +96,7 @@
                 <tbody class="divide-y divide-gray-100">
                     @foreach($report as $row)
                     <tr class="hover:bg-gray-50/50">
-                        <td class="px-5 py-3">
+                        <td class="px-5 py-3 rt-primary">
                             <div class="flex items-center gap-3">
                                 <img src="{{ $row['archer']->photo_url }}" alt="{{ $row['archer']->full_name }}"
                                      class="h-9 w-9 rounded-lg object-cover flex-shrink-0">
@@ -106,12 +106,12 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-3 py-3 text-center font-bold text-emerald-700">{{ $row['counts']['present'] }}</td>
-                        <td class="px-3 py-3 text-center font-bold text-amber-700">{{ $row['counts']['late'] }}</td>
-                        <td class="px-3 py-3 text-center font-bold text-rose-700">{{ $row['counts']['absent'] }}</td>
-                        <td class="px-3 py-3 text-center font-bold text-slate-700">{{ $row['counts']['excused'] }}</td>
-                        <td class="px-3 py-3 text-center font-bold text-gray-700">{{ $row['total'] }}</td>
-                        <td class="px-5 py-3">
+                        <td class="px-3 py-3 text-center font-bold text-emerald-700" data-label="Present">{{ $row['counts']['present'] }}</td>
+                        <td class="px-3 py-3 text-center font-bold text-amber-700" data-label="Late">{{ $row['counts']['late'] }}</td>
+                        <td class="px-3 py-3 text-center font-bold text-rose-700" data-label="Absent">{{ $row['counts']['absent'] }}</td>
+                        <td class="px-3 py-3 text-center font-bold text-slate-700" data-label="Excused">{{ $row['counts']['excused'] }}</td>
+                        <td class="px-3 py-3 text-center font-bold text-gray-700" data-label="Total">{{ $row['total'] }}</td>
+                        <td class="px-5 py-3" data-label="Rate">
                             <div class="flex items-center gap-2">
                                 <div class="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
                                     <div class="h-full rounded-full"

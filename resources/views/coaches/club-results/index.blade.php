@@ -34,7 +34,7 @@
         </div>
     @else
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <table class="w-full text-sm">
+            <table class="w-full text-sm rtable">
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50/60">
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Archer</th>
@@ -51,7 +51,7 @@
                     @foreach($sessions as $session)
                     <tr class="hover:bg-teal-50/30 transition-colors cursor-pointer"
                         onclick="window.location='{{ route('coaches.club-results.show', [$coach, $session]) }}'">
-                        <td class="px-6 py-3">
+                        <td class="px-6 py-3 rt-primary">
                             <div class="flex items-center gap-2">
                                 <img src="{{ $session->archer->photo_url }}" alt="{{ $session->archer->full_name }}"
                                      class="h-7 w-7 rounded-lg object-cover flex-shrink-0">
@@ -61,24 +61,24 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-3">
+                        <td class="px-6 py-3" data-label="Date">
                             <p class="font-semibold text-gray-800">{{ $session->date->format('d M Y') }}</p>
                             <p class="text-xs text-gray-400">{{ $session->date->format('l') }}</p>
                         </td>
-                        <td class="px-6 py-3 text-gray-700">{{ $session->roundType->name }}</td>
-                        <td class="px-6 py-3 text-center">
+                        <td class="px-6 py-3 text-gray-700" data-label="Round">{{ $session->roundType->name }}</td>
+                        <td class="px-6 py-3 text-center" data-label="Score">
                             <span class="text-base font-black text-indigo-700">{{ $session->score?->total_score ?? '—' }}</span>
                         </td>
-                        <td class="px-6 py-3 text-center text-gray-600 font-semibold">{{ $session->score?->gold_count ?? '—' }}</td>
-                        <td class="px-6 py-3 text-center text-gray-600 font-semibold">{{ $session->score?->x_count ?? '—' }}</td>
-                        <td class="px-6 py-3 text-center">
+                        <td class="px-6 py-3 text-center text-gray-600 font-semibold" data-label="10+X">{{ $session->score?->gold_count ?? '—' }}</td>
+                        <td class="px-6 py-3 text-center text-gray-600 font-semibold" data-label="X">{{ $session->score?->x_count ?? '—' }}</td>
+                        <td class="px-6 py-3 text-center" data-label="Type">
                             @if($session->is_competition)
                                 <span class="text-xs font-semibold px-2 py-1 rounded-lg text-amber-700 bg-amber-100">Competition</span>
                             @else
                                 <span class="text-xs font-medium px-2 py-1 rounded-lg text-gray-500 bg-gray-100">Training</span>
                             @endif
                         </td>
-                        <td class="px-6 py-3 text-right">
+                        <td class="px-6 py-3 text-right rt-avatar">
                             <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
                             </svg>

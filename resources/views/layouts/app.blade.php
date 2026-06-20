@@ -127,6 +127,7 @@
             }
             table.rtable td.rt-primary { padding-bottom: 0.4rem; }
             table.rtable td.rt-actions { padding-top: 0.65rem; }
+            table.rtable td.rt-avatar { display: none; } /* avatar cell hidden in mobile card mode */
             table.rtable td:empty { display: none; }
         }
     </style>

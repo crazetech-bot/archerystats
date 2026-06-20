@@ -76,7 +76,7 @@
             </div>
         @else
             <div class="overflow-x-auto">
-                <table class="min-w-full">
+                <table class="min-w-full rtable">
                     <thead>
                         <tr style="background:#f8fafc; border-bottom: 2px solid #e2e8f0;">
                             <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-widest text-slate-400">Date</th>
@@ -96,10 +96,10 @@
                                 $catLabel  = $match->category === 'mssm' ? 'MSSM' : ucfirst($match->category);
                             @endphp
                             <tr class="hover:bg-slate-50 transition-colors">
-                                <td class="px-4 py-3 text-sm font-medium text-slate-700">
+                                <td class="px-4 py-3 text-sm font-medium text-slate-700 rt-primary">
                                     {{ $match->date->format('d M Y') }}
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3" data-label="Archer A">
                                     <span class="text-sm font-semibold text-slate-800">
                                         {{ $match->archer_a_id ? $match->archerA->full_name : $match->archer_a_name }}
                                     </span>
@@ -109,7 +109,7 @@
                                         <span class="text-xs text-amber-500 block">Guest</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3" data-label="Archer B">
                                     <span class="text-sm font-semibold text-slate-800">
                                         {{ $match->archer_b_id ? $match->archerB->full_name : $match->archer_b_name }}
                                     </span>
@@ -119,13 +119,13 @@
                                         <span class="text-xs text-amber-500 block">Guest</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3" data-label="Category">
                                     <span class="px-2 py-0.5 rounded-full text-xs font-bold text-white"
                                           style="background: {{ $catColor }};">
                                         {{ $catLabel }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3" data-label="Result">
                                     @if($match->status === 'completed')
                                         @php
                                             // Calculate final set points from arrow_values
@@ -168,7 +168,7 @@
                                         <span class="text-sm text-slate-400">—</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-4 py-3" data-label="Status">
                                     @if($match->status === 'completed')
                                         <span class="px-2 py-0.5 rounded-full text-xs font-bold"
                                               style="background:#dcfce7; color:#15803d;">Completed</span>
@@ -177,7 +177,7 @@
                                               style="background:#fef3c7; color:#92400e;">In Progress</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right">
+                                <td class="px-4 py-3 text-right rt-actions">
                                     <div class="flex items-center justify-end gap-2">
                                         <a href="{{ route('elimination-matches.scorecard', $match) }}"
                                            class="px-3 py-1 rounded-lg text-xs font-bold text-white"

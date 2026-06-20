@@ -132,7 +132,7 @@
 {{-- Table --}}
 <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0;">
     <div class="overflow-x-auto">
-    <table class="min-w-full">
+    <table class="min-w-full rtable">
         <thead>
             <tr style="background: #0f172a;">
                 <th class="w-12 py-3.5 pl-5 pr-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest"></th>
@@ -150,24 +150,24 @@
         <tbody class="divide-y divide-slate-100">
             @forelse($coaches as $coach)
                 <tr class="transition-colors hover:bg-amber-50/40 group">
-                    <td class="py-3.5 pl-5 pr-3">
+                    <td class="py-3.5 pl-5 pr-3 rt-avatar">
                         <img src="{{ $coach->photo_url }}" alt="{{ $coach->full_name }}"
                              class="h-10 w-10 rounded-full object-cover bg-slate-100 ring-2 ring-white shadow-sm">
                     </td>
-                    <td class="px-4 py-3.5">
+                    <td class="px-4 py-3.5" data-label="Ref No">
                         <span class="inline-block text-xs font-mono font-bold px-2.5 py-1 rounded-lg"
                               style="background:#0f172a; color:#f59e0b;">
                             {{ $coach->ref_no ?? '—' }}
                         </span>
                     </td>
-                    <td class="px-4 py-3.5">
+                    <td class="px-4 py-3.5 rt-primary">
                         <a href="{{ route('coaches.show', $coach) }}"
                            class="text-sm font-bold text-slate-900 hover:text-amber-600 transition-colors">
                             {{ $coach->full_name }}
                         </a>
                         <p class="text-xs text-slate-400">{{ $coach->user->email }}</p>
                     </td>
-                    <td class="px-4 py-3.5">
+                    <td class="px-4 py-3.5" data-label="Gender">
                         @if($coach->gender === 'male')
                             <span class="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">♂ Male</span>
                         @elseif($coach->gender === 'female')
@@ -176,13 +176,13 @@
                             <span class="text-slate-400 text-sm">—</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden sm:table-cell">
+                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden sm:table-cell" data-label="Club">
                         {{ $coach->club?->name ?? '—' }}
                     </td>
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden md:table-cell">
+                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden md:table-cell" data-label="State">
                         {{ $coach->state ?: '—' }}
                     </td>
-                    <td class="px-4 py-3.5 hidden md:table-cell">
+                    <td class="px-4 py-3.5 hidden md:table-cell" data-label="National Team">
                         @if($coach->national_team)
                             <span class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full"
                                   style="background:rgba(245,158,11,0.12); color:#92400e; border:1px solid rgba(245,158,11,0.3);">
@@ -192,7 +192,7 @@
                             <span class="text-slate-400 text-sm">—</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3.5 hidden lg:table-cell">
+                    <td class="px-4 py-3.5 hidden lg:table-cell" data-label="Coaching Level">
                         @if($coach->coaching_level && $coach->coaching_level !== 'None')
                             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
                                   style="background:rgba(13,148,136,0.10); color:#065f46; border:1px solid rgba(13,148,136,0.25);">
@@ -202,7 +202,7 @@
                             <span class="text-slate-400 text-sm">—</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3.5 hidden lg:table-cell">
+                    <td class="px-4 py-3.5 hidden lg:table-cell" data-label="Sports Science">
                         @if($coach->sports_science_course)
                             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full"
                                   style="background:rgba(99,102,241,0.10); color:#3730a3; border:1px solid rgba(99,102,241,0.25);">
@@ -212,7 +212,7 @@
                             <span class="text-slate-400 text-sm">—</span>
                         @endif
                     </td>
-                    <td class="px-4 py-3.5 pr-5 text-right">
+                    <td class="px-4 py-3.5 pr-5 text-right rt-actions">
                         <div class="flex items-center justify-end gap-2">
                             <a href="{{ route('coaches.show', $coach) }}"
                                class="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"

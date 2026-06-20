@@ -58,7 +58,7 @@
                 <p class="text-sm font-medium text-gray-500">No training sessions logged yet</p>
             </div>
         @else
-            <table class="w-full text-sm">
+            <table class="w-full text-sm rtable">
                 <thead>
                     <tr class="border-b border-gray-100 bg-gray-50/60">
                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
@@ -73,19 +73,19 @@
                     @foreach($sessions as $ts)
                     <tr class="hover:bg-teal-50/30 transition-colors cursor-pointer"
                         onclick="window.location='{{ route('coaches.training.show', [$coach, $ts]) }}'">
-                        <td class="px-6 py-3">
+                        <td class="px-6 py-3 rt-primary">
                             <p class="font-semibold text-gray-900">{{ $ts->date->format('d M Y') }}</p>
                             <p class="text-xs text-gray-400">{{ $ts->date->format('l') }}</p>
                         </td>
-                        <td class="px-6 py-3 text-gray-600">{{ $ts->location ?? '—' }}</td>
-                        <td class="px-6 py-3 text-gray-600">{{ $ts->focus_area ?? '—' }}</td>
-                        <td class="px-6 py-3 text-center text-gray-600">{{ $ts->duration_label }}</td>
-                        <td class="px-6 py-3 text-center">
+                        <td class="px-6 py-3 text-gray-600" data-label="Location">{{ $ts->location ?? '—' }}</td>
+                        <td class="px-6 py-3 text-gray-600" data-label="Focus Area">{{ $ts->focus_area ?? '—' }}</td>
+                        <td class="px-6 py-3 text-center text-gray-600" data-label="Duration">{{ $ts->duration_label }}</td>
+                        <td class="px-6 py-3 text-center" data-label="Attendees">
                             <span class="inline-flex items-center justify-center h-7 w-7 rounded-full text-xs font-bold text-teal-700 bg-teal-100">
                                 {{ $ts->archers_count }}
                             </span>
                         </td>
-                        <td class="px-6 py-3 text-right" onclick="event.stopPropagation()">
+                        <td class="px-6 py-3 text-right rt-actions" onclick="event.stopPropagation()">
                             <div class="flex items-center justify-end gap-2">
                                 <a href="{{ route('coaches.training.show', [$coach, $ts]) }}"
                                    class="text-xs font-medium text-indigo-600 hover:text-indigo-800 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors">
