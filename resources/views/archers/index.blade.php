@@ -129,7 +129,7 @@
 
 {{-- Table --}}
 <div class="bg-white rounded-2xl shadow-sm overflow-x-auto" style="border: 1px solid #e2e8f0;">
-    <table class="min-w-full">
+    <table class="min-w-full rtable">
         <thead>
             <tr style="background: #0f172a;">
                 <th class="w-12 py-3.5 pl-5 pr-3 text-left text-xs font-bold text-slate-400 uppercase tracking-widest"></th>
@@ -149,13 +149,13 @@
                 <tr class="transition-colors hover:bg-amber-50/40 group">
 
                     {{-- Photo --}}
-                    <td class="py-3.5 pl-5 pr-3">
+                    <td class="py-3.5 pl-5 pr-3 rt-avatar">
                         <img src="{{ $archer->photo_url }}" alt="{{ $archer->full_name }}"
                              class="h-10 w-10 rounded-full object-cover bg-slate-100 ring-2 ring-white shadow-sm">
                     </td>
 
                     {{-- MAREOS ID --}}
-                    <td class="px-4 py-3.5">
+                    <td class="px-4 py-3.5" data-label="MAREOS ID">
                         @if($archer->mareos_id)
                             <span class="inline-block text-xs font-mono font-bold px-2.5 py-1 rounded-lg"
                                   style="background:#0f766e; color:#ccfbf1;">
@@ -167,7 +167,7 @@
                     </td>
 
                     {{-- Name --}}
-                    <td class="px-4 py-3.5">
+                    <td class="px-4 py-3.5 rt-primary">
                         <a href="{{ route('archers.show', $archer) }}"
                            class="text-sm font-bold text-slate-900 hover:text-amber-600 transition-colors">
                             {{ $archer->full_name }}
@@ -176,7 +176,7 @@
                     </td>
 
                     {{-- Gender --}}
-                    <td class="px-4 py-3.5 hidden sm:table-cell">
+                    <td class="px-4 py-3.5 hidden sm:table-cell" data-label="Gender">
                         @if($archer->gender === 'male')
                             <span class="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
                                 ♂ Male
@@ -191,7 +191,7 @@
                     </td>
 
                     {{-- Age --}}
-                    <td class="px-4 py-3.5 hidden sm:table-cell">
+                    <td class="px-4 py-3.5 hidden sm:table-cell" data-label="Age">
                         @if($archer->age !== null)
                             <span class="text-sm font-bold text-slate-700">{{ $archer->age }}</span>
                             <span class="text-xs text-slate-400"> yrs</span>
@@ -201,7 +201,7 @@
                     </td>
 
                     {{-- Division --}}
-                    <td class="px-4 py-3.5 hidden md:table-cell">
+                    <td class="px-4 py-3.5 hidden md:table-cell" data-label="Division">
                         @if($archer->division)
                             <span class="text-xs font-bold px-2.5 py-0.5 rounded-full"
                                   style="background:rgba(245,158,11,0.12); color:#92400e; border: 1px solid rgba(245,158,11,0.3);">
@@ -222,17 +222,17 @@
                     </td>
 
                     {{-- Club --}}
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden md:table-cell">
+                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden md:table-cell" data-label="Club">
                         {{ $archer->club?->name ?? '—' }}
                     </td>
 
                     {{-- State --}}
-                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden lg:table-cell">
+                    <td class="px-4 py-3.5 text-sm text-slate-600 hidden lg:table-cell" data-label="State">
                         {{ $archer->state ?? '—' }}
                     </td>
 
                     {{-- Para-Archery --}}
-                    <td class="px-4 py-3.5 hidden lg:table-cell">
+                    <td class="px-4 py-3.5 hidden lg:table-cell" data-label="Para-Archery">
                         @if($archer->para_archery)
                             <span class="inline-block text-xs font-bold px-2.5 py-1 rounded-full"
                                   style="background:#f3e8ff; color:#7e22ce; border:1px solid #e9d5ff;">
@@ -250,7 +250,7 @@
                     </td>
 
                     {{-- Actions --}}
-                    <td class="px-4 py-3.5 pr-5 text-right">
+                    <td class="px-4 py-3.5 pr-5 text-right rt-actions">
                         <div class="flex items-center justify-end gap-2">
                             <a href="{{ route('archers.show', $archer) }}"
                                class="inline-flex items-center text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
