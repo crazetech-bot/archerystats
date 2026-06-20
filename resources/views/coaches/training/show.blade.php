@@ -307,7 +307,7 @@
             @csrf
             <div class="divide-y divide-gray-100 max-h-[28rem] overflow-y-auto">
                 @foreach($clubArchers as $archer)
-                <div class="flex items-center gap-3 px-5 py-3">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3">
                     <img src="{{ $archer->photo_url }}" alt="{{ $archer->full_name }}"
                          class="h-9 w-9 rounded-lg object-cover flex-shrink-0">
                     <div class="min-w-0 flex-1">
@@ -316,7 +316,8 @@
                     </div>
                     <input type="hidden" :name="marks[{{ $archer->id }}] ? 'status[{{ $archer->id }}]' : ''"
                            :value="marks[{{ $archer->id }}]">
-                    <div class="flex items-center gap-1 flex-shrink-0">
+                    {{-- Pills wrap to their own full-width line on phones, inline from sm up --}}
+                    <div class="flex flex-wrap items-center gap-1 w-full sm:w-auto justify-start sm:justify-end">
                         @foreach($statusMeta as $key => [$label, $color])
                         <button type="button" @click="set({{ $archer->id }}, '{{ $key }}')"
                                 :class="marks[{{ $archer->id }}] === '{{ $key }}'
