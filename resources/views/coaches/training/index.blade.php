@@ -28,7 +28,7 @@
 <div class="max-w-5xl mx-auto">
 
     {{-- Stats bar --}}
-    <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
         @php
             $total     = $sessions->total();
             $lastDate  = $sessions->first()?->date?->format('d M Y') ?? '—';

@@ -33,7 +33,7 @@
         $bestScore = $allSessions->max(fn($s) => $s->score?->total_score ?? 0);
         $latestDate = $allSessions->first()?->date;
     @endphp
-    <div class="grid grid-cols-3 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div class="bg-white rounded-2xl p-5 text-center shadow-sm" style="border: 1px solid #e2e8f0; border-top: 4px solid #f59e0b;">
             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Sessions</p>
             <p class="text-4xl font-black text-slate-900" style="font-family:'Barlow',sans-serif;">{{ $sessions->total() }}</p>
@@ -81,7 +81,7 @@
             </div>
         @else
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-sm rtable">
                     <thead style="background:#f8fafc; border-bottom: 1px solid #e2e8f0;">
                         <tr>
                             <th class="px-5 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
@@ -98,29 +98,29 @@
                         @foreach($sessions as $s)
                             <tr class="hover:bg-amber-50/30 transition-colors cursor-pointer"
                                 onclick="window.location='{{ route('sessions.scorecard', $s) }}'">
-                                <td class="px-5 py-4">
+                                <td class="px-5 py-4 rt-primary">
                                     <p class="font-bold text-slate-800">{{ $s->date->format('d M Y') }}</p>
                                     <p class="text-xs text-slate-400 font-medium">{{ $s->date->format('l') }}</p>
                                 </td>
-                                <td class="px-5 py-4">
+                                <td class="px-5 py-4" data-label="Round">
                                     <p class="font-bold text-slate-800">{{ $s->roundType->name }}</p>
                                     <p class="text-xs text-slate-400 font-medium">{{ $s->roundType->num_ends }} ends × {{ $s->roundType->arrows_per_end }} arrows</p>
                                 </td>
-                                <td class="px-5 py-4 text-slate-600 font-medium hidden sm:table-cell">{{ $s->location ?? '—' }}</td>
-                                <td class="px-5 py-4 text-center">
+                                <td class="px-5 py-4 text-slate-600 font-medium hidden sm:table-cell" data-label="Location">{{ $s->location ?? '—' }}</td>
+                                <td class="px-5 py-4 text-center" data-label="Score">
                                     @if($s->score?->total_score > 0)
                                         <span class="text-2xl font-black" style="color:#0f172a; font-family:'Barlow',sans-serif;">{{ $s->score->total_score }}</span>
                                     @else
                                         <span class="text-slate-300 font-black text-xl">—</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-4 text-center font-black hidden sm:table-cell" style="color:#f59e0b; font-family:'Barlow',sans-serif;">
+                                <td class="px-5 py-4 text-center font-black hidden sm:table-cell" style="color:#f59e0b; font-family:'Barlow',sans-serif;" data-label="10+X">
                                     {{ $s->score?->gold_count ?? '—' }}
                                 </td>
-                                <td class="px-5 py-4 text-center font-black text-emerald-600 hidden sm:table-cell" style="font-family:'Barlow',sans-serif;">
+                                <td class="px-5 py-4 text-center font-black text-emerald-600 hidden sm:table-cell" style="font-family:'Barlow',sans-serif;" data-label="X">
                                     {{ $s->score?->x_count ?? '—' }}
                                 </td>
-                                <td class="px-5 py-4 text-center hidden sm:table-cell">
+                                <td class="px-5 py-4 text-center hidden sm:table-cell" data-label="Type">
                                     @if($s->is_competition)
                                         <span class="text-xs font-bold px-2.5 py-1 rounded-lg"
                                               style="background:rgba(245,158,11,0.12); color:#92400e; border:1px solid rgba(245,158,11,0.3);">
@@ -130,7 +130,7 @@
                                         <span class="text-xs text-slate-400 font-medium">Training</span>
                                     @endif
                                 </td>
-                                <td class="px-5 py-4 text-right" onclick="event.stopPropagation()">
+                                <td class="px-5 py-4 text-right rt-actions" onclick="event.stopPropagation()">
                                     <div class="flex items-center justify-end gap-2">
                                         <a href="{{ route('sessions.scorecard', $s) }}"
                                            class="text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"

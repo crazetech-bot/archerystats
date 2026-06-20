@@ -21,7 +21,7 @@
 <div x-data="{ activeTab: '{{ request('category', 'all') }}' }">
 
     {{-- Stats bar --}}
-    <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
         <div class="stat-card rounded-2xl bg-white p-4 shadow-sm border border-gray-100">
             <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Total Matches</p>
             <p class="text-3xl font-black text-slate-800">{{ $total }}</p>

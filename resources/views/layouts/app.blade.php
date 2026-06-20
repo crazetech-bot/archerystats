@@ -104,6 +104,31 @@
             letter-spacing: 0.04em;
             text-transform: uppercase;
         }
+        /* Responsive data tables: on phones, each row becomes a labelled card.
+           Add class="rtable" to <table>, data-label="…" to each data <td>,
+           rt-primary to the main cell (name) and rt-actions to the actions cell. */
+        @media (max-width: 767px) {
+            table.rtable, table.rtable > tbody { display: block; width: 100%; }
+            table.rtable thead { display: none; }
+            table.rtable > tbody > tr {
+                display: block;
+                padding: 0.85rem 1rem;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            /* Block cells: label stacks above the cell's own content, so rich cells
+               (multiple <p>/badges) render naturally instead of flattening into a row. */
+            table.rtable > tbody > tr > td {
+                display: block; padding: 0.3rem 0; border: none; text-align: left; width: auto;
+            }
+            table.rtable > tbody > tr > td[data-label]::before {
+                content: attr(data-label); display: block;
+                font-weight: 600; font-size: 0.65rem; letter-spacing: 0.04em;
+                text-transform: uppercase; color: #94a3b8; margin-bottom: 0.1rem;
+            }
+            table.rtable td.rt-primary { padding-bottom: 0.4rem; }
+            table.rtable td.rt-actions { padding-top: 0.65rem; }
+            table.rtable td:empty { display: none; }
+        }
     </style>
     {{-- Preline UI --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/preline@2/dist/preline.min.css">
@@ -569,12 +594,13 @@
         @endauth
     </aside>
 
-    {{-- Main area --}}
-    <div class="flex-1 lg:pl-64 flex flex-col min-h-screen">
+    {{-- Main area (min-w-0 lets this flex column shrink below content width so wide
+         tables scroll internally instead of forcing page-wide horizontal overflow) --}}
+    <div class="flex-1 min-w-0 lg:pl-64 flex flex-col min-h-screen">
 
         {{-- Top header --}}
         <header class="sticky top-0 z-20 bg-white" style="border-bottom: 1px solid #e2e8f0; box-shadow: 0 1px 4px rgba(15,23,42,0.06);">
-            <div class="flex items-center gap-3 px-4 py-4">
+            <div class="flex flex-wrap items-center gap-3 px-4 py-4">
 
                 {{-- Hamburger (mobile only) --}}
                 <button @click="mobileOpen = true"
@@ -592,7 +618,7 @@
                         <p class="text-sm font-medium text-slate-500 mt-0.5 truncate">@yield('subheader')</p>
                     @endif
                 </div>
-                <div class="flex items-center gap-2 flex-shrink-0">@yield('header-actions')</div>
+                <div class="flex items-center gap-2 flex-shrink-0 basis-full sm:basis-auto justify-end flex-wrap">@yield('header-actions')</div>
             </div>
         </header>
 

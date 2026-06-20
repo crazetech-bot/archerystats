@@ -59,7 +59,7 @@
         </div>
 
         {{-- Summary stats --}}
-        <div class="grid grid-cols-4 divide-x divide-gray-100">
+        <div class="grid grid-cols-2 sm:grid-cols-4 sm:divide-x divide-gray-100">
             @foreach([
                 ['Total Score', $score?->total_score ?? 0, 'text-indigo-700'],
                 ['10+X', $score?->gold_count ?? 0, 'text-amber-600'],
