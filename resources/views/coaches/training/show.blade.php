@@ -254,8 +254,30 @@
     </div>
     @endif
 
-    {{-- Attendance --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    {{-- Attendance roster marker --}}
+    @php
+        $attMarks = $clubArchers->mapWithKeys(fn($a) => [
+            $a->id => optional($attendanceMap->get($a->id))->status ?? '',
+        ]);
+        $statusMeta = [
+            'present' => ['Present', 'emerald'],
+            'late'    => ['Late',    'amber'],
+            'absent'  => ['Absent',  'rose'],
+            'excused' => ['Excused', 'slate'],
+        ];
+    @endphp
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
+         x-data="{
+             marks: {{ Js::from($attMarks) }},
+             set(id, s) { this.marks[id] = (this.marks[id] === s) ? '' : s; },
+             count(s)   { return Object.values(this.marks).filter(v => v === s).length; },
+             markAll(s) { Object.keys(this.marks).forEach(k => this.marks[k] = s); },
+             get marked() { return Object.values(this.marks).filter(v => v !== '').length; },
+             get rate()   {
+                 const a = this.count('present') + this.count('late');
+                 return this.marked ? Math.round(a / this.marked * 1000) / 10 : 0;
+             }
+         }">
         <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
              style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
             <span class="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
@@ -263,33 +285,65 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </span>
-            <div>
+            <div class="flex-1">
                 <h2 class="text-sm font-bold text-gray-900">Attendance</h2>
-                <p class="text-xs text-gray-500">{{ $training->archers->count() }} archer(s) attended</p>
+                <p class="text-xs text-gray-500">
+                    <span x-text="marked"></span> marked &middot;
+                    <span class="text-emerald-600 font-semibold"><span x-text="rate"></span>% attended</span>
+                </p>
             </div>
+            <button type="button" @click="markAll('present')"
+                    class="text-xs font-semibold text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors">
+                Mark all present
+            </button>
         </div>
 
-        @if($training->archers->isEmpty())
+        @if($clubArchers->isEmpty())
             <div class="px-6 py-10 text-center">
-                <p class="text-sm text-gray-400">No attendance recorded for this session.</p>
+                <p class="text-sm text-gray-400">No archers in this club yet.</p>
             </div>
         @else
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-6">
-                @foreach($training->archers as $archer)
-                <a href="{{ route('archers.show', $archer) }}"
-                   class="flex items-center gap-3 p-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 transition-colors">
+        <form method="POST" action="{{ route('attendance.store', [$coach, $training]) }}">
+            @csrf
+            <div class="divide-y divide-gray-100 max-h-[28rem] overflow-y-auto">
+                @foreach($clubArchers as $archer)
+                <div class="flex items-center gap-3 px-5 py-3">
                     <img src="{{ $archer->photo_url }}" alt="{{ $archer->full_name }}"
-                         class="h-10 w-10 rounded-xl object-cover flex-shrink-0">
+                         class="h-9 w-9 rounded-lg object-cover flex-shrink-0">
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-semibold text-gray-900 truncate">{{ $archer->full_name }}</p>
                         <p class="text-xs text-gray-400 font-mono">{{ $archer->ref_no }}</p>
                     </div>
-                    <svg class="h-4 w-4 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                    </svg>
-                </a>
+                    <input type="hidden" :name="marks[{{ $archer->id }}] ? 'status[{{ $archer->id }}]' : ''"
+                           :value="marks[{{ $archer->id }}]">
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        @foreach($statusMeta as $key => [$label, $color])
+                        <button type="button" @click="set({{ $archer->id }}, '{{ $key }}')"
+                                :class="marks[{{ $archer->id }}] === '{{ $key }}'
+                                    ? 'bg-{{ $color }}-500 text-white border-{{ $color }}-500'
+                                    : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'"
+                                class="text-xs font-semibold px-2.5 py-1 rounded-lg border transition-colors">
+                            {{ $label }}
+                        </button>
+                        @endforeach
+                    </div>
+                </div>
                 @endforeach
             </div>
+            <div class="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                <p class="text-xs text-gray-500">
+                    <span class="text-emerald-600 font-semibold" x-text="count('present')"></span> present,
+                    <span class="text-amber-600 font-semibold" x-text="count('late')"></span> late,
+                    <span class="text-rose-600 font-semibold" x-text="count('absent')"></span> absent,
+                    <span class="text-slate-600 font-semibold" x-text="count('excused')"></span> excused
+                </p>
+                <button type="submit"
+                        class="px-6 py-2.5 rounded-xl text-sm font-bold text-white shadow-md transition-all hover:opacity-90 active:scale-95"
+                        style="background: linear-gradient(135deg, #059669, #10b981);">
+                    Save Attendance
+                </button>
+            </div>
+        </form>
         @endif
     </div>
 

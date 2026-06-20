@@ -117,9 +117,14 @@ class TrainingSessionController extends Controller
             'eliminationMatches.archerA.user',
             'eliminationMatches.archerB.user',
             'eliminationMatches.winner',
+            'attendances',
         ]);
 
-        return view('coaches.training.show', compact('coach', 'training'));
+        // Attendance roster = the coach's club archers, with any saved status pre-filled.
+        $clubArchers   = $coach->clubArchers()->with('user')->orderBy('ref_no')->get();
+        $attendanceMap = $training->attendances->keyBy('archer_id');
+
+        return view('coaches.training.show', compact('coach', 'training', 'clubArchers', 'attendanceMap'));
     }
 
     public function edit(Coach $coach, TrainingSession $training): View

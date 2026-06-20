@@ -233,6 +233,14 @@
                         </svg>
                         Training Sessions
                     </a>
+                    <a href="{{ route('attendance.report') }}" @click="mobileOpen = false"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('attendance.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Attendance
+                    </a>
                     <a href="{{ route('coaches.club-results', auth()->user()->coach) }}" @click="mobileOpen = false"
                        class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
                               {{ request()->routeIs('coaches.club-results*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
@@ -433,6 +441,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
                         </svg>
                         Training Sessions
+                    </a>
+                    <a href="{{ route('attendance.report') }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('attendance.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Attendance
                     </a>
                     <a href="{{ route('coaches.club-results', auth()->user()->coach) }}"
                        class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all

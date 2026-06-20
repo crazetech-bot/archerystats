@@ -44,6 +44,27 @@ class TrainingSession extends Model
         return $this->hasMany(EliminationMatch::class);
     }
 
+    /** Attendance records for this session (present/late/absent/excused per archer). */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Attendance rate: percentage of marked archers who showed up (present or late).
+     * Null when nobody has been marked yet.
+     */
+    public function getAttendanceRateAttribute(): ?float
+    {
+        $marked = $this->attendances->count();
+        if ($marked === 0) {
+            return null;
+        }
+        $attended = $this->attendances->whereIn('status', ['present', 'late'])->count();
+
+        return round($attended / $marked * 100, 1);
+    }
+
     public function getDurationLabelAttribute(): string
     {
         if (!$this->duration_minutes) return '—';

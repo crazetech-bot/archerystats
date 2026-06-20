@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\ClubManagementController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\ArcherController;
+use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AttendanceReportController;
 use App\Http\Controllers\ArcherPerformanceController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
@@ -142,6 +144,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/coaches/{coach}/training/{training}/edit',      [TrainingSessionController::class, 'edit'])->name('coaches.training.edit');
         Route::put('/coaches/{coach}/training/{training}',           [TrainingSessionController::class, 'update'])->name('coaches.training.update');
         Route::delete('/coaches/{coach}/training/{training}',        [TrainingSessionController::class, 'destroy'])->name('coaches.training.destroy');
+
+        // Attendance: mark a session's roster + per-archer report
+        Route::post('/coaches/{coach}/training/{training}/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+        Route::get('/attendance/report',                              [AttendanceReportController::class, 'index'])->name('attendance.report');
 
         // Coach sub-modules: club archer results (read-only)
         Route::get('/coaches/{coach}/club-results',          [SessionController::class, 'coachView'])->name('coaches.club-results');
