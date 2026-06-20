@@ -94,6 +94,23 @@ class Coach extends Model
         return $this->hasMany(Archer::class, 'club_id', 'club_id');
     }
 
+    /**
+     * Every archer in the coach's club — whether linked by their primary `club_id`
+     * or via the `archer_clubs` pivot (multi-club archers). Returns a query builder.
+     * ClubScope is dropped so the scoping is explicitly this coach's club regardless
+     * of the current subdomain.
+     */
+    public function allClubArchers(): \Illuminate\Database\Eloquent\Builder
+    {
+        $clubId = $this->club_id;
+
+        return Archer::withoutGlobalScope(ClubScope::class)
+            ->where(function ($q) use ($clubId) {
+                $q->where('club_id', $clubId)
+                  ->orWhereHas('clubs', fn($c) => $c->where('clubs.id', $clubId));
+            });
+    }
+
     public function getAgeAttribute(): ?int
     {
         return $this->date_of_birth?->age;

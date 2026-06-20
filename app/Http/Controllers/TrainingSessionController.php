@@ -120,8 +120,9 @@ class TrainingSessionController extends Controller
             'attendances',
         ]);
 
-        // Attendance roster = the coach's club archers, with any saved status pre-filled.
-        $clubArchers   = $coach->clubArchers()->with('user')->orderBy('ref_no')->get();
+        // Attendance roster = every archer in the coach's club (primary club_id or via
+        // the archer_clubs pivot), with any saved status pre-filled.
+        $clubArchers   = $coach->allClubArchers()->with('user')->orderBy('ref_no')->get();
         $attendanceMap = $training->attendances->keyBy('archer_id');
 
         return view('coaches.training.show', compact('coach', 'training', 'clubArchers', 'attendanceMap'));

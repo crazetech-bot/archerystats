@@ -27,7 +27,7 @@ class AttendanceController extends Controller
             'status.*' => ['in:' . implode(',', Attendance::STATUSES)],
         ]);
 
-        $clubArcherIds = $coach->clubArchers()->pluck('id')->all();
+        $clubArcherIds = $coach->allClubArchers()->pluck('id')->all();
         $marked = 0;
 
         DB::transaction(function () use ($training, $validated, $clubArcherIds, &$marked) {
