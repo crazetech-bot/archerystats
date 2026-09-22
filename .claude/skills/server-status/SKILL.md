@@ -10,7 +10,7 @@ Check the health of the ArcheryStats production server at sportdns.com.
 
 ## Steps
 
-Use MCP SSH (`mcp__mcp-ssh__exec`) to run these checks:
+Use MCP SSH (`mcp__mcp-ssh__run-command`) to run these checks:
 
 1. **Laravel & PHP version**:
    ```

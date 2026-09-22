@@ -10,7 +10,7 @@ Clear all Laravel caches on sportdns.com using MCP SSH.
 
 ## Steps
 
-Use MCP SSH (`mcp__mcp-ssh__exec`) to run:
+Use MCP SSH (`mcp__mcp-ssh__run-command`) to run:
 
 ```
 cd /home/mfazil/public_html/laravel && php artisan cache:clear && php artisan config:clear && php artisan route:clear && php artisan view:cache

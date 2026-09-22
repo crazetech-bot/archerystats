@@ -45,12 +45,15 @@ Seed demo data: `php artisan db:seed`
 
 ## Deployment (cPanel — sportdns.com)
 - Installed via Softaculous — Laravel already set up on server
-- Remote path: `/home/mfazil/public_html/laravel`
-- Upload files: `scp -i "D:/claude project/.ssh/claudecode" -P 22 <file> mfazil@sportdns.com:<remote_path>`
-- SSH key: `D:/claude project/.ssh/claudecode` (no passphrase, ed25519)
-- MCP SSH: `ssh-mcp` configured in `~/.claude.json` for remote commands
+- Remote path: `/home/mfazil/public_html/laravel` — a git clone tracking `origin/main`
+- **Deploy = git, not scp.** Push `main`, then on the server: `git fetch origin main && git reset --hard origin/main` (use the `/deploy` skill — it dry-runs first and restores `.htaccess`)
+- Remote commands: MCP SSH `mcp__mcp-ssh__run-command` (profile `mcp-ssh`)
 - Composer on server: `php composer.phar` (not in PATH)
-- After upload: `php artisan view:clear && php artisan cache:clear && php artisan config:clear && php artisan route:clear`
+- After deploy: `php artisan migrate --force`, then `php artisan cache:clear && php artisan config:clear && php artisan route:clear && php artisan view:cache`
+- **Never `view:clear` on the live server** — it causes intermittent 500s; `view:cache` last, always
+- `public/.htaccess` on the server carries a cPanel `ea-php83` handler block that is not in git (skip-worktree, backup at `/home/mfazil/htaccess.cpanel.bak`) — restore it after any reset
+- Never `git clean` on the server: `composer.phar`, `docs/`, `cache/`, `error_log` are untracked and must stay
+- Never edit files directly on the server; hotfixes go commit → push → deploy
 - `DB_HOST` must be `127.0.0.1` in `.env`
 - Photos stored in `storage/app/public/archers/` — served via `storage:link`
 
