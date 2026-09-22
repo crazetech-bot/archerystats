@@ -458,6 +458,125 @@
             </div>
             @endif
 
+            {{-- My Clubs --}}
+            @php
+                $memberClubs     = $archer->clubs()->get();
+                $isSelfArcher    = auth()->user()->id === $archer->user_id;
+                $canManageClubs  = $isSelfArcher || auth()->user()->isClubAdmin();
+                $pendingTransfer = \App\Models\ClubTransferRequest::where('archer_id', $archer->id)
+                    ->where('status', 'pending')->where('expires_at', '>', now())
+                    ->with('toClub')->first();
+                $transferTargets = $isSelfArcher && ! $pendingTransfer
+                    ? \App\Models\Club::where('active', true)
+                        ->whereNotIn('id', $memberClubs->pluck('id'))->orderBy('name')->get()
+                    : collect();
+            @endphp
+            @if($memberClubs->isNotEmpty() || $pendingTransfer)
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border: 1px solid #e2e8f0;"
+                 x-data="{ transferring: false }">
+                <div class="flex items-center gap-3 px-5 py-4" style="background:#0f172a; border-bottom:3px solid #f59e0b;">
+                    <svg class="h-5 w-5 flex-shrink-0" style="color:#fbbf24;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75"/>
+                    </svg>
+                    <h3 class="text-sm font-black text-white uppercase tracking-widest" style="font-family:'Barlow',sans-serif;">
+                        Clubs
+                    </h3>
+                    <span class="ml-auto text-xs font-bold px-2 py-0.5 rounded-lg"
+                          style="background:rgba(245,158,11,0.2); color:#fbbf24;">
+                        {{ $memberClubs->count() }}
+                    </span>
+                </div>
+                <div class="divide-y divide-slate-100">
+                    @foreach($memberClubs as $mc)
+                    <div class="flex flex-wrap items-center gap-3 px-5 py-3.5">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-slate-800 truncate">{{ $mc->name }}</p>
+                            <p class="text-xs text-slate-400">
+                                @if($mc->pivot->joined_at) Joined {{ \Illuminate\Support\Carbon::parse($mc->pivot->joined_at)->format('d M Y') }} @endif
+                            </p>
+                        </div>
+                        @if($mc->pivot->primary_club)
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-lg flex-shrink-0"
+                                  style="background:rgba(245,158,11,0.15); color:#b45309;">Primary</span>
+                        @elseif($canManageClubs)
+                            <form method="POST" action="{{ route('archers.clubs.primary', [$archer, $mc]) }}" class="flex-shrink-0">
+                                @csrf
+                                <button type="submit"
+                                        class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition">
+                                    Set Primary
+                                </button>
+                            </form>
+                        @endif
+                        @if($canManageClubs && !($mc->pivot->primary_club && $memberClubs->count() <= 1))
+                            <form method="POST" action="{{ route('archers.clubs.leave', [$archer, $mc]) }}" class="flex-shrink-0"
+                                  onsubmit="return confirm('Leave {{ addslashes($mc->name) }}?') && confirm('Final confirmation — leave this club?')">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                        class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition">
+                                    Leave
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                    @endforeach
+
+                    {{-- Transfer request status / form (archer themself only) --}}
+                    @if($pendingTransfer)
+                    <div class="px-5 py-3.5 flex flex-wrap items-center gap-3" style="background:#f8fafc;">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-slate-600">
+                                Transfer to {{ $pendingTransfer->toClub->name }} pending approval
+                            </p>
+                            <p class="text-xs text-slate-400">Expires {{ $pendingTransfer->expires_at->format('d M Y') }}</p>
+                        </div>
+                        @if($isSelfArcher || auth()->user()->isClubAdmin())
+                        <form method="POST" action="{{ route('transfer-requests.cancel', $pendingTransfer) }}"
+                              onsubmit="return confirm('Cancel this transfer request?')">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                    class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition">
+                                Cancel Request
+                            </button>
+                        </form>
+                        @endif
+                    </div>
+                    @elseif($isSelfArcher && $transferTargets->isNotEmpty())
+                    <div class="px-5 py-3.5" style="background:#f8fafc;">
+                        <button type="button" x-show="!transferring" @click="transferring = true"
+                                class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition">
+                            Request transfer to another club →
+                        </button>
+                        <form x-show="transferring" x-cloak method="POST"
+                              action="{{ route('archers.transfer-request', $archer) }}"
+                              class="flex flex-wrap items-end gap-2"
+                              onsubmit="return confirm('Send this transfer request? The receiving club must approve it.')">
+                            @csrf
+                            <div class="flex-1 min-w-48">
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Transfer primary membership to</label>
+                                <select name="to_club_id" required
+                                        class="block w-full rounded-xl border border-slate-200 bg-white text-sm py-2 px-3 outline-none focus:border-indigo-400">
+                                    <option value="">— choose club —</option>
+                                    @foreach($transferTargets as $tc)
+                                        <option value="{{ $tc->id }}">{{ $tc->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button type="submit"
+                                    class="text-xs font-bold px-3 py-2 rounded-xl text-white transition hover:opacity-90"
+                                    style="background:linear-gradient(135deg,#4338ca,#6366f1);">
+                                Send Request
+                            </button>
+                            <button type="button" @click="transferring = false"
+                                    class="text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition">
+                                Cancel
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @endif
+
             {{-- Coach Assignments --}}
             @php
                 $pendingAssigned = $archer->sessions()

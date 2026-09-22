@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\CoachArcherInvitationMail;
 use App\Models\Archer;
 use App\Models\Club;
 use App\Models\Coach;
+use App\Models\CoachArcherInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CoachArcherController extends Controller
@@ -58,10 +63,15 @@ class CoachArcherController extends Controller
         $states              = Archer::MALAYSIAN_STATES;
         $nationalTeamOptions = array_filter(Archer::NATIONAL_TEAM_OPTIONS, fn ($o) => $o !== 'No');
 
+        $pendingInvitations = CoachArcherInvitation::where('coach_id', $coach->id)
+            ->where('status', 'pending')->where('expires_at', '>', now())
+            ->with('archer.user')
+            ->orderByDesc('created_at')->get();
+
         return view('coaches.archers.index', compact(
             'coach', 'available', 'isNationalTeamContext',
             'assignedArchers', 'totalAssigned',
-            'clubs', 'states', 'nationalTeamOptions'
+            'clubs', 'states', 'nationalTeamOptions', 'pendingInvitations'
         ));
     }
 
@@ -90,6 +100,59 @@ class CoachArcherController extends Controller
         $coach->archers()->syncWithoutDetaching([$archer->id]);
 
         return back()->with('success', "Archer {$archer->ref_no} assigned to coach.");
+    }
+
+    /** Send an assignment invitation instead of assigning directly. */
+    public function invite(Coach $coach, Request $request): RedirectResponse
+    {
+        $request->validate([
+            'archer_id' => ['required', 'exists:archers,id'],
+        ]);
+
+        $archer = Archer::findOrFail($request->archer_id);
+
+        if ($coach->archers()->where('archers.id', $archer->id)->exists()) {
+            return back()->withErrors(['archer_id' => 'This archer is already assigned to this coach.']);
+        }
+
+        $userRole = auth()->user()->role;
+        $isNationalTeamContext = $userRole === 'national_team'
+            || ($userRole === 'coach' && $coach->national_team);
+
+        if ($isNationalTeamContext && (empty($archer->national_team) || $archer->national_team === 'No')) {
+            return back()->withErrors(['archer_id' => 'Only archers with a national team status can be invited here.']);
+        }
+
+        $email = $archer->user?->email;
+        if (! $email) {
+            return back()->withErrors(['archer_id' => 'This archer has no login account to email — use direct assign instead.']);
+        }
+
+        // Unique (coach_id, archer_id): re-invite resets the row after a decline/expiry.
+        $existing = CoachArcherInvitation::where('coach_id', $coach->id)
+            ->where('archer_id', $archer->id)->first();
+
+        if ($existing && $existing->isPending()) {
+            return back()->withErrors(['archer_id' => 'An invitation to this archer is already pending.']);
+        }
+
+        $invitation = CoachArcherInvitation::updateOrCreate(
+            ['coach_id' => $coach->id, 'archer_id' => $archer->id],
+            [
+                'token'        => Str::random(64),
+                'status'       => 'pending',
+                'responded_at' => null,
+                'expires_at'   => now()->addDays(7),
+            ]
+        );
+
+        try {
+            Mail::to($email)->send(new CoachArcherInvitationMail($invitation));
+        } catch (\Throwable $e) {
+            Log::error('Failed to send coach-archer invitation email: ' . $e->getMessage());
+        }
+
+        return back()->with('success', "Invitation sent to archer {$archer->ref_no}.");
     }
 
     public function destroy(Coach $coach, Archer $archer): RedirectResponse

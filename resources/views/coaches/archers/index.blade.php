@@ -44,11 +44,11 @@
             @if($isNationalTeamContext)
                 Only archers with a national team status (Podium, Pelapis Kebangsaan, PARA) are shown.
             @endif
-            Selected archer will be assigned immediately.
+            "Assign Now" adds them immediately; "Send Invitation" emails the archer to accept or decline first.
         </p>
-        <form method="POST" action="{{ route('coaches.archers.store', $coach) }}" class="flex items-end gap-3">
+        <form method="POST" action="{{ route('coaches.archers.store', $coach) }}" class="flex flex-wrap items-end gap-3">
             @csrf
-            <div class="flex-1">
+            <div class="flex-1 min-w-56">
                 <label for="archer_id" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Select Archer</label>
                 <select id="archer_id" name="archer_id"
                         class="block w-full rounded-xl border border-gray-300 bg-gray-50 text-sm py-2.5 px-4
@@ -70,9 +70,36 @@
             <button type="submit"
                     class="px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-md transition-all hover:opacity-90 flex-shrink-0"
                     style="background: linear-gradient(135deg, #0d9488, #14b8a6);">
-                Assign
+                Assign Now
+            </button>
+            <button type="submit" formaction="{{ route('coaches.archers.invite', $coach) }}"
+                    class="px-5 py-2.5 rounded-xl text-sm font-bold border border-teal-300 text-teal-700 bg-teal-50 hover:bg-teal-100 transition-all flex-shrink-0">
+                Send Invitation
             </button>
         </form>
+
+        {{-- Pending invitations --}}
+        @if(($pendingInvitations ?? collect())->isNotEmpty())
+        <div class="mt-5 border-t border-gray-100 pt-4">
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pending Invitations</p>
+            <div class="space-y-2">
+                @foreach($pendingInvitations as $inv)
+                <div class="flex items-center gap-3 text-sm">
+                    <span class="h-2 w-2 rounded-full bg-amber-400 flex-shrink-0"></span>
+                    <span class="font-semibold text-gray-800">{{ $inv->archer?->user?->name ?? $inv->archer?->ref_no ?? 'Archer' }}</span>
+                    <span class="text-xs text-gray-400">expires {{ $inv->expires_at->format('d M Y') }}</span>
+                    <form method="POST" action="{{ route('coach-archer-invitations.cancel', $inv) }}" class="ml-auto"
+                          onsubmit="return confirm('Cancel this invitation?')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition">
+                            Cancel
+                        </button>
+                    </form>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
     @endif
 

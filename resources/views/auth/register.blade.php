@@ -194,6 +194,23 @@
                 </div>
                 @endif
 
+                {{-- Club invitation banner --}}
+                @if(($invite ?? null))
+                <div class="mb-5 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 fade-2">
+                    <div class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-700 font-bold text-sm">
+                        {{ strtoupper(substr($invite->club->name, 0, 2)) }}
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-emerald-800">
+                            You've been invited to join {{ $invite->club->name }}
+                        </p>
+                        <p class="text-xs text-emerald-600">
+                            Registering as {{ ucfirst($invite->invitable_type) }} · {{ $invite->email }}
+                        </p>
+                    </div>
+                </div>
+                @endif
+
                 {{-- Errors --}}
                 @if($errors->any())
                     <div class="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 fade-2">
@@ -209,12 +226,16 @@
                 @endif
 
                 <form method="POST" action="{{ route('register') }}" class="space-y-5"
+                      @if(($invite ?? null)) x-init="role = '{{ $invite->invitable_type }}'" @endif
                       @submit.prevent="
                           const suspMap = { archer: {{ $regOpen['archer'] ? 'true' : 'false' }}, coach: {{ $regOpen['coach'] ? 'true' : 'false' }}, club_admin: {{ $regOpen['club'] ? 'true' : 'false' }} };
                           if (role && !suspMap[role]) return;
                           if (role === 'club_admin' && isDuplicate) return;
                           $el.submit()">
                     @csrf
+                    @if(($invite ?? null))
+                        <input type="hidden" name="invite_token" value="{{ $invite->token }}">
+                    @endif
 
                     {{-- Role selector --}}
                     <div class="fade-2">
@@ -370,7 +391,8 @@
                     <div class="fade-3">
                         <label for="email" class="block text-sm font-bold text-slate-700 mb-1.5">Email Address <span class="text-red-500">*</span></label>
                         <input type="email" id="email" name="email"
-                               value="{{ old('email') }}" required
+                               value="{{ old('email', ($invite ?? null) ? $invite->email : '') }}" required
+                               @if(($invite ?? null)) readonly @endif
                                placeholder="you@example.com"
                                class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm
                                       text-slate-900 placeholder-slate-400 transition

@@ -41,14 +41,17 @@ class AdminUserController extends Controller
             }
         }
 
-        User::create([
-            'name'              => $request->name,
-            'email'             => $request->email,
-            'password'          => Hash::make($request->password),
-            'role'              => $request->role,
-            'club_id'           => $clubId,
-            'email_verified_at' => now(),
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role'     => $request->role,
+            'club_id'  => $clubId,
         ]);
+
+        // Admin-created accounts are pre-verified. (email_verified_at is not
+        // mass-assignable, so it must be set explicitly after create.)
+        $user->markEmailAsVerified();
 
         return redirect()->route('admin.settings')->with('success', 'Admin user created successfully.');
     }

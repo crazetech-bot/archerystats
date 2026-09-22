@@ -13,10 +13,14 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\ClubInvitationController;
 use App\Http\Controllers\CoachArcherController;
 use App\Http\Controllers\CoachArcherInvitationController;
 use App\Http\Controllers\CoachController;
 use App\Http\Controllers\EliminationMatchController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\LiveScoringRealtimeController;
 use App\Http\Controllers\ClubLandingController;
@@ -63,9 +67,16 @@ Route::get('/', function () {
     return redirect()->route('archers.index');
 })->name('club.landing');
 
+// User manual — public, SEO-facing (guest CTA + role-tabbed guides)
+Route::get('/manual', fn () => view('manual.index'))->name('manual.index');
+
 // Coach-archer invitation responses (no auth required — token-based)
 Route::get('/coach-archer-invitations/{token}/accept',  [CoachArcherInvitationController::class, 'accept'])->name('coach-archer-invitations.accept');
 Route::get('/coach-archer-invitations/{token}/decline', [CoachArcherInvitationController::class, 'decline'])->name('coach-archer-invitations.decline');
+
+// Club membership invitation responses (no auth required — token-based)
+Route::get('/club-invitations/{token}/accept',  [ClubInvitationController::class, 'accept'])->name('club-invitations.accept');
+Route::get('/club-invitations/{token}/decline', [ClubInvitationController::class, 'decline'])->name('club-invitations.decline');
 
 // Protected routes
 Route::middleware(['auth'])->group(function () {
@@ -133,6 +144,7 @@ Route::middleware(['auth'])->group(function () {
         // Coach sub-modules: assigned archers
         Route::get('/coaches/{coach}/archers',                          [CoachArcherController::class, 'index'])->name('coaches.archers.index');
         Route::post('/coaches/{coach}/archers',                         [CoachArcherController::class, 'store'])->name('coaches.archers.store');
+        Route::post('/coaches/{coach}/archers/invite',                  [CoachArcherController::class, 'invite'])->name('coaches.archers.invite');
         Route::delete('/coaches/{coach}/archers/{archer}',              [CoachArcherController::class, 'destroy'])->name('coaches.archers.destroy');
         Route::delete('/coach-archer-invitations/{invitation}/cancel',  [CoachArcherInvitationController::class, 'cancel'])->name('coach-archer-invitations.cancel');
 
@@ -197,6 +209,53 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:super_admin,club_admin'])->group(function () {
         Route::get('/settings/club-page',  [SettingController::class, 'clubPage'])->name('settings.club-page');
         Route::post('/settings/club-page', [SettingController::class, 'updateClubPage'])->name('settings.club-page.update');
+    });
+
+    // Club events & RSVP (calendar for everyone; organising for admins & coaches)
+    Route::middleware(['role:super_admin,club_admin,coach,archer'])->group(function () {
+        Route::get('/events', [EventController::class, 'index'])->name('events.index');
+        Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+        Route::post('/events/{event}/rsvp', [EventController::class, 'rsvp'])->name('events.rsvp');
+    });
+    Route::middleware(['role:super_admin,club_admin,coach'])->group(function () {
+        Route::post('/events', [EventController::class, 'store'])->name('events.store');
+        Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
+        Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
+        Route::post('/events/{event}/pin', [EventController::class, 'togglePin'])->name('events.pin');
+        Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+    });
+
+    // Club announcements (feed for everyone; posting for admins & coaches)
+    Route::middleware(['role:super_admin,club_admin,coach,archer'])->group(function () {
+        Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+    });
+    Route::middleware(['role:super_admin,club_admin,coach'])->group(function () {
+        Route::post('/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::post('/announcements/{announcement}/pin', [AnnouncementController::class, 'togglePin'])->name('announcements.pin');
+        Route::delete('/announcements/{announcement}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
+    });
+
+    // Club membership management (club admins)
+    Route::middleware(['role:super_admin,club_admin'])->group(function () {
+        Route::get('/members',                                   [MembershipController::class, 'index'])->name('members.index');
+        Route::post('/members/invite',                           [ClubInvitationController::class, 'store'])->name('members.invite');
+        Route::post('/members/invitations/{invitation}/resend',  [ClubInvitationController::class, 'resend'])->name('members.invitations.resend');
+        Route::delete('/members/invitations/{invitation}',       [ClubInvitationController::class, 'cancel'])->name('members.invitations.cancel');
+        Route::post('/members/transfers/{transferRequest}/approve', [MembershipController::class, 'approveTransfer'])->name('members.transfers.approve');
+        Route::post('/members/transfers/{transferRequest}/decline', [MembershipController::class, 'declineTransfer'])->name('members.transfers.decline');
+        Route::delete('/members/{type}/{id}',                    [MembershipController::class, 'removeMember'])->name('members.remove');
+    });
+
+    // My Clubs actions (self-service; controller enforces self-or-admin)
+    Route::middleware(['role:super_admin,club_admin,archer'])->group(function () {
+        Route::post('/archers/{archer}/clubs/{club}/primary', [MembershipController::class, 'setPrimaryArcher'])->name('archers.clubs.primary');
+        Route::delete('/archers/{archer}/clubs/{club}',       [MembershipController::class, 'leaveArcher'])->name('archers.clubs.leave');
+        Route::post('/archers/{archer}/transfer-request',     [MembershipController::class, 'requestTransfer'])->name('archers.transfer-request');
+        Route::delete('/transfer-requests/{transferRequest}', [MembershipController::class, 'cancelTransfer'])->name('transfer-requests.cancel');
+    });
+    Route::middleware(['role:super_admin,club_admin,coach'])->group(function () {
+        Route::post('/coaches/{coach}/clubs/{club}/primary', [MembershipController::class, 'setPrimaryCoach'])->name('coaches.clubs.primary');
+        Route::delete('/coaches/{coach}/clubs/{club}',       [MembershipController::class, 'leaveCoach'])->name('coaches.clubs.leave');
     });
 
     // Super admin only — root domain access enforced by root.domain middleware

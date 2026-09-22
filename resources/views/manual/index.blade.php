@@ -198,6 +198,45 @@
             ],
         ])
 
+        @include('manual._section', [
+            'number' => '7',
+            'title'  => 'My Clubs & Transfers',
+            'color'  => 'indigo',
+            'steps'  => [
+                'The <strong>Clubs</strong> card on your profile lists every club you belong to, with a <strong>Primary</strong> badge on your main club.',
+                'You can belong to more than one club. To join another club: register on that club\'s subdomain with your existing email and password, or accept an email <strong>invitation</strong> sent by the club.',
+                'Use <strong>Set Primary</strong> to change which club is your main club, and <strong>Leave</strong> to exit a club (you cannot leave your only club).',
+                'To move your primary membership to a club you are not in yet, click <strong>Request transfer to another club</strong>, choose the club, and send the request.',
+                'The receiving club\'s admin approves or declines. On approval, the new club becomes your primary and your old club stays as secondary. You are notified by email either way.',
+                'You can register without any club at all — join one later using any of the methods above.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '8',
+            'title'  => 'Announcements',
+            'color'  => 'indigo',
+            'steps'  => [
+                'Click <strong>Announcements</strong> in the sidebar to read news from your club(s) and your coach.',
+                'You only see announcements addressed to you — club-wide posts, archer-only posts, and notices from coaches you are assigned to.',
+                'Unread posts show a <strong>New</strong> badge. Opening the feed marks them as read.',
+                'Important posts are <strong>pinned</strong> — they appear as an amber banner at the top of every page until you have read them.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '9',
+            'title'  => 'Events & RSVP',
+            'color'  => 'indigo',
+            'steps'  => [
+                'Click <strong>Events</strong> in the sidebar to see your club\'s calendar — a month grid plus an <strong>Upcoming</strong> list.',
+                'Your training sessions and elimination matches also appear on the calendar as markers (🎯 training, ⚔️ match) alongside club events.',
+                'Open an event to see the full details, then set your <strong>RSVP</strong>: <strong>Going</strong>, <strong>Maybe</strong>, or <strong>Not going</strong>. You can change your answer anytime.',
+                'You can RSVP straight from the Upcoming list too, using the quick buttons on the right of each event.',
+                'A <strong>pinned</strong> upcoming event shows as a banner on every page until you RSVP — so you never miss an important date.',
+            ],
+        ])
+
     </div>
 
     {{-- ─────────────────── COACH MANUAL ─────────────────── --}}
@@ -269,6 +308,43 @@
             ],
         ])
 
+        @include('manual._section', [
+            'number' => '6',
+            'title'  => 'Inviting Archers (Assignment Requests)',
+            'color'  => 'teal',
+            'steps'  => [
+                'On your <strong>Assigned Archers</strong> page, pick an archer from the dropdown.',
+                'Click <strong>Assign Now</strong> to add them immediately, or <strong>Send Invitation</strong> to email them an assignment request they can accept or decline.',
+                'Pending invitations are listed below the form with their expiry date — click <strong>Cancel</strong> to withdraw one.',
+                'When the archer clicks <strong>Accept</strong> in the email, they are added to your roster automatically.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '7',
+            'title'  => 'Announcements to Your Archers',
+            'color'  => 'teal',
+            'steps'  => [
+                'Click <strong>Announcements</strong> in the sidebar. As a coach, your posts go to <strong>your assigned archers</strong>.',
+                'Write a title and message, then tick <strong>Also email this announcement</strong> to send it to their inboxes as well.',
+                'Use <strong>Pin</strong> on an important post — it appears as a banner on every page for your archers until they read it.',
+                'The <strong>Seen by N</strong> counter shows how many have read each post. You can delete or unpin your own posts anytime.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '8',
+            'title'  => 'Events for Your Squad',
+            'color'  => 'teal',
+            'steps'  => [
+                'Click <strong>Events</strong> in the sidebar, then open the <strong>Create Event</strong> panel. Your events go to <strong>your assigned archers</strong>.',
+                'Set a title, type (Training / Competition / Meeting / Social), start and end time, location, and details.',
+                'Tick <strong>Email the audience</strong> to send it to their inboxes, and <strong>Pin to dashboard</strong> to banner it until they RSVP.',
+                'Open any event to see who is <strong>Going / Maybe / Not going</strong>, and use <strong>Edit</strong> to reschedule.',
+                'Your squad\'s training sessions and matches also appear on the calendar automatically as read-only markers.',
+            ],
+        ])
+
     </div>
 
     {{-- ─────────────────── CLUB ADMIN MANUAL ─────────────────── --}}
@@ -297,10 +373,10 @@
             'title'  => 'Managing Archers',
             'color'  => 'indigo',
             'steps'  => [
-                'Click <strong>Archers</strong> in the sidebar to see all archers in the system.',
+                'Click <strong>Archers</strong> in the sidebar to see all archers in your club.',
                 'Click <strong>New Archer</strong> to register a new archer. Fill in their personal details, divisions, equipment, and classification.',
-                'To invite an existing archer to your club, open their profile and use the <strong>Invite to Club</strong> button. They will receive an email to accept.',
-                'To remove an archer from your club, go to <strong>My Club → Members</strong> and click <strong>Remove</strong> next to the archer.',
+                'To invite an archer to your club by email, go to <strong>Members</strong> in the sidebar and use the <strong>Invite a Member</strong> form (works for existing users and people without an account).',
+                'To remove an archer from your club, use the <strong>Remove</strong> button on the <strong>Members</strong> page.',
                 'To edit an archer\'s profile, open their profile and click <strong>Edit</strong>.',
             ],
         ])
@@ -312,21 +388,23 @@
             'steps'  => [
                 'Click <strong>Coaches</strong> in the sidebar to view all coaches.',
                 'Click <strong>New Coach</strong> to register a new coach. Fill in their details and coaching level.',
-                'To invite an existing coach to your club, open their profile and use the <strong>Invite to Club</strong> button.',
-                'To assign a coach to an archer, go to the archer\'s profile and use the <strong>Assign Coach</strong> section.',
-                'To remove a coach from your club, go to <strong>My Club → Members</strong> and click <strong>Remove</strong>.',
+                'To invite a coach to your club by email, use the <strong>Invite a Member</strong> form on the <strong>Members</strong> page and choose the <strong>Coach</strong> role.',
+                'To assign archers to a coach, open the coach\'s <strong>Assigned Archers</strong> page — assign instantly, or send an invitation the archer must accept.',
+                'To remove a coach from your club, use the <strong>Remove</strong> button on the <strong>Members</strong> page.',
             ],
         ])
 
         @include('manual._section', [
             'number' => '4',
-            'title'  => 'My Club',
+            'title'  => 'Members, Invitations & Transfers',
             'color'  => 'indigo',
             'steps'  => [
-                'Click <strong>My Club</strong> in the sidebar to view your club details and member list.',
-                'The <strong>Members</strong> tab shows all current archers and coaches in your club.',
-                'Pending invitations are listed separately — you can cancel them if needed.',
-                'Click <strong>Edit Club</strong> to update your club name, location, and other details.',
+                'Click <strong>Members</strong> in the sidebar to open your club\'s membership hub.',
+                'The roster lists every archer and coach with a <strong>Primary</strong> or <strong>Secondary</strong> badge and their join date. Use <strong>Remove</strong> to detach a member (their account is kept).',
+                '<strong>Invite a Member</strong>: enter an email and choose Archer or Coach. Existing users get an accept/decline link; people without an account get a sign-up link that joins them to your club automatically.',
+                'The <strong>Invitations</strong> list shows every invite with its status (Pending / Accepted / Declined / Expired) — you can <strong>Resend</strong> or <strong>Cancel</strong>.',
+                '<strong>Incoming Transfer Requests</strong> appear when an archer asks to make your club their primary club. Click <strong>Approve</strong> (their primary moves to you; their old club becomes secondary) or <strong>Decline</strong>. The archer is emailed either way.',
+                'To edit your club\'s public page and details, use <strong>Club Page</strong> in the sidebar.',
             ],
         ])
 
@@ -384,6 +462,34 @@
                 'Archers are ranked by total score, with X count and 10+X count used as tiebreakers.',
                 'The scoreboard auto-refreshes at the selected interval — choose between 15 seconds and 5 minutes using the <strong>Refresh</strong> dropdown.',
                 'Use the <strong>Date</strong> picker at the top to view a different day\'s scoreboard.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '9',
+            'title'  => 'Announcements',
+            'color'  => 'indigo',
+            'steps'  => [
+                'Click <strong>Announcements</strong> in the sidebar to post news to your club.',
+                'Choose the audience per post: <strong>Everyone</strong>, <strong>Archers only</strong>, or <strong>Coaches only</strong>.',
+                'Tick <strong>Also email this announcement</strong> to send it to the audience\'s inboxes as well — the post shows an <strong>Emailed to N</strong> badge afterwards.',
+                'Use <strong>Pin</strong> for important notices — pinned posts sort first and appear as an amber banner on every page for targeted members until they read them.',
+                'The <strong>Seen by N</strong> counter is your read receipt. Members see a <strong>New</strong> badge on unread posts.',
+                'Use <strong>Delete</strong> (double-confirmed) to remove a post for everyone.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '10',
+            'title'  => 'Events & RSVP',
+            'color'  => 'indigo',
+            'steps'  => [
+                'Click <strong>Events</strong> in the sidebar to open your club calendar (month grid + Upcoming list). Existing training sessions and matches show automatically as read-only markers.',
+                'Use <strong>Create Event</strong> to add an event: title, type, start/end time, location, and details.',
+                'Choose the audience: <strong>Everyone</strong>, <strong>Archers only</strong>, or <strong>Coaches only</strong>.',
+                'Optionally <strong>Email the audience</strong> and <strong>Pin to dashboard</strong> — pinned events banner on every page for members until they RSVP.',
+                'Members RSVP <strong>Going / Maybe / Not going</strong>. Open an event to see live counts and the attendee lists, or click <strong>Edit</strong> to change the time or details.',
+                'Delete (double-confirmed) removes the event and all its RSVPs.',
             ],
         ])
 
@@ -605,6 +711,20 @@
                 'Filters can be combined freely. Clear a filter by selecting the blank option.',
                 'The scoreboard auto-refreshes at the selected interval. Use the <strong>Date</strong> picker to view any day\'s scoreboard.',
                 'Distance columns are split into 36-arrow blocks — a 72-arrow round shows two columns, a 144-arrow round shows four.',
+            ],
+        ])
+
+        @include('manual._section', [
+            'number' => '10',
+            'title'  => 'Membership & Communication',
+            'color'  => 'rose',
+            'steps'  => [
+                'The <strong>Members</strong> page (sidebar) gives you the same membership hub as a club admin: roster, email invitations, and transfer approvals — scoped to the club you are working in.',
+                'Registration policy lives in <strong>Settings</strong>: open/close registration per role, set the unverified-account expiry (default 7 days), and choose Manual or Automatic <strong>club activation</strong>.',
+                'Self-registered accounts must <strong>verify their email</strong> before they can log in; unverified accounts are pruned automatically after the expiry window. Accounts you create in the admin panel are pre-verified.',
+                'Email invitations bypass the registration open/closed toggles — they are explicit admissions.',
+                '<strong>Announcements</strong> work club-wide with audience targeting, optional email blast, pinning (banner until read), and Seen-by read receipts.',
+                '<strong>Events</strong> (sidebar) give each club a calendar with RSVP (Going / Maybe / Not going), optional email, and pinned dashboard banners — existing training sessions and matches appear on it automatically.',
             ],
         ])
 

@@ -153,6 +153,51 @@
             </div>
             @endif
 
+            {{-- My Clubs --}}
+            @php
+                $memberClubs    = $coach->clubs()->get();
+                $canManageClubs = auth()->user()->id === $coach->user_id || auth()->user()->isClubAdmin();
+            @endphp
+            @if($memberClubs->isNotEmpty())
+            <div class="bg-white rounded-2xl shadow-sm p-6" style="border: 1px solid #e2e8f0;">
+                <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-3" style="font-family:'Barlow',sans-serif;">Clubs</h3>
+                <div class="space-y-3">
+                    @foreach($memberClubs as $mc)
+                    <div class="flex flex-wrap items-center gap-2">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-slate-800 truncate">{{ $mc->name }}</p>
+                            @if($mc->pivot->joined_at)
+                                <p class="text-xs text-slate-400">Joined {{ \Illuminate\Support\Carbon::parse($mc->pivot->joined_at)->format('d M Y') }}</p>
+                            @endif
+                        </div>
+                        @if($mc->pivot->primary_club)
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-lg flex-shrink-0"
+                                  style="background:rgba(245,158,11,0.15); color:#b45309;">Primary</span>
+                        @elseif($canManageClubs)
+                            <form method="POST" action="{{ route('coaches.clubs.primary', [$coach, $mc]) }}" class="flex-shrink-0">
+                                @csrf
+                                <button type="submit"
+                                        class="text-xs font-semibold px-2 py-1 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition">
+                                    Set Primary
+                                </button>
+                            </form>
+                        @endif
+                        @if($canManageClubs && !($mc->pivot->primary_club && $memberClubs->count() <= 1))
+                            <form method="POST" action="{{ route('coaches.clubs.leave', [$coach, $mc]) }}" class="flex-shrink-0"
+                                  onsubmit="return confirm('Leave {{ addslashes($mc->name) }}?') && confirm('Final confirmation — leave this club?')">
+                                @csrf @method('DELETE')
+                                <button type="submit"
+                                        class="text-xs font-semibold px-2 py-1 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 transition">
+                                    Leave
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
         </div>
     </div>
 

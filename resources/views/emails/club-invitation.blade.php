@@ -58,14 +58,20 @@
 
             @if($currentClub && $currentClub->id !== $invitation->club_id)
             <div class="notice">
-                <p>⚠️ <strong>Note:</strong> You are currently a member of <strong>{{ $currentClub->name }}</strong>. Accepting this invitation will transfer your membership to {{ $invitation->club->name }}.</p>
+                <p>ℹ️ <strong>Note:</strong> You are currently a member of <strong>{{ $currentClub->name }}</strong>. Accepting adds {{ $invitation->club->name }} as an additional club — your current membership is unchanged.</p>
+            </div>
+            @endif
+
+            @if(! $invitation->invitable_id)
+            <div class="notice">
+                <p>✨ You don't have an Archery Stats account yet — accepting will take you to a short sign-up that joins you to {{ $invitation->club->name }} automatically.</p>
             </div>
             @endif
 
             <p>Please click one of the buttons below to respond to this invitation:</p>
 
             <div class="buttons">
-                <a href="{{ $acceptUrl }}" class="btn-accept">✓ Accept Invitation</a>
+                <a href="{{ $acceptUrl }}" class="btn-accept">✓ {{ $invitation->invitable_id ? 'Accept Invitation' : 'Accept & Create Account' }}</a>
                 <a href="{{ $declineUrl }}" class="btn-decline">✕ Decline</a>
             </div>
 

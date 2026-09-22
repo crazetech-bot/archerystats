@@ -233,6 +233,22 @@
                         </svg>
                         Performance
                     </a>
+                    <a href="{{ route('events.index') }}" @click="mobileOpen = false"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('events.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                        </svg>
+                        Events
+                    </a>
+                    <a href="{{ route('announcements.index') }}" @click="mobileOpen = false"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('announcements.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73"/>
+                        </svg>
+                        Announcements
+                    </a>
                 @elseif(auth()->user()->role === 'coach' && auth()->user()->coach)
                     {{-- Coach: full coach module nav --}}
                     <a href="{{ route('coaches.show', auth()->user()->coach) }}" @click="mobileOpen = false"
@@ -283,6 +299,22 @@
                         </svg>
                         Elimination Matches
                     </a>
+                    <a href="{{ route('events.index') }}" @click="mobileOpen = false"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('events.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                        </svg>
+                        Events
+                    </a>
+                    <a href="{{ route('announcements.index') }}" @click="mobileOpen = false"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('announcements.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73"/>
+                        </svg>
+                        Announcements
+                    </a>
                 @else
                     <a href="{{ route('archers.index') }}" @click="mobileOpen = false"
                        class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
@@ -312,6 +344,34 @@
                         </svg>
                         Elimination Matches
                     </a>
+
+                    <a href="{{ route('events.index') }}" @click="mobileOpen = false"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('events.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                        </svg>
+                        Events
+                    </a>
+                    <a href="{{ route('announcements.index') }}" @click="mobileOpen = false"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('announcements.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73"/>
+                        </svg>
+                        Announcements
+                    </a>
+
+                    @if(in_array(auth()->user()->role, ['super_admin', 'club_admin']))
+                        <a href="{{ route('members.index') }}" @click="mobileOpen = false"
+                           class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                                  {{ request()->routeIs('members.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                            </svg>
+                            Members
+                        </a>
+                    @endif
 
                     @if(auth()->user()->role === 'super_admin')
                         <a href="{{ route('admin.clubs.index') }}" @click="mobileOpen = false"
@@ -442,6 +502,22 @@
                         </svg>
                         Performance
                     </a>
+                    <a href="{{ route('events.index') }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('events.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                        </svg>
+                        Events
+                    </a>
+                    <a href="{{ route('announcements.index') }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('announcements.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73"/>
+                        </svg>
+                        Announcements
+                    </a>
                 @elseif(auth()->user()->role === 'coach' && auth()->user()->coach)
                     {{-- Coach: full coach module nav --}}
                     <a href="{{ route('coaches.show', auth()->user()->coach) }}"
@@ -492,6 +568,22 @@
                         </svg>
                         Elimination Matches
                     </a>
+                    <a href="{{ route('events.index') }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('events.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                        </svg>
+                        Events
+                    </a>
+                    <a href="{{ route('announcements.index') }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('announcements.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73"/>
+                        </svg>
+                        Announcements
+                    </a>
                 @else
                     {{-- Admin / club_admin / state_admin: full menu --}}
                     <a href="{{ route('archers.index') }}"
@@ -522,6 +614,34 @@
                         </svg>
                         Elimination Matches
                     </a>
+
+                    <a href="{{ route('events.index') }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('events.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+                        </svg>
+                        Events
+                    </a>
+                    <a href="{{ route('announcements.index') }}"
+                       class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                              {{ request()->routeIs('announcements.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                        <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73"/>
+                        </svg>
+                        Announcements
+                    </a>
+
+                    @if(in_array(auth()->user()->role, ['super_admin', 'club_admin']))
+                        <a href="{{ route('members.index') }}"
+                           class="nav-item flex items-center gap-3 px-4 py-2.5 rounded-r-xl text-sm font-semibold transition-all
+                                  {{ request()->routeIs('members.*') ? 'nav-active' : 'text-slate-400 hover:text-white hover:bg-white/5' }}">
+                            <svg class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                            </svg>
+                            Members
+                        </a>
+                    @endif
 
                     @if(auth()->user()->role === 'super_admin')
                         <a href="{{ route('admin.clubs.index') }}"
@@ -643,6 +763,77 @@
 
         {{-- Content --}}
         <main class="flex-1 px-4 py-5 lg:px-6 lg:py-6">
+            {{-- Pinned announcements banner (shows until the member reads them) --}}
+            @php
+                $pinnedUnread = collect();
+                if (auth()->check() && ! request()->routeIs('announcements.*')) {
+                    try {
+                        $vq = \App\Models\ClubAnnouncement::visibleTo(auth()->user());
+                        if ($vq) {
+                            $pinnedUnread = $vq->where('pinned', true)
+                                ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', auth()->id()))
+                                ->orderByDesc('created_at')->limit(2)->get();
+                        }
+                    } catch (\Throwable $e) {
+                        $pinnedUnread = collect();
+                    }
+                }
+            @endphp
+            @foreach($pinnedUnread as $pa)
+                <a href="{{ route('announcements.index') }}"
+                   class="block mb-4 rounded-2xl border-2 border-amber-300 px-5 py-3.5 transition hover:shadow-md"
+                   style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+                    <div class="flex items-start gap-3">
+                        <span class="text-lg leading-none mt-0.5">📌</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-amber-900">
+                                {{ $pa->title }}
+                                <span class="ml-1 text-xs font-black px-1.5 py-0.5 rounded uppercase tracking-wide" style="background:#4338ca;color:#fff;">New</span>
+                            </p>
+                            <p class="text-xs text-amber-800/80 truncate">{{ \Illuminate\Support\Str::limit($pa->body, 140) }}</p>
+                        </div>
+                        <span class="text-xs font-semibold text-amber-700 flex-shrink-0 mt-1">Read more →</span>
+                    </div>
+                </a>
+            @endforeach
+
+            {{-- Pinned upcoming events banner (shows until the member RSVPs) --}}
+            @php
+                $pinnedEvents = collect();
+                if (auth()->check() && ! request()->routeIs('events.*')) {
+                    try {
+                        $eq = \App\Models\ClubEvent::visibleTo(auth()->user());
+                        if ($eq) {
+                            $pinnedEvents = $eq->where('pinned', true)
+                                ->where('starts_at', '>=', now())
+                                ->whereDoesntHave('rsvps', fn ($q) => $q->where('user_id', auth()->id()))
+                                ->orderBy('starts_at')->limit(2)->get();
+                        }
+                    } catch (\Throwable $e) {
+                        $pinnedEvents = collect();
+                    }
+                }
+            @endphp
+            @foreach($pinnedEvents as $pe)
+                <a href="{{ route('events.show', $pe) }}"
+                   class="block mb-4 rounded-2xl border-2 border-indigo-300 px-5 py-3.5 transition hover:shadow-md"
+                   style="background: linear-gradient(135deg, #eef2ff, #e0e7ff);">
+                    <div class="flex items-start gap-3">
+                        <span class="text-lg leading-none mt-0.5">🗓️</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-indigo-900">
+                                {{ $pe->title }}
+                                <span class="ml-1 text-xs font-semibold text-indigo-500">{{ $pe->starts_at->format('D d M · g:i A') }}</span>
+                            </p>
+                            <p class="text-xs text-indigo-800/80 truncate">
+                                {{ $pe->typeLabel() }}@if($pe->location) · {{ $pe->location }} @endif — RSVP now
+                            </p>
+                        </div>
+                        <span class="text-xs font-semibold text-indigo-700 flex-shrink-0 mt-1">RSVP →</span>
+                    </div>
+                </a>
+            @endforeach
+
             @yield('content')
         </main>
 

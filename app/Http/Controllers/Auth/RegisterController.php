@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Archer;
 use App\Models\Club;
+use App\Models\ClubInvitation;
 use App\Models\Coach;
+use App\Models\Scopes\ClubScope;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -19,7 +21,7 @@ use Illuminate\View\View;
 
 class RegisterController extends Controller
 {
-    public function showRegistrationForm(): View
+    public function showRegistrationForm(Request $request): View
     {
         $clubs       = Club::orderBy('name')->pluck('name');
         $currentClub = app()->has('currentClub') ? app('currentClub') : null;
@@ -28,12 +30,25 @@ class RegisterController extends Controller
             'coach'  => Setting::get('reg_coach_open',  '1') === '1',
             'club'   => Setting::get('reg_club_open',   '1') === '1',
         ];
-        return view('auth.register', compact('clubs', 'regOpen', 'currentClub'));
+
+        $invite = $this->resolvePendingEmailInvite($request->query('invite'));
+
+        return view('auth.register', compact('clubs', 'regOpen', 'currentClub', 'invite'));
     }
 
     public function register(Request $request): RedirectResponse
     {
         $currentClub = app()->has('currentClub') ? app('currentClub') : null;
+
+        // Club-invitation signup: a valid email-only invite locks email + role
+        // and joins the new account to the inviting club.
+        $invite = $this->resolvePendingEmailInvite($request->input('invite_token'));
+        if ($invite) {
+            $request->merge([
+                'email' => $invite->email,
+                'role'  => $invite->invitable_type,
+            ]);
+        }
 
         // On a subdomain, allow existing emails so archers/coaches can join multiple clubs
         $emailRule = $currentClub
@@ -48,14 +63,6 @@ class RegisterController extends Controller
             'password_confirmation' => ['required'],
             'club_name'             => ['required_if:role,club_admin', 'nullable', 'string', 'max:255', 'unique:clubs,name'],
         ]);
-
-        $typeMap = ['archer' => 'archer', 'coach' => 'coach', 'club_admin' => 'club'];
-        $type    = $typeMap[$validated['role']] ?? null;
-        if ($type && Setting::get('reg_' . $type . '_open', '1') !== '1') {
-            return back()
-                ->withErrors(['role' => ucfirst($type) . ' registration is currently suspended.'])
-                ->withInput();
-        }
 
         // On a subdomain, club_admin registration is not allowed
         if ($currentClub && $validated['role'] === 'club_admin') {
@@ -84,17 +91,30 @@ class RegisterController extends Controller
                 }
 
                 $joined = DB::transaction(function () use ($existingUser, $currentClub) {
-                    if ($existingUser->role === 'archer') {
-                        $archer = $existingUser->archer;
-                        if ($archer && ! $archer->clubs()->where('clubs.id', $currentClub->id)->exists()) {
-                            $archer->clubs()->attach($currentClub->id, ['primary_club' => false, 'joined_at' => now()]);
-                        }
-                    } elseif ($existingUser->role === 'coach') {
-                        $coach = $existingUser->coach;
-                        if ($coach && ! $coach->clubs()->where('clubs.id', $currentClub->id)->exists()) {
-                            $coach->clubs()->attach($currentClub->id, ['primary_club' => false, 'joined_at' => now()]);
+                    // Bypass ClubScope: in tenant context the member is (by definition)
+                    // not yet part of the current club, so scoped relations hide them.
+                    $member = $existingUser->role === 'archer'
+                        ? Archer::withoutGlobalScope(ClubScope::class)->where('user_id', $existingUser->id)->first()
+                        : Coach::withoutGlobalScope(ClubScope::class)->where('user_id', $existingUser->id)->first();
+
+                    if ($member && ! $member->clubs()->where('clubs.id', $currentClub->id)->exists()) {
+                        // First club becomes primary (covers previously unaffiliated
+                        // members); joining an additional club stays secondary.
+                        $hasPrimary = $member->clubs()->wherePivot('primary_club', true)->exists();
+
+                        $member->clubs()->attach($currentClub->id, [
+                            'primary_club' => ! $hasPrimary,
+                            'joined_at'    => now(),
+                        ]);
+
+                        if (! $hasPrimary) {
+                            $member->update(['club_id' => $currentClub->id]);
+                            if (! $existingUser->club_id) {
+                                $existingUser->update(['club_id' => $currentClub->id]);
+                            }
                         }
                     }
+
                     return $existingUser;
                 });
 
@@ -109,8 +129,23 @@ class RegisterController extends Controller
             }
         }
 
-        $user = DB::transaction(function () use ($validated, $currentClub) {
-            $clubId = $currentClub?->id;
+        // Open/closed registration toggles gate NEW account creation only.
+        // Existing members joining another club (handled above) and club
+        // invitations (explicit admission by a club admin) both bypass them.
+        $typeMap = ['archer' => 'archer', 'coach' => 'coach', 'club_admin' => 'club'];
+        $type    = $typeMap[$validated['role']] ?? null;
+        if (! $invite && $type && Setting::get('reg_' . $type . '_open', '1') !== '1') {
+            return back()
+                ->withErrors(['role' => ucfirst($type) . ' registration is currently suspended.'])
+                ->withInput();
+        }
+
+        // Which club (if any) the new account joins: an email invitation wins,
+        // then the subdomain's tenant club.
+        $joinClub = $invite?->club ?? $currentClub;
+
+        $user = DB::transaction(function () use ($validated, $joinClub, $invite) {
+            $clubId = $joinClub?->id;
 
             $user = User::create([
                 'name'     => $validated['name'],
@@ -122,14 +157,14 @@ class RegisterController extends Controller
 
             if ($validated['role'] === 'archer') {
                 $archer = Archer::create(['user_id' => $user->id, 'club_id' => $clubId]);
-                if ($currentClub) {
-                    $archer->clubs()->attach($currentClub->id, ['primary_club' => true, 'joined_at' => now()]);
+                if ($joinClub) {
+                    $archer->clubs()->attach($joinClub->id, ['primary_club' => true, 'joined_at' => now()]);
                 }
             } elseif ($validated['role'] === 'coach') {
                 $user->update(['is_coach' => true]);
                 $coach = Coach::create(['user_id' => $user->id, 'club_id' => $clubId]);
-                if ($currentClub) {
-                    $coach->clubs()->attach($currentClub->id, ['primary_club' => true, 'joined_at' => now()]);
+                if ($joinClub) {
+                    $coach->clubs()->attach($joinClub->id, ['primary_club' => true, 'joined_at' => now()]);
                 }
             } elseif ($validated['role'] === 'club_admin') {
                 // Club starts inactive (pending) — its subdomain stays offline until the
@@ -144,6 +179,10 @@ class RegisterController extends Controller
             return $user;
         });
 
+        if ($invite) {
+            $invite->update(['status' => 'accepted', 'responded_at' => now()]);
+        }
+
         // Log them in so they can see the "verify your email" notice and resend it,
         // but the account is unverified — the `verified` middleware blocks app access
         // until they click the link.
@@ -156,5 +195,21 @@ class RegisterController extends Controller
         }
 
         return redirect()->route('verification.notice');
+    }
+
+    /** Valid, still-pending, email-only club invitation for the given token (or null). */
+    private function resolvePendingEmailInvite(?string $token): ?ClubInvitation
+    {
+        if (! $token) {
+            return null;
+        }
+
+        $invite = ClubInvitation::where('token', $token)->with('club')->first();
+
+        if (! $invite || ! $invite->isPending() || $invite->invitable_id) {
+            return null;
+        }
+
+        return $invite;
     }
 }
