@@ -47,7 +47,7 @@ Seed demo data: `php artisan db:seed`
 - Installed via Softaculous — Laravel already set up on server
 - Remote path: `/home/mfazil/public_html/laravel` — a git clone tracking `origin/main`
 - **Deploy = git, not scp.** Push `main`, then on the server: `git fetch origin main && git reset --hard origin/main` (use the `/deploy` skill — it dry-runs first and restores `.htaccess`)
-- Remote commands: MCP SSH `mcp__mcp-ssh__run-command` (profile `mcp-ssh`)
+- Remote commands: MCP SSH `mcp__mcp-ssh__run-command` (profile `mcp-ssh`), or plain `ssh -i C:\dev\.ssh\sportdns mfazil@sportdns.com` (cPanel key `claude-code`)
 - Composer on server: `php composer.phar` (not in PATH)
 - After deploy: `php artisan migrate --force`, then `php artisan cache:clear && php artisan config:clear && php artisan route:clear && php artisan view:cache`
 - **Never `view:clear` on the live server** — it causes intermittent 500s; `view:cache` last, always
@@ -81,4 +81,4 @@ Archer CRUD — fully built and live.
 - `resources/views/archers/` — index, create, edit, show, _form partial
 - `database/migrations/2024_01_01_000009_update_archers_table_personal_info.php`
 
-**Login:** admin@archery.my / password
+**Login (live):** one account per role — `admin@archery.my` (super_admin), `demo.clubadmin@archery.my` (club_admin), `demo.coach@archery.my` (coach), `demo.archer@archery.my` (archer); the last three are in club #2. Passwords are not stored in the repo — the owner keeps them. Seeded local data still uses `password`.
